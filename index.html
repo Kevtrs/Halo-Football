@@ -436,67 +436,105 @@ function loadResults() {
 const KEY = '7585468b7f104d31a14311eafac3ba86';
 
 async function loadStand() {
-  const p = document.getElementById('p2');
+  const p = document.getElementById('p3');
+
   const FD_LEAGUES = [
-    { id: 2021, name: 'Premier League', chl: 4, eur: 2 },
-    { id: 2014, name: 'La Liga',        chl: 4, eur: 2 },
-    { id: 2019, name: 'Serie A',        chl: 4, eur: 3 },
-    { id: 2002, name: 'Bundesliga',     chl: 4, eur: 2 },
-    { id: 2015, name: 'Ligue 1',        chl: 3, eur: 2 },
+    { id: 2015, name: 'Ligue 1',        chl: 3, eur: 2, open: true  },
+    { id: 2021, name: 'Premier League', chl: 4, eur: 2, open: false },
+    { id: 2014, name: 'La Liga',        chl: 4, eur: 2, open: false },
+    { id: 2019, name: 'Serie A',        chl: 4, eur: 3, open: false },
+    { id: 2002, name: 'Bundesliga',     chl: 4, eur: 2, open: false },
   ];
 
-  async function apiFD(path, retries=2) {
+  async function apiFD(path) {
     const target = 'https://api.football-data.org/v4' + path;
+
     const proxies = [
       'https://api.allorigins.win/raw?url=' + encodeURIComponent(target),
       'https://corsproxy.io/?' + encodeURIComponent(target),
-      'https://cors.isomorphic-git.org/' + target,
-      'https://thingproxy.freeboard.io/fetch/' + target,
       'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(target),
     ];
+
     let lastErr = null;
-    for (let attempt = 0; attempt <= retries; attempt++) {
-      for (const proxy of proxies) {
-        try {
-          const r = await fetch(proxy, {
-            headers: { 'X-Auth-Token': KEY },
-            signal: AbortSignal.timeout(12000),
-          });
-          if (!r.ok) { lastErr = new Error('HTTP ' + r.status); continue; }
-          const data = await r.json();
-          if (data) return data;
-        } catch(e) { lastErr = e; }
+
+    for (const proxy of proxies) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 8000);
+
+        const r = await fetch(proxy, {
+          headers: { 'X-Auth-Token': KEY },
+          signal: controller.signal,
+        });
+
+        clearTimeout(timer);
+
+        if (!r.ok) {
+          lastErr = new Error('HTTP ' + r.status);
+          continue;
+        }
+
+        const data = await r.json();
+        if (data) return data;
+      } catch (e) {
+        lastErr = e;
       }
-      if (attempt < retries) await new Promise(r => setTimeout(r, 1200 + attempt * 800));
     }
+
     throw lastErr || new Error('inaccessible');
   }
 
-  let h = '<div class="legend"><div class="li"><div class="ld" style="background:rgba(0,155,222,.6)"></div>Ligue des champions</div><div class="li"><div class="ld" style="background:rgba(56,189,248,.5)"></div>Europa League</div></div>';
-  p.innerHTML = h + '<div class="loading"><div class="sr"></div>Chargement...</div>';
+  function renderAccShell(lg) {
+    const accId = 'acc-' + lg.id;
+    return `
+      <div class="acc ${lg.open ? 'open' : ''}" id="${accId}">
+        <button class="acc-h" onclick="toggleStandAcc('${accId}')">
+          <div class="acc-l">
+            <div>
+              <div class="acc-title">${lg.name}</div>
+              <div class="acc-sub" id="sub-${lg.id}">Chargement...</div>
+            </div>
+          </div>
+          <div class="acc-r">
+            <span class="acc-chevron">⌄</span>
+          </div>
+        </button>
+        <div class="acc-c" id="content-${lg.id}">
+          <div class="loading" style="padding:18px 14px">
+            <div class="sr"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  p.innerHTML = `<div class="st-acc">${FD_LEAGUES.map(renderAccShell).join('')}</div>`;
 
   for (const lg of FD_LEAGUES) {
+    const sub = document.getElementById(`sub-${lg.id}`);
+    const content = document.getElementById(`content-${lg.id}`);
+
     try {
       const d = await apiFD('/competitions/' + lg.id + '/standings');
       const st = (d.standings || []).find(s => s.type === 'TOTAL') || d.standings?.[0];
-      if (!st?.table?.length) { h += '<div class="err" style="margin-bottom:8px">' + lg.name + ' : aucun classement</div>'; p.innerHTML = h; continue; }
+
+      if (!st || !st.table || !st.table.length) {
+        sub.textContent = 'Aucun classement trouvé';
+        content.innerHTML = `<div class="err" style="margin:0 12px 12px">Aucun classement disponible</div>`;
+        continue;
+      }
+
       const tbl = st.table;
-      h += '<div class="lhdr"><span>' + lg.name + '</span></div><div class="sb">';
-      h += '<div class="sth"><span>#</span><span>Équipe</span><span>J</span><span>G</span><span>N</span><span>D</span><span>Pts</span><span>Forme</span></div>';
-      tbl.slice(0, 10).forEach((t, i) => {
-        const cls = i < lg.chl ? 'chl' : i < (lg.chl + lg.eur) ? 'eur' : '';
-        const form = (t.form || '').split(',').map(x => x.trim()).filter(Boolean).slice(-5)
-          .map(r => '<div class="fp" style="background:' + (r==='W'?'#34d399':r==='D'?'#38bdf8':'#f87171') + '"></div>').join('');
-        h += '<div class="str ' + cls + '"><span class="sp">' + (t.position??'-') + '</span><div class="st">' + crest(t.team?.crest||'',20,'scr') + '<span class="sn">' + (t.team?.shortName||t.team?.name||'?') + '</span></div><span class="ss">' + (t.playedGames??0) + '</span><span class="ss">' + (t.won??0) + '</span><span class="ss">' + (t.draw??0) + '</span><span class="ss">' + (t.lost??0) + '</span><span class="spt">' + (t.points??0) + '</span><div class="fr">' + form + '</div></div>';
-      });
-      h += '</div>';
-      p.innerHTML = h;
-      await new Promise(r => setTimeout(r, 1200));
-    } catch(e) {
-      h += '<div class="err" style="margin-bottom:8px">' + lg.name + ' : ' + e.message + '</div>';
-      p.innerHTML = h;
+      sub.textContent = `${tbl.length} équipes`;
+      content.innerHTML = renderStandTable(tbl, lg);
+    } catch (e) {
+      sub.textContent = 'Erreur de chargement';
+      content.innerHTML = `<div class="err" style="margin:0 12px 12px">${lg.name} : ${e.message || e}</div>`;
     }
+
+    await new Promise(res => setTimeout(res, 700));
   }
+
   standLoaded = true;
 }
 
