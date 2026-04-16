@@ -179,7 +179,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
     </div>
     <div class="tab" id="t1" onclick="goTab(1)"><span class="tab-icon">📅</span>Calendrier</div>
     <div class="tab" id="t2" onclick="goTab(2)"><span class="tab-icon">🏁</span>Résultats</div>
-    <div class="tab" id="t3" onclick="goTab(3)"><span class="tab-icon">🏆</span>Classements</div>
+    <div class="tab" id="t3" onclick="goTab(3)"><span class="tab-icon">🔵</span>OM</div>
   </div>
 </div>
 
@@ -187,7 +187,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
   <div class="page on" id="p0"><div class="loading"><div class="sr"></div>Chargement...</div></div>
   <div class="page" id="p1"><div class="loading"><div class="sr"></div>Chargement du calendrier...</div></div>
   <div class="page" id="p2"><div class="loading"><div class="sr"></div>Chargement des résultats...</div></div>
-  <div class="page" id="p3"><div class="loading"><div class="sr"></div>Chargement des classements...</div></div>
+<div class="page" id="p3"><div class="loading"><div class="sr"></div>Chargement OM...</div></div>
 </div>
 
 <div class="ftr">
@@ -549,117 +549,150 @@ function renderResults() {
 //  CLASSEMENTS — Ligue 1 (TheSportsDB)
 //              + LDC (ESPN direct)
 // ─────────────────────────────────────────
-async function loadStand() {
+ async function loadOM() {
   const p = document.getElementById('p3');
-  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
-  let h = '';
+  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement OM...</div>';
 
-  // ── LIGUE 1 via TheSportsDB (sans proxy, CORS ouvert)
   try {
-    const r = await fetch('https://www.thesportsdb.com/api/v1/json/3/lookuptable.php?l=4334&s=2024-2025', { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-    const table = data?.table || [];
-    if (table.length) {
-      h += `<div class="lhdr"><span>Ligue 1</span></div>
-      <div class="stand-legend">
-        <div class="sleg"><div class="sleg-dot" style="background:rgba(0,155,222,.7)"></div>Ligue des champions</div>
-        <div class="sleg"><div class="sleg-dot" style="background:rgba(56,189,248,.5)"></div>Europa League</div>
-      </div>
-      <div class="sb">
-      <div class="sth"><span>#</span><span>Équipe</span><span>J</span><span>G</span><span>N</span><span>D</span><span>Pts</span></div>`;
-      table.slice(0, 18).forEach((t, i) => {
-        const cls = i < 3 ? 'chl' : i < 5 ? 'eur' : '';
-        h += `<div class="str ${cls}">
-          <span class="sp">${t.intRank || i+1}</span>
-          <div class="st">${crest(t.strTeamBadge, 20, 'scr')}<span class="sn">${t.strTeam}</span></div>
-          <span class="ss">${t.intPlayed || 0}</span>
-          <span class="ss">${t.intWin || 0}</span>
-          <span class="ss">${t.intDraw || 0}</span>
-          <span class="ss">${t.intLoss || 0}</span>
-          <span class="spt">${t.intPoints || 0}</span>
-        </div>`;
+    const datesPast = [];
+    const datesFuture = [];
+
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      datesPast.push(dateKey(d));
+    }
+
+    for (let i = 0; i <= 21; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      datesFuture.push(dateKey(d));
+    }
+
+    const omMatches = [];
+
+    function isOMName(name='') {
+      const n = String(name).toLowerCase();
+      return n.includes('marseille') || n.includes('olympique de marseille') || n === 'om';
+    }
+
+    function isOMEvent(ev) {
+      const { home, away } = getCompetitors(ev);
+      const hn = home?.team?.displayName || home?.team?.shortDisplayName || home?.team?.name || '';
+      const an = away?.team?.displayName || away?.team?.shortDisplayName || away?.team?.name || '';
+      return isOMName(hn) || isOMName(an);
+    }
+
+    // Matchs passés
+    for (const day of datesPast) {
+      const results = await Promise.allSettled(
+        LEAGUES.map(lg => espn(lg.slug, '?dates=' + day).then(data => ({ lg, data })))
+      );
+
+      for (const r of results) {
+        if (r.status !== 'fulfilled') continue;
+        const { lg, data } = r.value;
+
+        for (const ev of (data.events || [])) {
+          if (!isOMEvent(ev)) continue;
+          if (!omMatches.find(m => m.id === ev.id)) {
+            omMatches.push(normalize(ev, lg.name, lg.slug));
+          }
+        }
+      }
+
+      await new Promise(res => setTimeout(res, 120));
+    }
+
+    // Matchs à venir
+    for (const day of datesFuture) {
+      const results = await Promise.allSettled(
+        LEAGUES.map(lg => espn(lg.slug, '?dates=' + day).then(data => ({ lg, data })))
+      );
+
+      for (const r of results) {
+        if (r.status !== 'fulfilled') continue;
+        const { lg, data } = r.value;
+
+        for (const ev of (data.events || [])) {
+          if (!isOMEvent(ev)) continue;
+          if (!omMatches.find(m => m.id === ev.id)) {
+            omMatches.push(normalize(ev, lg.name, lg.slug));
+          }
+        }
+      }
+
+      await new Promise(res => setTimeout(res, 120));
+    }
+
+    const now = Date.now();
+
+    const liveOM = liveEvents.find(m => isOMName(m.homeName) || isOMName(m.awayName));
+
+    const lastOM = [...omMatches]
+      .filter(m => isDone({status:m.status}) && new Date(m.date).getTime() <= now)
+      .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+
+    const nextOM = [...omMatches]
+      .filter(m => {
+        const state = m.status?.type?.state || '';
+        return state === 'pre' && new Date(m.date).getTime() >= now - 3600000;
+      })
+      .sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    let h = '<div class="sec">Allez l\\'OM 💙</div>';
+
+    if (liveOM) {
+      h += '<div class="sec">En direct</div>';
+      h += renderMatch(liveOM);
+    }
+
+    if (nextOM.length) {
+      h += '<div class="sec">Prochain match</div>';
+      h += `
+        <div class="cal-card">
+          <div class="cal-t">${lt(nextOM[0].date)}</div>
+          <div class="cal-cc">${crest(nextOM[0].homeLogo,24,'ccr')}${crest(nextOM[0].awayLogo,24,'ccr')}</div>
+          <div class="cal-i">
+            <div class="cal-tn">${nextOM[0].homeName} — ${nextOM[0].awayName}</div>
+            <div class="cal-cn">${dl(nextOM[0].date)} · ${nextOM[0].leagueName}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    if (lastOM) {
+      h += '<div class="sec">Dernier résultat</div>';
+      h += renderMatch(lastOM);
+    }
+
+    if (nextOM.length > 1) {
+      h += '<div class="sec">Les 5 prochains matchs</div>';
+      nextOM.slice(0, 5).forEach(m => {
+        h += `
+          <div class="cal-card">
+            <div class="cal-t">${lt(m.date)}</div>
+            <div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div>
+            <div class="cal-i">
+              <div class="cal-tn">${m.homeName} — ${m.awayName}</div>
+              <div class="cal-cn">${dl(m.date)} · ${m.leagueName}</div>
+            </div>
+          </div>
+        `;
       });
-      h += '</div>';
     }
-  } catch(e) {
-    h += `<div class="err" style="margin-bottom:8px">Ligue 1 : ${e.message}</div>`;
-  }
-  p.innerHTML = h;
 
-  // ── LDC via ESPN direct (standings endpoint)
-  try {
-    const r = await fetch('https://site.web.api.espn.com/apis/v2/sports/soccer/uefa.champions/standings', { signal: AbortSignal.timeout(10000) });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
-
-    // Détecte la phase : groupes ou élimination directe
-    const children = data.children || [];
-
-    if (children.length > 1) {
-      // PHASE DE GROUPES — plusieurs groupes
-      h += `<div class="lhdr"><span>Champions League — Groupes</span></div>`;
-      for (const group of children) {
-        const entries = group.standings?.entries || [];
-        if (!entries.length) continue;
-        h += `<div style="font-size:10px;font-weight:800;color:var(--om2);padding:10px 4px 4px;letter-spacing:1px;text-transform:uppercase">${group.name || group.abbreviation || ''}</div>`;
-        h += `<div class="sb"><div class="sth"><span>#</span><span>Équipe</span><span>J</span><span>G</span><span>N</span><span>D</span><span>Pts</span></div>`;
-        entries.forEach((entry, i) => {
-          const cls = i < 2 ? 'chl' : '';
-          const stats = entry.stats || [];
-          const getStat = (...keys) => stats.find(s => keys.includes(s.name) || keys.includes(s.abbreviation))?.displayValue || '0';
-          h += `<div class="str ${cls}">
-            <span class="sp">${i+1}</span>
-            <div class="st">${crest(entry.team?.logos?.[0]?.href || entry.team?.logo || '', 20, 'scr')}<span class="sn">${entry.team?.shortDisplayName || entry.team?.name || '?'}</span></div>
-            <span class="ss">${getStat('gamesPlayed','GP')}</span>
-            <span class="ss">${getStat('wins','W')}</span>
-            <span class="ss">${getStat('ties','D')}</span>
-            <span class="ss">${getStat('losses','L')}</span>
-            <span class="spt">${getStat('points','PTS')}</span>
-          </div>`;
-        });
-        h += '</div>';
-      }
-    } else if (children.length === 1) {
-      // PHASE DE LIGUE (format actuel LDC) — classement unique
-      const entries = children[0]?.standings?.entries || data.standings?.entries || [];
-      if (entries.length) {
-        h += `<div class="lhdr"><span>Champions League — Phase de ligue</span></div>`;
-        h += `<div class="stand-legend"><div class="sleg"><div class="sleg-dot" style="background:rgba(0,155,222,.7)"></div>Qualifiés direct 8e</div><div class="sleg"><div class="sleg-dot" style="background:rgba(56,189,248,.5)"></div>Barrages</div></div>`;
-        h += `<div class="sb"><div class="sth"><span>#</span><span>Équipe</span><span>J</span><span>G</span><span>N</span><span>D</span><span>Pts</span></div>`;
-        entries.slice(0, 36).forEach((entry, i) => {
-          const cls = i < 8 ? 'chl' : i < 24 ? 'eur' : '';
-          const stats = entry.stats || [];
-          const getStat = (...keys) => stats.find(s => keys.includes(s.name) || keys.includes(s.abbreviation))?.displayValue || '0';
-          h += `<div class="str ${cls}">
-            <span class="sp">${i+1}</span>
-            <div class="st">${crest(entry.team?.logos?.[0]?.href || entry.team?.logo || '', 20, 'scr')}<span class="sn">${entry.team?.shortDisplayName || entry.team?.name || '?'}</span></div>
-            <span class="ss">${getStat('gamesPlayed','GP')}</span>
-            <span class="ss">${getStat('wins','W')}</span>
-            <span class="ss">${getStat('ties','D')}</span>
-            <span class="ss">${getStat('losses','L')}</span>
-            <span class="spt">${getStat('points','PTS')}</span>
-          </div>`;
-        });
-        h += '</div>';
-      }
-    } else {
-      // PHASE ÉLIMINATOIRE — pas de classement, on affiche un message
-      h += `<div class="lhdr"><span>Champions League</span></div>
-        <div class="empty" style="padding:24px 16px">
-          <span class="empty-icon">🏆</span>
-          Phase à élimination directe en cours<br>
-          <small style="font-size:11px;opacity:.5">Les classements ne s'appliquent pas à cette phase</small>
-        </div>`;
+    if (h === '<div class="sec">Allez l\\'OM 💙</div>') {
+      p.innerHTML = '<div class="empty"><span class="empty-icon">🔵</span>Aucune donnée OM trouvée</div>';
+      return;
     }
 
     p.innerHTML = h;
-  } catch(e) {
-    h += `<div class="err" style="margin-bottom:8px">Champions League : ${e.message}</div>`;
-    p.innerHTML = h;
-  }
+    standLoaded = true;
 
-  standLoaded = true;
+  } catch (e) {
+    p.innerHTML = `<div class="err">Erreur onglet OM<br><small>${e.message || e}</small></div>`;
+  }
 }
 
 // ─────────────────────────────────────────
@@ -753,9 +786,9 @@ logoEl.addEventListener('pointerleave',() => clearTimeout(pressTimer));
 function goTab(i) {
   document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j));
   document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j));
-  if (i === 1 && !calLoaded)   loadCal();
-  if (i === 2)                  renderResults();
-  if (i === 3 && !standLoaded) loadStand();
+  if (i === 1 && !calLoaded) loadCal();
+  if (i === 2) renderResults();
+  if (i === 3 && !standLoaded) loadOM();
 }
 
 function updateClk() {
@@ -777,7 +810,7 @@ async function manualRefresh() {
   if (idx === 0) await loadLive(false);
   if (idx === 1) { calLoaded = false; await loadCal(); }
   if (idx === 2) { await loadLive(true); renderResults(); }
-  if (idx === 3) { standLoaded = false; await loadStand(); }
+  if (idx === 3) { standLoaded = false; await loadOM(); }
   updateUpd();
   setTimeout(() => btn.classList.remove('spin'), 500);
 }
