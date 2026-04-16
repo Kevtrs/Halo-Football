@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Veher Live</title>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -12,63 +14,48 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .hdr{padding:calc(var(--sat) + 18px) 20px 0;background:var(--bg);position:sticky;top:0;z-index:100}
 .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .logo{display:flex;align-items:center;gap:11px}
-.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--om);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;box-shadow:0 0 16px rgba(0,155,222,.5);flex-shrink:0;letter-spacing:-.5px;cursor:pointer;user-select:none}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--om);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;box-shadow:0 0 16px rgba(0,155,222,.5);flex-shrink:0;letter-spacing:-.5px;cursor:pointer}
 .logo-text{font-size:21px;font-weight:800;color:var(--white);letter-spacing:-.3px}.logo-text span{color:var(--om)}
 .hdr-r{display:flex;align-items:center;gap:10px}
-.clk{font-size:13px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
-.rbtn{background:var(--bg3);border:1px solid var(--b2);color:var(--om);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;user-select:none;transition:.15s}
+.clk{font-size:13px;color:var(--muted);font-weight:600}
+.rbtn{background:var(--bg3);border:1px solid var(--b2);color:var(--om);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:.15s}
 .rbtn.spin{animation:spinr .6s linear}
 @keyframes spinr{to{transform:rotate(360deg)}}
 .tabs-wrap{display:flex;gap:8px;padding:0 0 14px;overflow-x:auto;scrollbar-width:none}.tabs-wrap::-webkit-scrollbar{display:none}
-.tab{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;color:var(--dim);background:var(--bg2);border:1px solid var(--muted);cursor:pointer;user-select:none;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.tab{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;color:var(--dim);background:var(--bg2);border:1px solid var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s}
 .tab.on{background:var(--om);color:#fff;border-color:var(--om);box-shadow:0 0 16px rgba(0,155,222,.35)}
-.tab-live-dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.3s infinite;flex-shrink:0}
+.tab-live-dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.3s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .content{padding:4px 16px calc(var(--sab) + 28px)}
 .page{display:none}.page.on{display:block;animation:fi .2s ease}
 @keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;font-weight:500}
+.loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px}
 .sr{width:26px;height:26px;border:2.5px solid var(--bg3);border-top-color:var(--om);border-radius:50%;animation:spinr .7s linear infinite;margin:0 auto 14px}
-.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;line-height:2;font-weight:500}.empty-icon{font-size:32px;display:block;margin-bottom:10px}
-.err{background:rgba(248,113,113,.07);border:1px solid rgba(248,113,113,.18);border-radius:14px;padding:14px;font-size:13px;color:#fca5a5;margin:6px 0;line-height:1.7}
-.sec{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.8px;padding:14px 2px 8px;text-transform:uppercase}.sec:first-child{padding-top:4px}.sec b{color:var(--om2)}
+.empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;line-height:2}.empty-icon{font-size:32px;display:block;margin-bottom:10px}
+.sec{font-size:11px;font-weight:700;color:var(--muted);letter-spacing:1.8px;padding:14px 2px 8px;text-transform:uppercase}.sec b{color:var(--om2)}
 .mc{background:var(--bg2);border:1px solid var(--b1);border-radius:18px;padding:14px 15px;margin-bottom:10px}
-.mc.live{border-color:var(--b2);background:linear-gradient(150deg,#060c1e 0%,#080d18 100%);box-shadow:0 2px 24px rgba(0,155,222,.08)}
+.mc.live{border-color:var(--b2);background:linear-gradient(150deg,#060c1e 0%,#080d18 100%)}
 .mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:6px}
 .mc-comp{font-size:11px;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:65%}
-.badge{font-size:9px;font-weight:800;padding:4px 10px;border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0}
-.b-live{background:rgba(0,155,222,.18);color:var(--om);border:1px solid rgba(0,155,222,.35);animation:blink 1.4s infinite}
-.b-ht{background:rgba(56,189,248,.12);color:var(--om2);border:1px solid rgba(56,189,248,.25)}
-.b-ft{background:rgba(36,54,80,.4);color:var(--muted);border:1px solid var(--muted)}
+.badge{font-size:9px;font-weight:800;padding:4px 10px;border-radius:20px;text-transform:uppercase}
+.b-live{background:rgba(0,155,222,0.18);color:var(--om);border:1px solid rgba(0,155,222,0.35);animation:blink 1.4s infinite}
+.b-ft{background:rgba(36,54,80,0.4);color:var(--muted);border:1px solid var(--muted)}
 .teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px}
 .th{display:flex;align-items:center;gap:9px}.ta{display:flex;align-items:center;gap:9px;flex-direction:row-reverse}
-.cr{width:32px;height:32px;object-fit:contain;flex-shrink:0}.cr-e{width:32px;height:32px;background:var(--bg3);border-radius:50%;flex-shrink:0;border:1px solid var(--b2)}
-.tn{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white)}.th .tn{text-align:left}.ta .tn{text-align:right}
-.scb{display:flex;align-items:center;gap:5px;flex-shrink:0;padding:5px 12px;background:var(--bg3);border-radius:14px;border:1px solid var(--b2)}
-.scn{font-size:28px;font-weight:900;color:var(--white);min-width:20px;text-align:center;line-height:1}.scs{font-size:15px;color:var(--muted);font-weight:400}
-.sct{font-size:19px;font-weight:800;color:var(--om2);text-align:center;white-space:nowrap;padding:5px 12px;background:rgba(56,189,248,.07);border-radius:12px;border:1px solid rgba(56,189,248,.15)}
-.mc-min{text-align:center;font-size:12px;color:var(--om);margin-top:10px;font-weight:700;letter-spacing:.3px}
-.scorers{margin-top:12px;background:rgba(0,155,222,.06);border-radius:12px;border:1px solid rgba(0,155,222,.15);overflow:hidden}
-.scorers-hdr{padding:8px 12px 6px;font-size:9px;font-weight:800;color:var(--om);letter-spacing:1.8px;text-transform:uppercase;border-bottom:1px solid rgba(0,155,222,.1)}
-.scorers-grid{display:grid;grid-template-columns:1fr 1fr}
-.goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06)}
-.goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
-.gmin{color:var(--om);font-weight:700;font-size:11px;flex-shrink:0}.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:0 2px}.bk-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-weight:500}
-.cal-card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;gap:12px}
-.cal-t{font-size:17px;font-weight:800;color:var(--om);min-width:46px;flex-shrink:0}.cal-cc{display:flex;align-items:center;gap:4px;flex-shrink:0}
-.ccr{width:24px;height:24px;object-fit:contain}.ccr-e{width:24px;height:24px;background:var(--bg3);border-radius:50%;border:1px solid var(--b2)}
-.cal-i{flex:1;min-width:0}.cal-tn{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;color:var(--white)}.cal-cn{font-size:11px;color:var(--dim);font-weight:500}
-.day-sep{font-size:11px;color:var(--om2);font-weight:700;letter-spacing:.5px;padding:14px 2px 6px;border-top:1px solid var(--bg3);margin-top:4px}.day-sep:first-child{border-top:none;margin-top:0;padding-top:2px}
-.ftr{padding:8px 20px 6px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600}.ok{color:var(--om)}.upd-live{color:var(--om2)}
-.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--b2);color:var(--white);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;transition:opacity .4s;white-space:nowrap;pointer-events:none;font-family:var(--f)}
-@media(min-width:640px){.hdr,.content,.ftr{max-width:780px;margin-left:auto;margin-right:auto;padding-left:32px;padding-right:32px}html,body{background:#02060e}.hdr{background:#02060e}}
+.cr{width:32px;height:32px;object-fit:contain}
+.tn{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white)}
+.scb{display:flex;align-items:center;gap:5px;padding:5px 12px;background:var(--bg3);border-radius:14px;border:1px solid var(--b2)}
+.scn{font-size:28px;font-weight:900;color:var(--white);line-height:1}.scs{font-size:15px;color:var(--muted)}
+.sct{font-size:19px;font-weight:800;color:var(--om2);padding:5px 12px;background:rgba(56,189,248,0.07);border-radius:12px;border:1px solid rgba(56,189,248,0.15)}
+.mc-min{text-align:center;font-size:12px;color:var(--om);margin-top:10px;font-weight:700}
+.ftr{padding:8px 20px 6px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600}
+.ok{color:var(--om)}.upd-live{color:var(--om2)}
 </style>
 </head>
 <body>
 <div class="hdr">
   <div class="hdr-top">
-    <div class="logo"><div class="logo-mark" id="logoMark">VL</div><div class="logo-text">Veher <span>Live</span></div></div>
+    <div class="logo"><div class="logo-mark">VL</div><div class="logo-text">Veher <span>Live</span></div></div>
     <div class="hdr-r"><span class="clk" id="clk">--:--</span><div class="rbtn" id="rbtn" onclick="manualRefresh()">↻</div></div>
   </div>
   <div class="tabs-wrap">
@@ -80,86 +67,116 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 </div>
 <div class="content">
   <div class="page on" id="p0"><div class="loading"><div class="sr"></div>Chargement...</div></div>
-  <div class="page" id="p1"><div class="loading"><div class="sr"></div>Chargement du calendrier...</div></div>
-  <div class="page" id="p2"><div class="loading"><div class="sr"></div>Chargement des résultats...</div></div>
-  <div class="page" id="p3"><div class="loading"><div class="sr"></div>Chargement OM...</div></div>
+  <div class="page" id="p1"><div class="loading">Chargement...</div></div>
+  <div class="page" id="p2"><div class="loading">Chargement...</div></div>
+  <div class="page" id="p3"><div class="loading">Chargement...</div></div>
 </div>
 <div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
-<div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.1 - Global Scan</div>
+
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
-const LEAGUES = [{ slug: 'fra.1', name: 'Ligue 1' },{ slug: 'uefa.champions', name: 'Champions League' }];
-let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
+const FAVORITES = ['fra.1', 'uefa.champions'];
+let liveEvents = [];
 
-async function espn(slug, params = '') { const r = await fetch(`${BASE}/${slug}/scoreboard${params}`, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
-async function espnSummary(slug, eventId) { const r = await fetch(`${BASE}/${slug}/summary?event=${eventId}`, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
-function crest(src, sz, cls) { if (!src) return `<div class="${cls}-e" style="width:${sz}px;height:${sz}px"></div>`; return `<img src="${src.replace(/"/g,'&quot;')}" class="${cls}" width="${sz}" height="${sz}" loading="lazy" onerror="this.style.display='none'">`; }
-function badge(st) { const name = st?.name || ''; const detail = st?.shortDetail || st?.detail || ''; if (name.includes('STATUS_IN_PROGRESS') || name.includes('STATUS_END_PERIOD')) return '<span class="badge b-live">● LIVE</span>'; if (detail === 'HT') return '<span class="badge b-ht">Mi-temps</span>'; if (name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME')) return '<span class="badge b-ft">Terminé</span>'; return ''; }
-function isLive(ev) { const state = ev?.status?.type?.state || ''; const name = ev?.status?.type?.name || ''; const detail = ev?.status?.type?.shortDetail || ''; return state === 'in' || name.includes('STATUS_IN_PROGRESS') || detail === 'HT'; }
-function isDone(ev) { const state = ev?.status?.type?.state || ''; const name = ev?.status?.type?.name || ''; return state === 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME'); }
-function lt(u) { return new Date(u).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }); }
-function dl(u) { const d = new Date(u), t = new Date(), tm = new Date(); tm.setDate(tm.getDate() + 1); if (d.toDateString() === t.toDateString()) return "Aujourd'hui"; if (d.toDateString() === tm.toDateString()) return 'Demain'; const s = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }); return s.charAt(0).toUpperCase() + s.slice(1); }
-function dateKey(d) { return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
-function isRecent(dateStr) { return (Date.now() - new Date(dateStr).getTime()) < 86400000; }
-function getCompetitors(event) { const comp = event?.competitions?.[0]; const list = comp?.competitors || []; return { home: list.find(c => c.homeAway === 'home') || list[0] || {}, away: list.find(c => c.homeAway === 'away') || list[1] || {}, comp }; }
-function normalize(event, leagueName, leagueSlug) { const { home, away, comp } = getCompetitors(event); return { id:event.id, leagueName, leagueSlug, date:event.date, homeName:home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '?', awayName:away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '?', homeLogo:home.team?.logo || '', awayLogo:away.team?.logo || '', homeScore:home.score, awayScore:away.score, status:comp?.status || event.status || {}, details:comp?.details || [], homeTeamId:home.team?.id, awayTeamId:away.team?.id }; }
+async function fetchESPN(slug) {
+    const r = await fetch(`${BASE}/${slug}/scoreboard`, { signal: AbortSignal.timeout(8000) });
+    return r.json();
+}
+
+function normalize(ev, leagueName) {
+    const comp = ev.competitors || ev.competitions?.[0]?.competitors || [];
+    const home = comp.find(c => c.homeAway === 'home') || comp[0];
+    const away = comp.find(c => c.homeAway === 'away') || comp[1];
+    return {
+        id: ev.id,
+        league: leagueName,
+        homeName: home.team.shortDisplayName || home.team.name,
+        awayName: away.team.shortDisplayName || away.team.name,
+        homeLogo: home.team.logo,
+        awayLogo: away.team.logo,
+        homeScore: home.score,
+        awayScore: away.score,
+        status: ev.status.type,
+        date: ev.date
+    };
+}
+
 function renderMatch(m) {
-  const showScore = m.homeScore != null && m.awayScore != null;
-  const scoreHtml = showScore ? `<div class="scb"><span class="scn">${m.homeScore}</span><span class="scs">–</span><span class="scn">${m.awayScore}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
-  const detail = m.status?.type?.shortDetail || ''; const minHtml = isLive({status:m.status}) ? `<div class="mc-min">${detail || 'En cours'}</div>` : '';
-  return `<div class="mc${isLive({status:m.status}) ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${badge(m.status?.type)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}</div>`;
+    const isLive = m.status.state === 'in' || m.status.name.includes('PROGRESS');
+    const scoreHtml = m.homeScore != null ? `<div class="scb"><span class="scn">${m.homeScore}</span><span class="scs">–</span><span class="scn">${m.awayScore}</span></div>` : `<div class="sct">${new Date(m.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
+    return `
+    <div class="mc ${isLive ? 'live' : ''}">
+        <div class="mc-top"><span class="mc-comp">${m.league}</span>${isLive ? '<span class="badge b-live">● LIVE</span>' : ''}</div>
+        <div class="teams">
+            <div class="th"><img src="${m.homeLogo}" class="cr"><span class="tn">${m.homeName}</span></div>
+            ${scoreHtml}
+            <div class="ta"><span class="tn">${m.awayName}</span><img src="${m.awayLogo}" class="cr"></div>
+        </div>
+        ${isLive ? `<div class="mc-min">${m.status.shortDetail}</div>` : ''}
+    </div>`;
 }
 
 async function loadLive(silent = false) {
-  const p = document.getElementById('p0'); if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Scan mondial en cours...</div>';
-  try {
-    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug).then(data => ({ lg, data }))));
-    const seen = new Map();
-    for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!isLive(ev) && !isDone(ev)) continue; if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
+    const p = document.getElementById('p0');
+    if(!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Scan mondial...</div>';
     
-    // SCAN MONDIAL AUTOMATIQUE SI RIEN EN DIRECT
-    if ([...seen.values()].filter(m => isLive({status:m.status})).length === 0) {
-        try {
-            const world = await espn('all');
-            for (const ev of (world.events || [])) {
-                if (isLive(ev) && !seen.has(ev.id)) seen.set(ev.id, normalize(ev, ev.competitions?.[0]?.league?.name || 'Monde', 'all'));
+    try {
+        let allMatches = [];
+        // 1. On check les favoris
+        const favResults = await Promise.allSettled(FAVORITES.map(s => fetchESPN(s)));
+        favResults.forEach(r => {
+            if(r.status === 'fulfilled') {
+                const name = r.value.leagues?.[0]?.name || 'Favoris';
+                r.value.events?.forEach(ev => allMatches.push(normalize(ev, name)));
             }
-        } catch(e) {}
-    }
+        });
 
-    let matches = [...seen.values()];
-    if (!matches.some(m => isLive({status:m.status}))) {
-        liveEvents = []; document.getElementById('liveDot').style.display = 'none';
-        // AFFICHAGE DU PROCHAIN MATCH MONDIAL
-        try {
-            const world = await espn('all');
-            const next = (world.events || []).filter(e => e.status.type.state === 'pre').sort((a,b) => new Date(a.date) - new Date(b.date))[0];
-            p.innerHTML = `<div class="empty"><span class="empty-icon">⏳</span>Aucun match en direct<br><div class="sct" style="margin:15px auto; width:fit-content">${lt(next.date)}</div><small>${next.name}</small></div>`;
-        } catch(e) { p.innerHTML = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match trouvé</div>`; }
-        return;
-    }
+        // 2. Si pas de direct, on prend TOUT le reste du monde
+        if (!allMatches.some(m => m.status.state === 'in')) {
+            const world = await fetchESPN('all');
+            world.events?.forEach(ev => {
+                if(ev.status.type.state === 'in') allMatches.push(normalize(ev, ev.competitions?.[0]?.league?.name || 'Monde'));
+            });
+        }
 
-    liveEvents = matches.filter(m => isLive({status:m.status})).sort((a,b) => new Date(a.date) - new Date(b.date));
-    finishedTodayEvents = matches.filter(m => isDone({status:m.status}) && isRecent(m.date)).sort((a,b) => new Date(b.date) - new Date(a.date));
-    document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
-    
-    let h = `<div class="sec">En direct · <b>Monde</b></div>`;
-    liveEvents.forEach(m => h += renderMatch(m));
-    p.innerHTML = h;
-  } catch(e) { if (!silent) p.innerHTML = `<div class="err">Erreur réseau</div>`; }
+        const live = allMatches.filter(m => m.status.state === 'in');
+        document.getElementById('liveDot').style.display = live.length ? 'block' : 'none';
+
+        if(live.length > 0) {
+            let h = '<div class="sec">En direct · <b>Monde</b></div>';
+            live.forEach(m => h += renderMatch(m));
+            p.innerHTML = h;
+        } else {
+            p.innerHTML = '<div class="empty"><span class="empty-icon">⚽</span>Aucun match en direct<br><small>Reviens plus tard pour les prochains scores</small></div>';
+        }
+    } catch(e) {
+        p.innerHTML = '<div class="empty">Erreur de connexion</div>';
+    }
 }
 
-// Les autres fonctions restent identiques pour garder ton interface
-async function loadCal() { /* ... identique à ton code ... */ }
-function renderResults() { /* ... identique à ton code ... */ }
-async function loadOM() { /* ... identique à ton code ... */ }
-function goTab(i) { document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j)); document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j)); if (i === 0) loadLive(); if (i === 1 && !calLoaded) loadCal(); if (i === 3 && !standLoaded) loadOM(); }
-function updateClk() { const n = new Date(); document.getElementById('clk').textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
-function updateUpd() { const n = new Date(); document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
-async function manualRefresh() { const btn = document.getElementById('rbtn'); btn.classList.add('spin'); await loadLive(false); updateUpd(); setTimeout(() => btn.classList.remove('spin'), 500); }
-async function startLiveLoop() { await loadLive(false); updateUpd(); setInterval(async () => { await loadLive(true); updateUpd(); }, 30000); }
-updateClk(); setInterval(updateClk, 30000); startLiveLoop();
+function goTab(i) {
+    document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j));
+    document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j));
+    if(i === 0) loadLive();
+}
+
+function updateUpd() {
+    const n = new Date();
+    document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('clk').textContent = `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+async function manualRefresh() {
+    document.getElementById('rbtn').classList.add('spin');
+    await loadLive();
+    updateUpd();
+    setTimeout(() => document.getElementById('rbtn').classList.remove('spin'), 600);
+}
+
+// Lancement
+loadLive();
+updateUpd();
+setInterval(() => { loadLive(true); updateUpd(); }, 40000);
 </script>
 </body>
 </html>
