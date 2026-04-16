@@ -92,12 +92,16 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 </div>
 <div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
 <div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.1</div>
+<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.2</div>
 
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
-const LEAGUES = [{ slug: 'fra.1', name: 'Ligue 1' },{ slug: 'uefa.champions', name: 'Champions League' }];
-const DEMO_SLUGS = ['fra.1','uefa.champions','eng.1','esp.1','ger.1','ita.1','uefa.europa','usa.1','mex.1','bra.1','arg.1','jpn.1'];
+const LEAGUES = [
+  { slug: 'fra.1', name: 'Ligue 1' },
+  { slug: 'uefa.champions', name: 'Champions League' },
+  { slug: 'uefa.europa', name: 'Europa League' }
+];
+const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1','uefa.europa.conf','usa.1','mex.1','bra.1','arg.1','jpn.1'];
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
 let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
 
