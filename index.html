@@ -14,14 +14,14 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .hdr{padding:calc(var(--sat) + 18px) 20px 0;background:var(--bg);position:sticky;top:0;z-index:100}
 .hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .logo{display:flex;align-items:center;gap:11px}
-.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--om);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;box-shadow:0 0 16px rgba(0,155,222,.5);flex-shrink:0;letter-spacing:-.5px;cursor:pointer}
+.logo-mark{width:36px;height:36px;border-radius:10px;background:var(--om);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;box-shadow:0 0 16px rgba(0,155,222,.5);flex-shrink:0;letter-spacing:-.5px}
 .logo-text{font-size:21px;font-weight:800;color:var(--white);letter-spacing:-.3px}.logo-text span{color:var(--om)}
 .hdr-r{display:flex;align-items:center;gap:10px}
 .clk{font-size:13px;color:var(--muted);font-weight:600}
 .rbtn{background:var(--bg3);border:1px solid var(--b2);color:var(--om);width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:18px;transition:.15s}
 .rbtn.spin{animation:spinr .6s linear}
 @keyframes spinr{to{transform:rotate(360deg)}}
-.tabs-wrap{display:flex;gap:8px;padding:0 0 14px;overflow-x:auto;scrollbar-width:none}.tabs-wrap::-webkit-scrollbar{display:none}
+.tabs-wrap{display:flex;gap:8px;padding:0 0 14px;overflow-x:auto;scrollbar-width:none}
 .tab{display:flex;align-items:center;gap:7px;padding:9px 18px;border-radius:50px;font-size:13px;font-weight:700;color:var(--dim);background:var(--bg2);border:1px solid var(--muted);cursor:pointer;white-space:nowrap;transition:all .2s}
 .tab.on{background:var(--om);color:#fff;border-color:var(--om);box-shadow:0 0 16px rgba(0,155,222,.35)}
 .tab-live-dot{width:7px;height:7px;border-radius:50%;background:#fff;animation:blink 1.3s infinite}
@@ -49,7 +49,9 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .sct{font-size:19px;font-weight:800;color:var(--om2);padding:5px 12px;background:rgba(56,189,248,0.07);border-radius:12px;border:1px solid rgba(56,189,248,0.15)}
 .mc-min{text-align:center;font-size:12px;color:var(--om);margin-top:10px;font-weight:700}
 .ftr{padding:8px 20px 6px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600}
-.ok{color:var(--om)}.upd-live{color:var(--om2)}
+.cal-card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;gap:12px}
+.cal-t{font-size:17px;font-weight:800;color:var(--om);min-width:46px}
+.day-sep{font-size:11px;color:var(--om2);font-weight:700;padding:14px 2px 6px}
 </style>
 </head>
 <body>
@@ -66,27 +68,28 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
   </div>
 </div>
 <div class="content">
-  <div class="page on" id="p0"><div class="loading"><div class="sr"></div>Chargement...</div></div>
+  <div class="page on" id="p0"><div class="loading"><div class="sr"></div>Initialisation...</div></div>
   <div class="page" id="p1"><div class="loading">Chargement...</div></div>
   <div class="page" id="p2"><div class="loading">Chargement...</div></div>
   <div class="page" id="p3"><div class="loading">Chargement...</div></div>
 </div>
-<div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
+<div class="ftr"><span id="upd">Connexion...</span><span style="color:var(--om)">● en ligne</span></div>
 
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const FAVORITES = ['fra.1', 'uefa.champions'];
-let liveEvents = [];
+let allMatchesGlobal = [];
 
-async function fetchESPN(slug) {
-    const r = await fetch(`${BASE}/${slug}/scoreboard`, { signal: AbortSignal.timeout(8000) });
+async function api(path) {
+    const r = await fetch(`${BASE}/${path}`, { signal: AbortSignal.timeout(8000) });
     return r.json();
 }
 
 function normalize(ev, leagueName) {
-    const comp = ev.competitors || ev.competitions?.[0]?.competitors || [];
-    const home = comp.find(c => c.homeAway === 'home') || comp[0];
-    const away = comp.find(c => c.homeAway === 'away') || comp[1];
+    const comp = ev.competitions?.[0] || {};
+    const teams = comp.competitors || [];
+    const home = teams.find(t => t.homeAway === 'home') || teams[0];
+    const away = teams.find(t => t.homeAway === 'away') || teams[1];
     return {
         id: ev.id,
         league: leagueName,
@@ -96,50 +99,51 @@ function normalize(ev, leagueName) {
         awayLogo: away.team.logo,
         homeScore: home.score,
         awayScore: away.score,
-        status: ev.status.type,
+        status: ev.status,
         date: ev.date
     };
 }
 
 function renderMatch(m) {
-    const isLive = m.status.state === 'in' || m.status.name.includes('PROGRESS');
+    const isLive = m.status.type.state === 'in';
     const scoreHtml = m.homeScore != null ? `<div class="scb"><span class="scn">${m.homeScore}</span><span class="scs">–</span><span class="scn">${m.awayScore}</span></div>` : `<div class="sct">${new Date(m.date).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</div>`;
     return `
     <div class="mc ${isLive ? 'live' : ''}">
-        <div class="mc-top"><span class="mc-comp">${m.league}</span>${isLive ? '<span class="badge b-live">● LIVE</span>' : ''}</div>
+        <div class="mc-top"><span class="mc-comp">${m.league}</span>${isLive ? '<span class="badge b-live">● LIVE</span>' : m.status.type.state === 'post' ? '<span class="badge b-ft">Terminé</span>' : ''}</div>
         <div class="teams">
             <div class="th"><img src="${m.homeLogo}" class="cr"><span class="tn">${m.homeName}</span></div>
             ${scoreHtml}
             <div class="ta"><span class="tn">${m.awayName}</span><img src="${m.awayLogo}" class="cr"></div>
         </div>
-        ${isLive ? `<div class="mc-min">${m.status.shortDetail}</div>` : ''}
+        ${isLive ? `<div class="mc-min">${m.status.type.shortDetail}</div>` : ''}
     </div>`;
 }
 
 async function loadLive(silent = false) {
     const p = document.getElementById('p0');
-    if(!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Scan mondial...</div>';
+    if(!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Scan en cours...</div>';
     
     try {
-        let allMatches = [];
-        // 1. On check les favoris
-        const favResults = await Promise.allSettled(FAVORITES.map(s => fetchESPN(s)));
-        favResults.forEach(r => {
-            if(r.status === 'fulfilled') {
-                const name = r.value.leagues?.[0]?.name || 'Favoris';
-                r.value.events?.forEach(ev => allMatches.push(normalize(ev, name)));
-            }
-        });
+        let results = [];
+        // Favoris
+        for(const slug of FAVORITES) {
+            try {
+                const data = await api(`${slug}/scoreboard`);
+                const name = data.leagues?.[0]?.name || 'Ligue';
+                data.events?.forEach(ev => results.push(normalize(ev, name)));
+            } catch(e) {}
+        }
 
-        // 2. Si pas de direct, on prend TOUT le reste du monde
-        if (!allMatches.some(m => m.status.state === 'in')) {
-            const world = await fetchESPN('all');
+        // Si rien en direct, on scanne TOUT le monde
+        if (!results.some(m => m.status.type.state === 'in')) {
+            const world = await api(`all/scoreboard`);
             world.events?.forEach(ev => {
-                if(ev.status.type.state === 'in') allMatches.push(normalize(ev, ev.competitions?.[0]?.league?.name || 'Monde'));
+                if(ev.status.type.state === 'in') results.push(normalize(ev, ev.competitions?.[0]?.league?.name || 'Monde'));
             });
         }
 
-        const live = allMatches.filter(m => m.status.state === 'in');
+        allMatchesGlobal = results;
+        const live = results.filter(m => m.status.type.state === 'in');
         document.getElementById('liveDot').style.display = live.length ? 'block' : 'none';
 
         if(live.length > 0) {
@@ -147,36 +151,61 @@ async function loadLive(silent = false) {
             live.forEach(m => h += renderMatch(m));
             p.innerHTML = h;
         } else {
-            p.innerHTML = '<div class="empty"><span class="empty-icon">⚽</span>Aucun match en direct<br><small>Reviens plus tard pour les prochains scores</small></div>';
+            p.innerHTML = '<div class="empty"><span class="empty-icon">⚽</span>Aucun direct pour le moment</div>';
         }
     } catch(e) {
         p.innerHTML = '<div class="empty">Erreur de connexion</div>';
     }
 }
 
+async function loadCal() {
+    const p = document.getElementById('p1');
+    p.innerHTML = '<div class="loading">Recherche des matchs...</div>';
+    let h = '';
+    for(const slug of FAVORITES) {
+        try {
+            const data = await api(`${slug}/scoreboard`);
+            const name = data.leagues?.[0]?.name || '';
+            h += `<div class="day-sep">${name}</div>`;
+            data.events?.filter(ev => ev.status.type.state === 'pre').forEach(ev => {
+                const m = normalize(ev, name);
+                h += `<div class="cal-card"><div class="cal-t">${new Date(m.date).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div><div><div style="font-weight:700">${m.homeName} - ${m.awayName}</div><div style="font-size:11px;color:var(--dim)">${new Date(m.date).toLocaleDateString()}</div></div></div>`;
+            });
+        } catch(e) {}
+    }
+    p.innerHTML = h || '<div class="empty">Aucun match prévu</div>';
+}
+
 function goTab(i) {
     document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j));
     document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j));
     if(i === 0) loadLive();
+    if(i === 1) loadCal();
+    if(i === 2) {
+        const finished = allMatchesGlobal.filter(m => m.status.type.state === 'post');
+        document.getElementById('p2').innerHTML = finished.length ? finished.map(renderMatch).join('') : '<div class="empty">Aucun résultat aujourd\'hui</div>';
+    }
 }
 
 function updateUpd() {
     const n = new Date();
-    document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
-    document.getElementById('clk').textContent = `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
+    const time = `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;
+    document.getElementById('upd').innerHTML = `<span style="color:var(--om2)">↻</span> MàJ ${time}`;
+    document.getElementById('clk').textContent = time;
 }
 
 async function manualRefresh() {
-    document.getElementById('rbtn').classList.add('spin');
+    const btn = document.getElementById('rbtn');
+    btn.classList.add('spin');
     await loadLive();
     updateUpd();
-    setTimeout(() => document.getElementById('rbtn').classList.remove('spin'), 600);
+    setTimeout(() => btn.classList.remove('spin'), 600);
 }
 
-// Lancement
+// Start
 loadLive();
 updateUpd();
-setInterval(() => { loadLive(true); updateUpd(); }, 40000);
+setInterval(() => { loadLive(true); updateUpd(); }, 30000);
 </script>
 </body>
 </html>
