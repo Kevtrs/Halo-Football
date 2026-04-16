@@ -59,7 +59,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06)}
 .goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
 .gmin{color:var(--om);font-weight:700;font-size:11px;flex-shrink:0}.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:0 2px}.bk-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-weight:500}
+.bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:4px 12px 8px}.bk-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-weight:500}
 .cal-card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;gap:12px}
 .cal-t{font-size:17px;font-weight:800;color:var(--om);min-width:46px;flex-shrink:0}.cal-cc{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .ccr{width:24px;height:24px;object-fit:contain}.ccr-e{width:24px;height:24px;background:var(--bg3);border-radius:50%;border:1px solid var(--b2)}
@@ -92,7 +92,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 </div>
 <div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
 <div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.2</div>
+<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.3</div>
 
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
@@ -167,9 +167,40 @@ function scorerBlock(details, homeId, awayId) {
 }
 
 function bookingsBlock(details) {
-  const cards = (details || []).filter(d => d.yellowCard || d.redCard); if (!cards.length) return '';
-  const lines = cards.map(c => { const name = c.athletesInvolved?.[0]?.displayName || c.athletesInvolved?.[0]?.fullName || ''; if (!name) return ''; const min = c.clock?.displayValue || ''; return `<div class="bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`; }).filter(Boolean).join('');
+  const cards = (details || []).filter(d => d.yellowCard || d.redCard);
+  if (!cards.length) return '';
+  const lines = cards.map(c => {
+    const name = c.athletesInvolved?.[0]?.displayName || c.athletesInvolved?.[0]?.fullName || '';
+    if (!name) return '';
+    const min = c.clock?.displayValue || '';
+    return `<div class="bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`;
+  }).filter(Boolean).join('');
   return lines ? `<div class="bookings">${lines}</div>` : '';
+}
+
+function substitutionsBlock(details) {
+  const subs = (details || []).filter(d =>
+    d.substitution ||
+    d.type === 'substitution' ||
+    d.text?.toLowerCase?.().includes('substitution') ||
+    d.shortText?.toLowerCase?.().includes('substitution')
+  );
+  if (!subs.length) return '';
+  const lines = subs.map(s => {
+    const athletes = s.athletesInvolved || [];
+    const inPlayer = athletes[0]?.displayName || athletes[0]?.fullName || '';
+    const outPlayer = athletes[1]?.displayName || athletes[1]?.fullName || '';
+    const min = s.clock?.displayValue || '';
+    if (!inPlayer && !outPlayer) return '';
+    let txt = '';
+    if (inPlayer && outPlayer) txt = `${inPlayer} ⇆ ${outPlayer}`;
+    else if (inPlayer) txt = inPlayer;
+    else txt = outPlayer;
+    return `<div class="bk-line"><span>🔁</span><span>${txt}${min ? ' ' + min : ''}</span></div>`;
+  }).filter(Boolean).join('');
+  return lines
+    ? `<div class="scorers"><div class="scorers-hdr">Changements</div><div class="bookings">${lines}</div></div>`
+    : '';
 }
 
 function renderMatch(m) {
@@ -179,7 +210,18 @@ function renderMatch(m) {
   const scoreHtml = (liveNow || state === 'post') ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
   const timeLabel = getMatchTimeLabel(m);
   const minHtml = liveNow ? `<div class="mc-min">${timeLabel}</div>` : '';
-  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
+  return `<div class="mc${liveNow ? ' live' : ''}">
+    <div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div>
+    <div class="teams">
+      <div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>
+      ${scoreHtml}
+      <div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div>
+    </div>
+    ${minHtml}
+    ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
+    ${bookingsBlock(m.details)}
+    ${substitutionsBlock(m.details)}
+  </div>`;
 }
 
 function renderPriorityMatch(m, title) {
@@ -214,8 +256,22 @@ async function loadLive(silent = false) {
     let matches = [...seen.values()];
     const liveMatches = matches.filter(m => isLive({status:m.status}));
     const doneMatches = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
-    const toDetail = [...liveMatches, ...doneMatches].slice(0, 15);
-    const details = await Promise.allSettled(toDetail.map(m => espnSummary(m.leagueSlug, m.id)));
+    
+    const toDetail = [...liveMatches, ...doneMatches].slice(0, 20);
+    const details = await Promise.allSettled(
+      toDetail.map(async (m) => {
+        try {
+          return await espnSummary(m.leagueSlug || 'all', m.id);
+        } catch (e) {
+          try {
+            return await espnSummary('all', m.id);
+          } catch (e2) {
+            return null;
+          }
+        }
+      })
+    );
+
     details.forEach((r, i) => { if (r.status !== 'fulfilled' || !r.value) return; const s = r.value; const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev); const idx = matches.findIndex(m => m.id === toDetail[i].id); if (idx >= 0) { matches[idx] = { ...matches[idx], homeScore: home.score ?? matches[idx].homeScore, awayScore: away.score ?? matches[idx].awayScore, status: ev.status || matches[idx].status, details: s.details || ev.competitions?.[0]?.details || [], homeTeamId: home.team?.id || matches[idx].homeTeamId, awayTeamId: away.team?.id || matches[idx].awayTeamId }; } });
 
     liveEvents = matches.filter(m => isLive({status:m.status}));
