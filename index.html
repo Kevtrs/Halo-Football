@@ -101,44 +101,40 @@ const DEMO_SLUGS = ['fra.1','uefa.champions','eng.1','esp.1','ger.1','ita.1','ue
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
 let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
 
-async function espn(slug, params = '') { 
-  const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); 
-  if (!r.ok) throw new Error('HTTP ' + r.status); 
-  return r.json(); 
-}
-async function espnSummary(slug, eventId) { 
-  const url = slug === 'all' ? `${BASE}/all/summary?event=${eventId}` : `${BASE}/${slug}/summary?event=${eventId}`;
-  const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); 
-  if (!r.ok) throw new Error('HTTP ' + r.status); 
-  return r.json(); 
-}
+async function espn(slug, params = '') { const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function espnSummary(slug, eventId) { const url = slug === 'all' ? `${BASE}/all/summary?event=${eventId}` : `${BASE}/${slug}/summary?event=${eventId}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
 
 function formatCountdown(ms) {
-  if (ms <= 0) return 'maintenant';
-  const totalSec = Math.floor(ms / 1000);
-  const h = Math.floor(totalSec / 3600);
-  const m = Math.floor((totalSec % 3600) / 60);
-  if (h > 0) return `${h}h ${String(m).padStart(2, '0')}min`;
-  return `${m} min`;
+  if (ms <= 0) return "0'";
+  const totalMin = Math.floor(ms / 60000);
+  if (totalMin < 60) return `${totalMin}'`;
+  const h = Math.floor(totalMin / 60);
+  const m = totalMin % 60;
+  return `${h}h ${String(m).padStart(2, '0')}min`;
 }
 
-async function getNextWorldMatch() {
-  try {
-    const data = await espn('all');
-    const events = data?.events || [];
-    const upcoming = events
-      .map(ev => {
-        const leagueName = ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
-        const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
-        return normalize(ev, leagueName, leagueSlug);
-      })
-      .filter(m => (m.status?.type?.state || '') === 'pre')
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    return upcoming[0] || null;
-  } catch (e) {
-    return null;
+function getMatchTimeLabel(match) {
+  const st = match?.status?.type || {};
+  const state = st.state || '';
+  const detail = st.shortDetail || st.detail || '';
+  if (state === 'in') return detail || "LIVE";
+  if (detail === 'HT') return 'HT';
+  if (state === 'pre') {
+    const diff = new Date(match.date).getTime() - Date.now();
+    return formatCountdown(diff);
   }
+  if (state === 'post') return 'FT';
+  return detail || '';
+}
+
+function getLiveLabel(match) {
+  const st = match?.status?.type || {};
+  const state = st.state || '';
+  const label = getMatchTimeLabel(match);
+  if (state === 'in') return `<span class="badge b-live">● ${label}</span>`;
+  if (state === 'pre') return `<span class="badge b-ht">⏳ ${label}</span>`;
+  if (state === 'post') return `<span class="badge b-ft">Terminé</span>`;
+  return badge(st);
 }
 
 function crest(src, sz, cls) { if (!src) return `<div class="${cls}-e" style="width:${sz}px;height:${sz}px"></div>`; return `<img src="${src.replace(/"/g,'&quot;')}" class="${cls}" width="${sz}" height="${sz}" loading="lazy" onerror="this.style.display='none'">`; }
@@ -150,7 +146,7 @@ function dl(u) { const d = new Date(u), t = new Date(), tm = new Date(); tm.setD
 function dateKey(d) { return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
 function isRecent(dateStr) { return (Date.now() - new Date(dateStr).getTime()) < 86400000; }
 function getCompetitors(event) { const comp = event?.competitions?.[0]; const list = comp?.competitors || []; return { home: list.find(c => c.homeAway === 'home') || list[0] || {}, away: list.find(c => c.homeAway === 'away') || list[1] || {}, comp }; }
-function normalize(event, leagueName, leagueSlug) { const { home, away, comp } = getCompetitors(event); return { id:event.id, leagueName: leagueName || comp?.type?.name || 'Soccer', leagueSlug: leagueSlug || 'all', date:event.date, homeName:home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '?', awayName:away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '?', homeLogo:home.team?.logo || '', awayLogo:away.team?.logo || '', homeScore:home.score, awayScore:away.score, status:comp?.status || event.status || {}, details:comp?.details || [], homeTeamId:home.team?.id, awayTeamId:away.team?.id }; }
+function normalize(event, leagueName, leagueSlug) { const { home, away, comp } = getCompetitors(event); return { id:event.id, leagueName, leagueSlug, date:event.date, homeName:home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '?', awayName:away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '?', homeLogo:home.team?.logo || '', awayLogo:away.team?.logo || '', homeScore:home.score, awayScore:away.score, status:comp?.status || event.status || {}, details:comp?.details || [], homeTeamId:home.team?.id, awayTeamId:away.team?.id }; }
 
 function scorerBlock(details, homeId, awayId) {
   const goals = (details || []).filter(d => d.scoringPlay); if (!goals.length) return '';
@@ -173,42 +169,53 @@ function bookingsBlock(details) {
 }
 
 function renderMatch(m) {
+  const state = m.status?.type?.state || '';
+  const liveNow = state === 'in';
   const showScore = m.homeScore != null && m.awayScore != null;
-  const scoreHtml = showScore ? `<div class="scb"><span class="scn">${m.homeScore}</span><span class="scs">–</span><span class="scn">${m.awayScore}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
-  const detail = m.status?.type?.shortDetail || ''; const minHtml = isLive({status:m.status}) ? `<div class="mc-min">${detail || 'En cours'}</div>` : '';
-  return `<div class="mc${isLive({status:m.status}) ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${badge(m.status?.type)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
+  const scoreHtml = (liveNow || state === 'post') ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
+  const timeLabel = getMatchTimeLabel(m);
+  const minHtml = liveNow ? `<div class="mc-min">${timeLabel}</div>` : '';
+  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
+}
+
+function renderPriorityMatch(m, title) {
+  const state = m.status?.type?.state || '';
+  const liveNow = state === 'in';
+  let centerHtml = (liveNow || state === 'post') ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` : `<div class="sct">${getMatchTimeLabel(m)}</div>`;
+  return `<div class="sec" style="color:var(--om)">${title}</div><div class="mc ${liveNow ? 'live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${centerHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : ''}</div>`;
+}
+
+async function getNextWorldMatch() {
+  try {
+    const data = await espn('all');
+    const events = data?.events || [];
+    const matches = events.map(ev => {
+      const leagueName = ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
+      const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
+      return normalize(ev, leagueName, leagueSlug);
+    });
+    const live = matches.filter(m => (m.status?.type?.state || '') === 'in').sort((a, b) => new Date(a.date) - new Date(b.date));
+    if (live.length) return live[0];
+    const upcoming = matches.filter(m => (m.status?.type?.state || '') === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
+    return upcoming[0] || null;
+  } catch (e) { return null; }
 }
 
 async function loadLive(silent = false) {
-  const p = document.getElementById('p0');
-  if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
+  const p = document.getElementById('p0'); if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
   try {
     const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug).then(data => ({ lg, data }))));
     const seen = new Map();
-    for (const r of results) {
-      if (r.status !== 'fulfilled') continue;
-      const { lg, data } = r.value;
-      for (const ev of (data.events || [])) {
-        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
-      }
-    }
+    for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
     let matches = [...seen.values()];
-    const liveMatches = matches.filter(m => isLive({ status: m.status }));
-    const doneMatches = matches.filter(m => isDone({ status: m.status }) && isRecent(m.date));
+    const liveMatches = matches.filter(m => isLive({status:m.status}));
+    const doneMatches = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
     const toDetail = [...liveMatches, ...doneMatches].slice(0, 15);
-    
     const details = await Promise.allSettled(toDetail.map(m => espnSummary(m.leagueSlug, m.id)));
-    details.forEach((r, i) => {
-      if (r.status !== 'fulfilled' || !r.value) return;
-      const s = r.value; const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev);
-      const idx = matches.findIndex(m => m.id === toDetail[i].id);
-      if (idx >= 0) {
-        matches[idx] = { ...matches[idx], homeScore: home.score ?? matches[idx].homeScore, awayScore: away.score ?? matches[idx].awayScore, status: ev.status || matches[idx].status, details: s.details || ev.competitions?.[0]?.details || [], homeTeamId: home.team?.id || matches[idx].homeTeamId, awayTeamId: away.team?.id || matches[idx].awayTeamId };
-      }
-    });
+    details.forEach((r, i) => { if (r.status !== 'fulfilled' || !r.value) return; const s = r.value; const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev); const idx = matches.findIndex(m => m.id === toDetail[i].id); if (idx >= 0) { matches[idx] = { ...matches[idx], homeScore: home.score ?? matches[idx].homeScore, awayScore: away.score ?? matches[idx].awayScore, status: ev.status || matches[idx].status, details: s.details || ev.competitions?.[0]?.details || [], homeTeamId: home.team?.id || matches[idx].homeTeamId, awayTeamId: away.team?.id || matches[idx].awayTeamId }; } });
 
-    liveEvents = matches.filter(m => isLive({ status: m.status }));
-    finishedTodayEvents = matches.filter(m => isDone({ status: m.status }) && isRecent(m.date));
+    liveEvents = matches.filter(m => isLive({status:m.status}));
+    finishedTodayEvents = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
     document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
 
     let h = '';
@@ -218,24 +225,15 @@ async function loadLive(silent = false) {
     } else {
       const nextWorld = await getNextWorldMatch();
       if (nextWorld) {
-        const diff = new Date(nextWorld.date).getTime() - Date.now();
-        h = `
-          <div class="sec" style="color:var(--om)">Prochain match mondial dans ${formatCountdown(diff)}</div>
-          ${renderMatch(nextWorld)}
-        `;
+        const state = nextWorld.status?.type?.state || '';
+        let title = state === 'in' ? `Match mondial en direct · ${getMatchTimeLabel(nextWorld)}` : `Prochain match mondial dans ${getMatchTimeLabel(nextWorld)}`;
+        h += renderPriorityMatch(nextWorld, title);
       } else {
-        h = `<div class="empty">
-          <span class="empty-icon">⚽</span>
-          Aucun match en cours<br>
-          <small style="font-size:11px;opacity:.5">Aucun match mondial détecté</small>
-        </div>`;
+        h = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
       }
     }
-    p.innerHTML = h;
-    if (document.getElementById('p2').classList.contains('on')) renderResults();
-  } catch (e) {
-    if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`;
-  }
+    p.innerHTML = h; if (document.getElementById('p2').classList.contains('on')) renderResults();
+  } catch(e) { if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`; }
 }
 
 async function loadCal() {
@@ -265,14 +263,13 @@ async function loadOM() {
     const datesPast = [], datesFuture = []; for (let i = 7; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); datesPast.push(dateKey(d)); } for (let i = 0; i <= 21; i++) { const d = new Date(); d.setDate(d.getDate() + i); datesFuture.push(dateKey(d)); }
     const omMatches = [];
     const isOMName = (name='') => { const n = String(name).toLowerCase(); return n.includes('marseille') || n.includes('olympique de marseille') || n === 'om'; };
-    const isOMEvent = (ev) => { const { home, away } = getCompetitors(ev); const hn = home?.team?.displayName || home?.team?.shortDisplayName || ''; const an = away?.team?.displayName || away?.team?.shortDisplayName || ''; return isOMName(hn) || isOMName(an); };
     for (const day of datesPast) {
       const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, '?dates=' + day).then(data => ({ lg, data }))));
-      for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!isOMEvent(ev)) continue; if (!omMatches.find(m => m.id === ev.id)) omMatches.push(normalize(ev, lg.name, lg.slug)); } }
+      for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { const { home, away } = getCompetitors(ev); if (!isOMName(home.team?.displayName) && !isOMName(away.team?.displayName)) continue; if (!omMatches.find(m => m.id === ev.id)) omMatches.push(normalize(ev, lg.name, lg.slug)); } }
     }
     for (const day of datesFuture) {
       const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, '?dates=' + day).then(data => ({ lg, data }))));
-      for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!isOMEvent(ev)) continue; if (!omMatches.find(m => m.id === ev.id)) omMatches.push(normalize(ev, lg.name, lg.slug)); } }
+      for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { const { home, away } = getCompetitors(ev); if (!isOMName(home.team?.displayName) && !isOMName(away.team?.displayName)) continue; if (!omMatches.find(m => m.id === ev.id)) omMatches.push(normalize(ev, lg.name, lg.slug)); } }
     }
     const liveOM = liveEvents.find(m => isOMName(m.homeName) || isOMName(m.awayName));
     const lastOM = [...omMatches].filter(m => isDone({status:m.status})).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
