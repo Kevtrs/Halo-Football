@@ -91,7 +91,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 </div>
 <div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
 <div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM 1.5</div>
+<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM 1.5.1</div>
 
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
@@ -101,48 +101,43 @@ const LEAGUES = [
   { slug: 'uefa.europa', name: 'Europa League' },
   { slug: 'eng.1', name: 'Premier League' }
 ];
-const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1'];
-let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
-let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
+let calLoaded = false, standLoaded = false, liveEvents = [], finishedTodayEvents = [];
 
 async function espn(slug, params = '') { const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
 async function espnSummary(slug, eventId) { const url = slug === 'all' ? `${BASE}/all/summary?event=${eventId}` : `${BASE}/${slug}/summary?event=${eventId}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
 
-// --- MOTEUR D'EXTRACTION v1.5 ---
+// --- PARSING SECURISE v1.5.1 ---
 
+function getTextLower(d) {
+  return String(d?.text || d?.shortText || d?.type?.text || '').toLowerCase();
+}
 function getPlayerName(d) {
   if (!d) return '';
-  // Cas 1: athletesInvolved (Array utilisé par Summary)
-  if (d.athletesInvolved && d.athletesInvolved[0]) {
-    return d.athletesInvolved[0].displayName || d.athletesInvolved[0].fullName || '';
-  }
-  // Cas 2: athlete (Object direct utilisé par Plays/Timeline)
-  if (d.athlete) {
-    return d.athlete.displayName || d.athlete.fullName || '';
-  }
-  // Cas 3: Fallback texte
-  if (d.text && d.text.includes(':')) return d.text.split(':')[0];
+  if (d.athletesInvolved?.[0]) return d.athletesInvolved[0].displayName || d.athletesInvolved[0].fullName || '';
+  if (d.athlete) return d.athlete.displayName || d.athlete.fullName || '';
   return '';
 }
-
 function getSecondaryPlayerName(d) {
-  if (d.athletesInvolved && d.athletesInvolved[1]) return d.athletesInvolved[1].displayName || '';
+  if (d?.athletesInvolved?.[1]) return d.athletesInvolved[1].displayName || d.athletesInvolved[1].fullName || '';
   return '';
 }
 
 function scorerBlock(details, homeId, awayId) {
-  const goals = (details || []).filter(d => d.scoringPlay || (d.type?.text?.toLowerCase().includes('goal')));
+  const goals = (details || []).filter(d => {
+    const txt = getTextLower(d);
+    return !!d?.scoringPlay || txt.includes('goal') || txt.includes('but');
+  });
   if (!goals.length) return '';
   const rows = goals.map(g => {
     const name = getPlayerName(g);
     if (!name) return null;
-    const min = g.clock?.displayValue || '';
-    const isHomeGoal = g.team?.id && String(g.team.id) === String(homeId);
-    const isAwayGoal = g.team?.id && String(g.team.id) === String(awayId);
+    const min = g?.clock?.displayValue || '';
     const minSpan = min ? `<span class="gmin">${min}</span>` : '';
     const nameSpan = `<span class="gname">${name}</span>`;
-    const left = isHomeGoal ? `<div class="goal-left">${nameSpan} ⚽ ${minSpan}</div>` : `<div class="goal-left"></div>`;
-    const right = isAwayGoal ? `<div class="goal-right">${minSpan} ⚽ ${nameSpan}</div>` : `<div class="goal-right"></div>`;
+    const isHomeGoal = g?.team?.id && String(g.team.id) === String(homeId);
+    const isAwayGoal = g?.team?.id && String(g.team.id) === String(awayId);
+    const left = isHomeGoal ? `<div class="goal-left">${nameSpan}<span>⚽</span>${minSpan}</div>` : `<div class="goal-left"></div>`;
+    const right = isAwayGoal ? `<div class="goal-right">${minSpan}<span>⚽</span>${nameSpan}</div>` : `<div class="goal-right"></div>`;
     return left + right;
   }).filter(Boolean);
   if (!rows.length) return '';
@@ -150,25 +145,32 @@ function scorerBlock(details, homeId, awayId) {
 }
 
 function bookingsBlock(details) {
-  const cards = (details || []).filter(d => d.yellowCard || d.redCard || d.type?.text?.toLowerCase().includes('card'));
+  const cards = (details || []).filter(d => {
+    const txt = getTextLower(d);
+    return !!d?.yellowCard || !!d?.redCard || txt.includes('card') || txt.includes('carton');
+  });
   if (!cards.length) return '';
   const lines = cards.map(c => {
     const name = getPlayerName(c);
     if (!name) return '';
-    const isRed = c.redCard || c.type?.text?.toLowerCase().includes('red');
-    const min = c.clock?.displayValue || '';
+    const txt = getTextLower(c);
+    const isRed = !!c?.redCard || txt.includes('red');
+    const min = c?.clock?.displayValue || '';
     return `<div class="bk-line"><span>${isRed ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`;
   }).filter(Boolean).join('');
   return lines ? `<div class="bookings">${lines}</div>` : '';
 }
 
 function substitutionsBlock(details) {
-  const subs = (details || []).filter(d => d.substitution || d.type?.text?.toLowerCase().includes('substitution'));
+  const subs = (details || []).filter(d => {
+    const txt = getTextLower(d);
+    return !!d?.substitution || txt.includes('substitution') || txt.includes('remplacement');
+  });
   if (!subs.length) return '';
   const lines = subs.map(s => {
     const inPlayer = getPlayerName(s);
     const outPlayer = getSecondaryPlayerName(s);
-    const min = s.clock?.displayValue || '';
+    const min = s?.clock?.displayValue || '';
     if (!inPlayer && !outPlayer) return '';
     let txt = (inPlayer && outPlayer) ? `${inPlayer} ⇆ ${outPlayer}` : (inPlayer || outPlayer);
     return `<div class="bk-line"><span>🔁</span><span>${txt}${min ? ' ' + min : ''}</span></div>`;
@@ -184,19 +186,17 @@ function getMatchTimeLabel(match) {
   if (st.shortDetail === 'HT') return 'HT';
   if (st.state === 'pre') {
     const diff = new Date(match.date).getTime() - Date.now();
-    if (diff <= 0) return "0'";
     const m = Math.floor(diff / 60000);
-    return m < 60 ? `${m}'` : `${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}`;
+    return m < 60 ? `${Math.max(0, m)}'` : `${Math.floor(m/60)}h ${String(m%60).padStart(2,'0')}`;
   }
   return st.state === 'post' ? 'FT' : (st.shortDetail || '');
 }
 
 function getLiveLabel(match) {
-  const state = match?.status?.type?.state || '';
   const label = getMatchTimeLabel(match);
-  if (state === 'in') return `<span class="badge b-live">● ${label}</span>`;
-  if (state === 'pre') return `<span class="badge b-ht">⏳ ${label}</span>`;
-  if (state === 'post') return `<span class="badge b-ft">Terminé</span>`;
+  if (isLive(match)) return `<span class="badge b-live">● ${label}</span>`;
+  if (match?.status?.type?.state === 'pre') return `<span class="badge b-ht">⏳ ${label}</span>`;
+  if (isDone(match)) return `<span class="badge b-ft">Terminé</span>`;
   return '';
 }
 
@@ -210,30 +210,20 @@ function getCompetitors(event) { const comp = event?.competitions?.[0]; const li
 
 function normalize(event, leagueName, leagueSlug) { 
   const { home, away, comp } = getCompetitors(event); 
-  return { 
-    id:event.id, leagueName, leagueSlug, date:event.date, 
-    homeName:home.team?.shortDisplayName || '?', awayName:away.team?.shortDisplayName || '?', 
-    homeLogo:home.team?.logo || '', awayLogo:away.team?.logo || '', 
-    homeScore:home.score, awayScore:away.score, 
-    status:comp?.status || event.status || {}, details:[], 
-    homeTeamId:home.team?.id, awayTeamId:away.team?.id 
-  }; 
+  return { id:event.id, leagueName, leagueSlug, date:event.date, homeName:home.team?.shortDisplayName || '?', awayName:away.team?.shortDisplayName || '?', homeLogo:home.team?.logo || '', awayLogo:away.team?.logo || '', homeScore:home.score, awayScore:away.score, status:comp?.status || event.status || {}, details:[], homeTeamId:home.team?.id, awayTeamId:away.team?.id }; 
 }
 
 function renderMatch(m) {
-  const isLiveNow = m.status?.type?.state === 'in';
-  const scoreHtml = (isLiveNow || m.status?.type?.state === 'post') 
-    ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` 
-    : `<div class="sct">${lt(m.date)}</div>`;
-  
-  return `<div class="mc${isLiveNow ? ' live' : ''}">
+  const live = isLive(m);
+  const scoreHtml = (live || isDone(m)) ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
+  return `<div class="mc${live ? ' live' : ''}">
     <div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div>
     <div class="teams">
       <div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>
       ${scoreHtml}
       <div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div>
     </div>
-    ${isLiveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : ''}
+    ${live ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : ''}
     ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
     ${bookingsBlock(m.details)}
     ${substitutionsBlock(m.details)}
@@ -247,12 +237,10 @@ async function loadLive(silent = false) {
     const seen = new Map();
     for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; (data.events || []).forEach(ev => { if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); }); }
     let matches = [...seen.values()];
-    
     const toDetail = matches.filter(m => isLive(m) || (isDone(m) && (Date.now() - new Date(m.date).getTime() < 14400000))).slice(0, 15);
     const details = await Promise.allSettled(toDetail.map(async m => {
       try { return await espnSummary(m.leagueSlug || 'all', m.id); } catch(e) { return await espnSummary('all', m.id).catch(()=>null); }
     }));
-
     details.forEach((r, i) => { 
       if (r.status !== 'fulfilled' || !r.value) return; 
       const s = r.value; const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev);
@@ -260,16 +248,13 @@ async function loadLive(silent = false) {
       if (idx >= 0) {
         matches[idx].homeScore = home.score ?? matches[idx].homeScore;
         matches[idx].awayScore = away.score ?? matches[idx].awayScore;
-        // FUSION DES SOURCES v1.5
         matches[idx].details = [...(s.plays || []), ...(s.details || []), ...(ev.competitions?.[0]?.details || [])];
         matches[idx].status = ev.status || matches[idx].status;
       }
     });
-
     liveEvents = matches.filter(isLive);
     finishedTodayEvents = matches.filter(isDone);
     document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
-
     let h = '';
     if (liveEvents.length) {
       h += `<div class="sec">En cours · <b>${liveEvents.length}</b></div>`;
@@ -320,11 +305,16 @@ function goTab(i) {
 function updateClk() { const n = new Date(); document.getElementById('clk').textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
 function updateUpd() { const n = new Date(); document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
 
-async function manualRefresh() { 
-  const btn = document.getElementById('rbtn'); btn.classList.add('spin'); 
-  await loadLive(false); 
-  updateUpd(); 
-  setTimeout(() => btn.classList.remove('spin'), 500); 
+async function manualRefresh() {
+  const btn = document.getElementById('rbtn');
+  btn.classList.add('spin');
+  const idx = [...document.querySelectorAll('.page')].findIndex(p => p.classList.contains('on'));
+  if (idx === 0) await loadLive(false);
+  if (idx === 1) { calLoaded = false; await loadCal(); }
+  if (idx === 2) { await loadLive(true); renderResults(); }
+  if (idx === 3) { standLoaded = false; await loadOM(); }
+  updateUpd();
+  setTimeout(() => btn.classList.remove('spin'), 500);
 }
 
 updateClk(); setInterval(updateClk, 30000);
