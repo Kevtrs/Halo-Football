@@ -92,7 +92,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 </div>
 <div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
 <div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.3</div>
+<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.4</div>
 
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
@@ -152,52 +152,69 @@ function isRecent(dateStr) { return (Date.now() - new Date(dateStr).getTime()) <
 function getCompetitors(event) { const comp = event?.competitions?.[0]; const list = comp?.competitors || []; return { home: list.find(c => c.homeAway === 'home') || list[0] || {}, away: list.find(c => c.homeAway === 'away') || list[1] || {}, comp }; }
 function normalize(event, leagueName, leagueSlug) { const { home, away, comp } = getCompetitors(event); return { id:event.id, leagueName, leagueSlug, date:event.date, homeName:home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '?', awayName:away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '?', homeLogo:home.team?.logo || '', awayLogo:away.team?.logo || '', homeScore:home.score, awayScore:away.score, status:comp?.status || event.status || {}, details:comp?.details || [], homeTeamId:home.team?.id, awayTeamId:away.team?.id }; }
 
+// Moteur de parsing tolérant
+function getEventFeed(details) {
+  return (details || [])
+    .map(d => {
+      const txt = String(d.text || d.shortText || d.type?.text || '').toLowerCase();
+      return {
+        raw: d,
+        text: txt,
+        name: d.athletesInvolved?.[0]?.displayName || d.athletesInvolved?.[0]?.fullName || '',
+        secondName: d.athletesInvolved?.[1]?.displayName || d.athletesInvolved?.[1]?.fullName || '',
+        minute: d.clock?.displayValue || '',
+        teamId: d.team?.id || null,
+        isGoal: !!d.scoringPlay || txt.includes('goal') || txt.includes('but'),
+        isYellow: !!d.yellowCard || txt.includes('yellow') || txt.includes('jaune'),
+        isRed: !!d.redCard || txt.includes('red card') || txt.includes('carton rouge'),
+        isSub: !!d.substitution || txt.includes('substitution') || txt.includes('sub') || txt.includes('remplacement')
+      };
+    });
+}
+
 function scorerBlock(details, homeId, awayId) {
-  const goals = (details || []).filter(d => d.scoringPlay); if (!goals.length) return '';
-  const rows = [...goals].sort((a,b) => (a.clock?.value || 0) - (b.clock?.value || 0)).slice(0,8).map(g => {
-    const nameRaw = g.athletesInvolved?.[0]?.displayName || g.athletesInvolved?.[0]?.fullName || ''; if (!nameRaw) return null;
-    const min = g.clock?.displayValue || ''; const isHomeGoal = g.team?.id && g.team.id === homeId; const isAwayGoal = g.team?.id && g.team.id === awayId; if (!isHomeGoal && !isAwayGoal) return null;
-    const minSpan = min ? `<span class="gmin">${min}</span>` : ''; const nameSpan = `<span class="gname">${nameRaw}</span>`;
-    const left = isHomeGoal ? `<div class="goal-left">${nameSpan}<span>⚽</span>${minSpan}</div>` : `<div class="goal-left"></div>`;
-    const right = isAwayGoal ? `<div class="goal-right">${minSpan}<span>⚽</span>${nameSpan}</div>` : `<div class="goal-right"></div>`;
-    return left + right;
-  }).filter(Boolean);
+  const events = getEventFeed(details).filter(e => e.isGoal && e.name);
+  if (!events.length) return '';
+  const rows = events
+    .sort((a, b) => (a.raw.clock?.value || 0) - (b.raw.clock?.value || 0))
+    .slice(0, 8)
+    .map(e => {
+      const minSpan = e.minute ? `<span class="gmin">${e.minute}</span>` : '';
+      const nameSpan = `<span class="gname">${e.name}</span>`;
+      const isHomeGoal = e.teamId && String(e.teamId) === String(homeId);
+      const isAwayGoal = e.teamId && String(e.teamId) === String(awayId);
+      const left = isHomeGoal
+        ? `<div class="goal-left">${nameSpan}<span>⚽</span>${minSpan}</div>`
+        : `<div class="goal-left"></div>`;
+      const right = isAwayGoal
+        ? `<div class="goal-right">${minSpan}<span>⚽</span>${nameSpan}</div>`
+        : `<div class="goal-right"></div>`;
+      return left + right;
+    })
+    .filter(Boolean);
   if (!rows.length) return '';
   return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows.join('')}</div></div>`;
 }
 
 function bookingsBlock(details) {
-  const cards = (details || []).filter(d => d.yellowCard || d.redCard);
-  if (!cards.length) return '';
-  const lines = cards.map(c => {
-    const name = c.athletesInvolved?.[0]?.displayName || c.athletesInvolved?.[0]?.fullName || '';
-    if (!name) return '';
-    const min = c.clock?.displayValue || '';
-    return `<div class="bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`;
-  }).filter(Boolean).join('');
+  const events = getEventFeed(details).filter(e => (e.isYellow || e.isRed) && e.name);
+  if (!events.length) return '';
+  const lines = events.map(e => {
+    return `<div class="bk-line"><span>${e.isRed ? '🟥' : '🟨'}</span><span>${e.name}${e.minute ? ' ' + e.minute : ''}</span></div>`;
+  }).join('');
   return lines ? `<div class="bookings">${lines}</div>` : '';
 }
 
 function substitutionsBlock(details) {
-  const subs = (details || []).filter(d =>
-    d.substitution ||
-    d.type === 'substitution' ||
-    d.text?.toLowerCase?.().includes('substitution') ||
-    d.shortText?.toLowerCase?.().includes('substitution')
-  );
-  if (!subs.length) return '';
-  const lines = subs.map(s => {
-    const athletes = s.athletesInvolved || [];
-    const inPlayer = athletes[0]?.displayName || athletes[0]?.fullName || '';
-    const outPlayer = athletes[1]?.displayName || athletes[1]?.fullName || '';
-    const min = s.clock?.displayValue || '';
-    if (!inPlayer && !outPlayer) return '';
+  const events = getEventFeed(details).filter(e => e.isSub && (e.name || e.secondName));
+  if (!events.length) return '';
+  const lines = events.map(e => {
     let txt = '';
-    if (inPlayer && outPlayer) txt = `${inPlayer} ⇆ ${outPlayer}`;
-    else if (inPlayer) txt = inPlayer;
-    else txt = outPlayer;
-    return `<div class="bk-line"><span>🔁</span><span>${txt}${min ? ' ' + min : ''}</span></div>`;
-  }).filter(Boolean).join('');
+    if (e.name && e.secondName) txt = `${e.name} ⇆ ${e.secondName}`;
+    else if (e.name) txt = e.name;
+    else txt = e.secondName;
+    return `<div class="bk-line"><span>🔁</span><span>${txt}${e.minute ? ' ' + e.minute : ''}</span></div>`;
+  }).join('');
   return lines
     ? `<div class="scorers"><div class="scorers-hdr">Changements</div><div class="bookings">${lines}</div></div>`
     : '';
