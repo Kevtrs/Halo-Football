@@ -325,7 +325,7 @@ async function loadLive(silent = false) {
         homeScore:  home.score  ?? matches[idx].homeScore,
         awayScore:  away.score  ?? matches[idx].awayScore,
         status:     ev.status   || matches[idx].status,
-details: ev.competitions?.[0]?.details || [],
+        details: ev.competitions?.[0]?.details || [],
         homeTeamId: home.team?.id || matches[idx].homeTeamId,
         awayTeamId: away.team?.id || matches[idx].awayTeamId
       };
