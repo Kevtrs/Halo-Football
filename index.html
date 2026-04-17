@@ -266,7 +266,7 @@ async function getNextWorldMatch() {
   try {
     const data = await espn('all');
     const events = data?.events || [];
-    const matches = events.map(ev => {
+    const  = events.map(ev => {
       const leagueName = ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
       const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
       return normalize(ev, leagueName, leagueSlug);
@@ -325,7 +325,7 @@ async function loadLive(silent = false) {
         homeScore:  home.score  ?? matches[idx].homeScore,
         awayScore:  away.score  ?? matches[idx].awayScore,
         status:     ev.status   || matches[idx].status,
-        details:    extractedDetails,
+details: ev.competitions?.[0]?.details || [],
         homeTeamId: home.team?.id || matches[idx].homeTeamId,
         awayTeamId: away.team?.id || matches[idx].awayTeamId
       };
