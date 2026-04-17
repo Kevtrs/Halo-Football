@@ -320,16 +320,15 @@ async function loadLive(silent = false) {
       const extractedDetails = getDetailsFromSummary(s);
       console.log('[VL] match', toDetail[i].homeName, 'vs', toDetail[i].awayName, '→ details extraits:', extractedDetails.length);
 
-      matches[idx] = {
-        ...matches[idx],
-        homeScore:  home.score  ?? matches[idx].homeScore,
-        awayScore:  away.score  ?? matches[idx].awayScore,
-        status:     ev.status   || matches[idx].status,
-        details: ev.competitions?.[0]?.details || [],
-        homeTeamId: home.team?.id || matches[idx].homeTeamId,
-        awayTeamId: away.team?.id || matches[idx].awayTeamId
-      };
-    });
+     matches[idx] = {
+  ...matches[idx],
+  homeScore: home.score ?? matches[idx].homeScore,
+  awayScore: away.score ?? matches[idx].awayScore,
+  status: ev.status || matches[idx].status,
+  details: ev.competitions?.[0]?.details || [],
+  homeTeamId: home.team?.id || matches[idx].homeTeamId,
+  awayTeamId: away.team?.id || matches[idx].awayTeamId
+};
 
     liveEvents = matches.filter(m => isLive({status:m.status}));
     finishedTodayEvents = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
