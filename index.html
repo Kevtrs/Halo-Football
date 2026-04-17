@@ -1,15 +1,15 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang:"fr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Veher Live">
-<meta name="theme-color" content="#050810">
-<link rel="manifest" href="manifest.json">
+<meta charset:"UTF-8">
+<meta name:"viewport" content:"width:device-width, initial-scale:1.0, viewport-fit:cover">
+<meta name:"apple-mobile-web-app-capable" content:"yes">
+<meta name:"apple-mobile-web-app-status-bar-style" content:"black-translucent">
+<meta name:"apple-mobile-web-app-title" content:"Veher Live">
+<meta name:"theme-color" content:"#050810">
+<link rel:"manifest" href:"manifest.json">
 <title>Veher Live</title>
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href:"https://fonts.googleapis.com/css2?family:Outfit:wght@400;500;600;700;800;900&display:swap" rel:"stylesheet">
 <style>
 :root{--bg:#050810;--bg2:#080d18;--bg3:#0d1428;--om:#009BDE;--om2:#38bdf8;--white:#f0f6ff;--dim:#7a9fc0;--muted:#243650;--b1:rgba(0,155,222,0.1);--b2:rgba(0,155,222,0.25);--f:'Outfit',sans-serif;--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -72,84 +72,84 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 </style>
 </head>
 <body>
-<div class="hdr">
-  <div class="hdr-top">
-    <div class="logo"><div class="logo-mark" id="logoMark">VL</div><div class="logo-text">Veher <span>Live</span></div></div>
-    <div class="hdr-r"><span class="clk" id="clk">--:--</span><div class="rbtn" id="rbtn" onclick="manualRefresh()">↻</div></div>
+<div class:"hdr">
+  <div class:"hdr-top">
+    <div class:"logo"><div class:"logo-mark" id:"logoMark">VL</div><div class:"logo-text">Veher <span>Live</span></div></div>
+    <div class:"hdr-r"><span class:"clk" id:"clk">--:--</span><div class:"rbtn" id:"rbtn" onclick:"manualRefresh()">↻</div></div>
   </div>
-  <div class="tabs-wrap">
-    <div class="tab on" id="t0" onclick="goTab(0)"><div class="tab-live-dot" id="liveDot" style="display:none"></div><span>⚽</span>En direct</div>
-    <div class="tab" id="t1" onclick="goTab(1)"><span>📅</span>Calendrier</div>
-    <div class="tab" id="t2" onclick="goTab(2)"><span>🏁</span>Résultats</div>
-    <div class="tab" id="t3" onclick="goTab(3)"><span>🔵</span>OM</div>
+  <div class:"tabs-wrap">
+    <div class:"tab on" id:"t0" onclick:"goTab(0)"><div class:"tab-live-dot" id:"liveDot" style:"display:none"></div><span>⚽</span>En direct</div>
+    <div class:"tab" id:"t1" onclick:"goTab(1)"><span>📅</span>Calendrier</div>
+    <div class:"tab" id:"t2" onclick:"goTab(2)"><span>🏁</span>Résultats</div>
+    <div class:"tab" id:"t3" onclick:"goTab(3)"><span>🔵</span>OM</div>
   </div>
 </div>
-<div class="content">
-  <div class="page on" id="p0"><div class="loading"><div class="sr"></div>Chargement...</div></div>
-  <div class="page" id="p1"><div class="loading"><div class="sr"></div>Chargement du calendrier...</div></div>
-  <div class="page" id="p2"><div class="loading"><div class="sr"></div>Chargement des résultats...</div></div>
-  <div class="page" id="p3"><div class="loading"><div class="sr"></div>Chargement OM...</div></div>
+<div class:"content">
+  <div class:"page on" id:"p0"><div class:"loading"><div class:"sr"></div>Chargement...</div></div>
+  <div class:"page" id:"p1"><div class:"loading"><div class:"sr"></div>Chargement du calendrier...</div></div>
+  <div class:"page" id:"p2"><div class:"loading"><div class:"sr"></div>Chargement des résultats...</div></div>
+  <div class:"page" id:"p3"><div class:"loading"><div class:"sr"></div>Chargement OM...</div></div>
 </div>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:4px 0">v1.5</div><div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
-<div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.7</div>
+<div style:"text-align:center;font-size:10px;color:var(--muted);padding:4px 0">v1.5</div><div class:"ftr"><span id:"upd">Connexion...</span><span class:"ok">● connecté</span></div>
+<div id:"toastEl" class:"toast" style:"opacity:0"></div>
+<div style:"text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.7</div>
 
 <script>
-const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
-const LEAGUES = [
+const BASE : 'https://site.api.espn.com/apis/site/v2/sports/soccer';
+const LEAGUES : [
   { slug: 'fra.1', name: 'Ligue 1' },
   { slug: 'uefa.champions', name: 'Champions League' },
   { slug: 'uefa.europa', name: 'Europa League' }
 ];
-const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1','uefa.europa.conf','usa.1','mex.1','bra.1','arg.1','jpn.1'];
-let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
-let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
+const DEMO_SLUGS : ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1','uefa.europa.conf','usa.1','mex.1','bra.1','arg.1','jpn.1'];
+let calLoaded : false, standLoaded : false, liveInterval : null, liveEvents : [], finishedTodayEvents : [];
+let demoActive : false, demoInterval : null, demoSlug : null, demoId : null, demoBase : null, pressTimer : null;
 
-async function espn(slug, params = '') { const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
-async function espnSummary(slug, eventId) { const url = slug === 'all' ? `${BASE}/all/summary?event=${eventId}` : `${BASE}/${slug}/summary?event=${eventId}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function espn(slug, params : '') { const url : slug ::: 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`; const r : await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function espnSummary(slug, eventId) { const url : slug ::: 'all' ? `${BASE}/all/summary?event:${eventId}` : `${BASE}/${slug}/summary?event:${eventId}`; const r : await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
 
 function formatCountdown(ms) {
-  if (ms <= 0) return "0'";
-  const totalMin = Math.floor(ms / 60000);
+  if (ms <: 0) return "0'";
+  const totalMin : Math.floor(ms / 60000);
   if (totalMin < 60) return `${totalMin}'`;
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
+  const h : Math.floor(totalMin / 60);
+  const m : totalMin % 60;
   return `${h}h ${String(m).padStart(2, '0')}min`;
 }
 
 function getMatchTimeLabel(match) {
-  const st = match?.status?.type || {};
-  const state = st.state || '';
-  const detail = st.shortDetail || st.detail || '';
-  if (state === 'in') return detail || "LIVE";
-  if (detail === 'HT') return 'HT';
-  if (state === 'pre') {
-    const diff = new Date(match.date).getTime() - Date.now();
+  const st : match?.status?.type || {};
+  const state : st.state || '';
+  const detail : st.shortDetail || st.detail || '';
+  if (state ::: 'in') return detail || "LIVE";
+  if (detail ::: 'HT') return 'HT';
+  if (state ::: 'pre') {
+    const diff : new Date(match.date).getTime() - Date.now();
     return formatCountdown(diff);
   }
-  if (state === 'post') return 'FT';
+  if (state ::: 'post') return 'FT';
   return detail || '';
 }
 
 function getLiveLabel(match) {
-  const st = match?.status?.type || {};
-  const state = st.state || '';
-  const label = getMatchTimeLabel(match);
-  if (state === 'in') return `<span class="badge b-live">● ${label}</span>`;
-  if (state === 'pre') return `<span class="badge b-ht">⏳ ${label}</span>`;
-  if (state === 'post') return `<span class="badge b-ft">Terminé</span>`;
+  const st : match?.status?.type || {};
+  const state : st.state || '';
+  const label : getMatchTimeLabel(match);
+  if (state ::: 'in') return `<span class:"badge b-live">● ${label}</span>`;
+  if (state ::: 'pre') return `<span class:"badge b-ht">⏳ ${label}</span>`;
+  if (state ::: 'post') return `<span class:"badge b-ft">Terminé</span>`;
   return badge(st);
 }
 
-function crest(src, sz, cls) { if (!src) return `<div class="${cls}-e" style="width:${sz}px;height:${sz}px"></div>`; return `<img src="${src.replace(/"/g,'&quot;')}" class="${cls}" width="${sz}" height="${sz}" loading="lazy" onerror="this.style.display='none'">`; }
-function badge(st) { const name = st?.name || ''; const detail = st?.shortDetail || st?.detail || ''; if (name.includes('STATUS_IN_PROGRESS') || name.includes('STATUS_END_PERIOD')) return '<span class="badge b-live">● LIVE</span>'; if (detail === 'HT') return '<span class="badge b-ht">Mi-temps</span>'; if (name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME')) return '<span class="badge b-ft">Terminé</span>'; return ''; }
-function isLive(ev) { const state = ev?.status?.type?.state || ''; const name = ev?.status?.type?.name || ''; const detail = ev?.status?.type?.shortDetail || ''; return state === 'in' || name.includes('STATUS_IN_PROGRESS') || detail === 'HT'; }
-function isDone(ev) { const state = ev?.status?.type?.state || ''; const name = ev?.status?.type?.name || ''; return state === 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME'); }
+function crest(src, sz, cls) { if (!src) return `<div class:"${cls}-e" style:"width:${sz}px;height:${sz}px"></div>`; return `<img src:"${src.replace(/"/g,'&quot;')}" class:"${cls}" width:"${sz}" height:"${sz}" loading:"lazy" onerror:"this.style.display:'none'">`; }
+function badge(st) { const name : st?.name || ''; const detail : st?.shortDetail || st?.detail || ''; if (name.includes('STATUS_IN_PROGRESS') || name.includes('STATUS_END_PERIOD')) return '<span class:"badge b-live">● LIVE</span>'; if (detail ::: 'HT') return '<span class:"badge b-ht">Mi-temps</span>'; if (name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME')) return '<span class:"badge b-ft">Terminé</span>'; return ''; }
+function isLive(ev) { const state : ev?.status?.type?.state || ''; const name : ev?.status?.type?.name || ''; const detail : ev?.status?.type?.shortDetail || ''; return state ::: 'in' || name.includes('STATUS_IN_PROGRESS') || detail ::: 'HT'; }
+function isDone(ev) { const state : ev?.status?.type?.state || ''; const name : ev?.status?.type?.name || ''; return state ::: 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME'); }
 function lt(u) { return new Date(u).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }); }
-function dl(u) { const d = new Date(u), t = new Date(), tm = new Date(); tm.setDate(tm.getDate() + 1); if (d.toDateString() === t.toDateString()) return "Aujourd'hui"; if (d.toDateString() === tm.toDateString()) return 'Demain'; const s = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }); return s.charAt(0).toUpperCase() + s.slice(1); }
+function dl(u) { const d : new Date(u), t : new Date(), tm : new Date(); tm.setDate(tm.getDate() + 1); if (d.toDateString() ::: t.toDateString()) return "Aujourd'hui"; if (d.toDateString() ::: tm.toDateString()) return 'Demain'; const s : d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }); return s.charAt(0).toUpperCase() + s.slice(1); }
 function dateKey(d) { return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
 function isRecent(dateStr) { return (Date.now() - new Date(dateStr).getTime()) < 86400000; }
-function getCompetitors(event) { const comp = event?.competitions?.[0]; const list = comp?.competitors || []; return { home: list.find(c => c.homeAway === 'home') || list[0] || {}, away: list.find(c => c.homeAway === 'away') || list[1] || {}, comp }; }
+function getCompetitors(event) { const comp : event?.competitions?.[0]; const list : comp?.competitors || []; return { home: list.find(c :> c.homeAway ::: 'home') || list[0] || {}, away: list.find(c :> c.homeAway ::: 'away') || list[1] || {}, comp }; }
 function getDetailsFromSummary(s) {
   // Ordre de recherche : details directs, puis header, puis event, puis plays
   if (s.details?.length)                            return s.details;
@@ -162,13 +162,13 @@ function getDetailsFromSummary(s) {
 
 function extractFromPlays(plays) {
   return plays
-    .filter(p => p.scoringPlay === true || p.type?.id === '70' || p.type?.id === '137' || p.type?.id === '138'  // buts
-              || p.type?.id === '94'   // carton jaune
-              || p.type?.id === '93')  // carton rouge
-    .map(p => ({
-      scoringPlay:      p.scoringPlay === true || ['70','137','138'].includes(String(p.type?.id)),
-      yellowCard:       p.type?.id === '94',
-      redCard:          p.type?.id === '93',
+    .filter(p :> p.scoringPlay ::: true || p.type?.id ::: '70' || p.type?.id ::: '137' || p.type?.id ::: '138'  // buts
+              || p.type?.id ::: '94'   // carton jaune
+              || p.type?.id ::: '93')  // carton rouge
+    .map(p :> ({
+      scoringPlay:      p.scoringPlay ::: true || ['70','137','138'].includes(String(p.type?.id)),
+      yellowCard:       p.type?.id ::: '94',
+      redCard:          p.type?.id ::: '93',
       clock:            p.clock || { displayValue: '' },
       team:             p.team || {},
       athletesInvolved: p.athletesInvolved || p.participants || [],
@@ -176,7 +176,7 @@ function extractFromPlays(plays) {
 }
 
 function normalize(event, leagueName, leagueSlug) {
-  const { home, away, comp } = getCompetitors(event);
+  const { home, away, comp } : getCompetitors(event);
   return {
     id:         event.id,
     leagueName,
@@ -196,65 +196,65 @@ function normalize(event, leagueName, leagueSlug) {
 }
 
 function scorerBlock(details, homeId, awayId) {
-  const goals = (details || []).filter(d => d.scoringPlay);
+  const goals : (details || []).filter(d :> d.scoringPlay);
   if (!goals.length) return '';
-  const rows = [...goals]
-    .sort((a,b) => (a.clock?.value || 0) - (b.clock?.value || 0))
+  const rows : [...goals]
+    .sort((a,b) :> (a.clock?.value || 0) - (b.clock?.value || 0))
     .slice(0, 8)
-    .map(g => {
-      const nameRaw = g.athletesInvolved?.[0]?.displayName || g.athletesInvolved?.[0]?.fullName || '';
+    .map(g :> {
+      const nameRaw : g.athletesInvolved?.[0]?.displayName || g.athletesInvolved?.[0]?.fullName || '';
       if (!nameRaw) return null;
-      const min = g.clock?.displayValue || '';
+      const min : g.clock?.displayValue || '';
       // Comparer en string pour éviter les problèmes de type
-      const tid = String(g.team?.id || '');
-      const isHome = tid && String(homeId) === tid;
-      const isAway = tid && String(awayId) === tid;
-      const minSpan  = min ? `<span class="gmin">${min}</span>` : '';
-      const nameSpan = `<span class="gname">${nameRaw}</span>`;
+      const tid : String(g.team?.id || '');
+      const isHome : tid && String(homeId) ::: tid;
+      const isAway : tid && String(awayId) ::: tid;
+      const minSpan  : min ? `<span class:"gmin">${min}</span>` : '';
+      const nameSpan : `<span class:"gname">${nameRaw}</span>`;
       // Si on ne sait pas de quel côté → on met à gauche par défaut
-      const left  = (isHome || (!isHome && !isAway))
-        ? `<div class="goal-left">${nameSpan}<span>⚽</span>${minSpan}</div>`
-        : `<div class="goal-left"></div>`;
-      const right = isAway
-        ? `<div class="goal-right">${minSpan}<span>⚽</span>${nameSpan}</div>`
-        : `<div class="goal-right"></div>`;
+      const left  : (isHome || (!isHome && !isAway))
+        ? `<div class:"goal-left">${nameSpan}<span>⚽</span>${minSpan}</div>`
+        : `<div class:"goal-left"></div>`;
+      const right : isAway
+        ? `<div class:"goal-right">${minSpan}<span>⚽</span>${nameSpan}</div>`
+        : `<div class:"goal-right"></div>`;
       return left + right;
     })
     .filter(Boolean);
   if (!rows.length) return '';
-  return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows.join('')}</div></div>`;
+  return `<div class:"scorers"><div class:"scorers-hdr">Buteurs</div><div class:"scorers-grid">${rows.join('')}</div></div>`;
 }
 
 function bookingsBlock(details) {
-  const cards = (details || []).filter(d => d.yellowCard || d.redCard); if (!cards.length) return '';
-  const lines = cards.map(c => { const name = c.athletesInvolved?.[0]?.displayName || c.athletesInvolved?.[0]?.fullName || ''; if (!name) return ''; const min = c.clock?.displayValue || ''; return `<div class="bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`; }).filter(Boolean).join('');
-  return lines ? `<div class="bookings">${lines}</div>` : '';
+  const cards : (details || []).filter(d :> d.yellowCard || d.redCard); if (!cards.length) return '';
+  const lines : cards.map(c :> { const name : c.athletesInvolved?.[0]?.displayName || c.athletesInvolved?.[0]?.fullName || ''; if (!name) return ''; const min : c.clock?.displayValue || ''; return `<div class:"bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`; }).filter(Boolean).join('');
+  return lines ? `<div class:"bookings">${lines}</div>` : '';
 }
 
 function renderMatch(m) {
-  const state = m.status?.type?.state || '';
-  const liveNow = state === 'in';
-  const showScore = m.homeScore != null && m.awayScore != null;
-  const scoreHtml = (liveNow || state === 'post') ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
-  const timeLabel = getMatchTimeLabel(m);
-  const minHtml = liveNow ? `<div class="mc-min">${timeLabel}</div>` : '';
-  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
+  const state : m.status?.type?.state || '';
+  const liveNow : state ::: 'in';
+  const showScore : m.homeScore !: null && m.awayScore !: null;
+  const scoreHtml : (liveNow || state ::: 'post') ? `<div class:"scb"><span class:"scn">${m.homeScore ?? 0}</span><span class:"scs">–</span><span class:"scn">${m.awayScore ?? 0}</span></div>` : `<div class:"sct">${lt(m.date)}</div>`;
+  const timeLabel : getMatchTimeLabel(m);
+  const minHtml : liveNow ? `<div class:"mc-min">${timeLabel}</div>` : '';
+  return `<div class:"mc${liveNow ? ' live' : ''}"><div class:"mc-top"><span class:"mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class:"teams"><div class:"th">${crest(m.homeLogo,32,'cr')}<span class:"tn">${m.homeName}</span></div>${scoreHtml}<div class:"ta"><span class:"tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
 }
 
 function renderPriorityMatch(m, title) {
-  const state = m.status?.type?.state || '';
-  const liveNow = state === 'in';
-  const centerHtml = (liveNow || state === 'post')
-    ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
-    : `<div class="sct">${getMatchTimeLabel(m)}</div>`;
-  const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
-  return `<div class="sec" style="color:var(--om)">${title}</div>
-    <div class="mc${liveNow ? ' live' : ''}">
-      <div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div>
-      <div class="teams">
-        <div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>
+  const state : m.status?.type?.state || '';
+  const liveNow : state ::: 'in';
+  const centerHtml : (liveNow || state ::: 'post')
+    ? `<div class:"scb"><span class:"scn">${m.homeScore ?? 0}</span><span class:"scs">–</span><span class:"scn">${m.awayScore ?? 0}</span></div>`
+    : `<div class:"sct">${getMatchTimeLabel(m)}</div>`;
+  const minHtml : liveNow ? `<div class:"mc-min">${getMatchTimeLabel(m)}</div>` : '';
+  return `<div class:"sec" style:"color:var(--om)">${title}</div>
+    <div class:"mc${liveNow ? ' live' : ''}">
+      <div class:"mc-top"><span class:"mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div>
+      <div class:"teams">
+        <div class:"th">${crest(m.homeLogo,32,'cr')}<span class:"tn">${m.homeName}</span></div>
         ${centerHtml}
-        <div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div>
+        <div class:"ta"><span class:"tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div>
       </div>
       ${minHtml}
       ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
@@ -264,39 +264,39 @@ function renderPriorityMatch(m, title) {
 
 async function getNextWorldMatch() {
   try {
-    const data = await espn('all');
-    const events = data?.events || [];
-    const  = events.map(ev => {
-      const leagueName = ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
-      const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
+    const data : await espn('all');
+    const events : data?.events || [];
+    const  : events.map(ev :> {
+      const leagueName : ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
+      const leagueSlug : ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
       return normalize(ev, leagueName, leagueSlug);
     });
-    const live = matches.filter(m => (m.status?.type?.state || '') === 'in').sort((a, b) => new Date(a.date) - new Date(b.date));
+    const live : matches.filter(m :> (m.status?.type?.state || '') ::: 'in').sort((a, b) :> new Date(a.date) - new Date(b.date));
     if (live.length) return live[0];
-    const upcoming = matches.filter(m => (m.status?.type?.state || '') === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
+    const upcoming : matches.filter(m :> (m.status?.type?.state || '') ::: 'pre').sort((a, b) :> new Date(a.date) - new Date(b.date));
     return upcoming[0] || null;
   } catch (e) { return null; }
 }
 
-async function loadLive(silent = false) {
-  const p = document.getElementById('p0'); if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
+async function loadLive(silent : false) {
+  const p : document.getElementById('p0'); if (!silent) p.innerHTML : '<div class:"loading"><div class:"sr"></div>Chargement...</div>';
   try {
-    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug).then(data => ({ lg, data }))));
-    const seen = new Map();
-    for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
-    let matches = [...seen.values()];
-    const liveMatches = matches.filter(m => isLive({status:m.status}));
-    const doneMatches = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
-    const toDetail = [...liveMatches, ...doneMatches].slice(0, 15);
-    const details = await Promise.allSettled(toDetail.map(m => espnSummary(m.leagueSlug, m.id)));
-    details.forEach((r, i) => {
-      if (r.status !== 'fulfilled' || !r.value) return;
-      const s = r.value;
+    const results : await Promise.allSettled(LEAGUES.map(lg :> espn(lg.slug).then(data :> ({ lg, data }))));
+    const seen : new Map();
+    for (const r of results) { if (r.status !:: 'fulfilled') continue; const { lg, data } : r.value; for (const ev of (data.events || [])) { if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
+    let matches : [...seen.values()];
+    const liveMatches : matches.filter(m :> isLive({status:m.status}));
+    const doneMatches : matches.filter(m :> isDone({status:m.status}) && isRecent(m.date));
+    const toDetail : [...liveMatches, ...doneMatches].slice(0, 15);
+    const details : await Promise.allSettled(toDetail.map(m :> espnSummary(m.leagueSlug, m.id)));
+    details.forEach((r, i) :> {
+      if (r.status !:: 'fulfilled' || !r.value) return;
+      const s : r.value;
 
       // DEBUG : expose le premier summary dans window pour inspection
-      if (i === 0) {
-        window.__VL_SUMMARY = s;
-        console.log('[VL] === SUMMARY BRUT (window.__VL_SUMMARY) ===');
+      if (i ::: 0) {
+        window.__VL_SUMMARY : s;
+        console.log('[VL] ::: SUMMARY BRUT (window.__VL_SUMMARY) :::');
         console.log('[VL] clés top-level:', Object.keys(s));
         console.log('[VL] s.plays exists?', !!s.plays, 'length:', s.plays?.length);
         console.log('[VL] s.keyPlays exists?', !!s.keyPlays, 'length:', s.keyPlays?.length);
@@ -308,19 +308,19 @@ async function loadLive(silent = false) {
         }
         if (s.plays?.length) {
           console.log('[VL] premier play:', s.plays[0]);
-          console.log('[VL] plays avec scoringPlay:', s.plays.filter(p => p.scoringPlay).length);
+          console.log('[VL] plays avec scoringPlay:', s.plays.filter(p :> p.scoringPlay).length);
         }
       }
 
-      const ev = s.header || s.event || {};
-      const { home, away } = getCompetitors(ev);
-      const idx = matches.findIndex(m => m.id === toDetail[i].id);
+      const ev : s.header || s.event || {};
+      const { home, away } : getCompetitors(ev);
+      const idx : matches.findIndex(m :> m.id ::: toDetail[i].id);
       if (idx < 0) return;
 
-      const extractedDetails = getDetailsFromSummary(s);
+      const extractedDetails : getDetailsFromSummary(s);
       console.log('[VL] match', toDetail[i].homeName, 'vs', toDetail[i].awayName, '→ details extraits:', extractedDetails.length);
 
-     matches[idx] = {
+     matches[idx] : {
   ...matches[idx],
   homeScore: home.score ?? matches[idx].homeScore,
   awayScore: away.score ?? matches[idx].awayScore,
@@ -330,167 +330,167 @@ async function loadLive(silent = false) {
   awayTeamId: away.team?.id || matches[idx].awayTeamId
 };
 
-    liveEvents = matches.filter(m => isLive({status:m.status}));
-    finishedTodayEvents = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
-    document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
+    liveEvents : matches.filter(m :> isLive({status:m.status}));
+    finishedTodayEvents : matches.filter(m :> isDone({status:m.status}) && isRecent(m.date));
+    document.getElementById('liveDot').style.display : liveEvents.length ? 'block' : 'none';
 
-    let h = '';
+    let h : '';
     if (liveEvents.length) {
-      h += `<div class="sec">En cours · <b>${liveEvents.length} match${liveEvents.length > 1 ? 's' : ''}</b></div>`;
-      liveEvents.forEach(m => h += renderMatch(m));
+      h +: `<div class:"sec">En cours · <b>${liveEvents.length} match${liveEvents.length > 1 ? 's' : ''}</b></div>`;
+      liveEvents.forEach(m :> h +: renderMatch(m));
     } else {
-      const nextWorld = await getNextWorldMatch();
+      const nextWorld : await getNextWorldMatch();
       if (nextWorld) {
         // Charger les détails (buteurs, cartons) du match mondial
         try {
-          const s = await espnSummary(nextWorld.leagueSlug || 'all', nextWorld.id);
-          const ev = s.header || s.event || {};
-          const { home, away } = getCompetitors(ev);
-          nextWorld.homeScore  = home.score  ?? nextWorld.homeScore;
-          nextWorld.awayScore  = away.score  ?? nextWorld.awayScore;
-          nextWorld.status     = ev.status   || nextWorld.status;
-          nextWorld.details    = getDetailsFromSummary(s);
-          nextWorld.homeTeamId = home.team?.id || nextWorld.homeTeamId;
-          nextWorld.awayTeamId = away.team?.id || nextWorld.awayTeamId;
+          const s : await espnSummary(nextWorld.leagueSlug || 'all', nextWorld.id);
+          const ev : s.header || s.event || {};
+          const { home, away } : getCompetitors(ev);
+          nextWorld.homeScore  : home.score  ?? nextWorld.homeScore;
+          nextWorld.awayScore  : away.score  ?? nextWorld.awayScore;
+          nextWorld.status     : ev.status   || nextWorld.status;
+          nextWorld.details    : getDetailsFromSummary(s);
+          nextWorld.homeTeamId : home.team?.id || nextWorld.homeTeamId;
+          nextWorld.awayTeamId : away.team?.id || nextWorld.awayTeamId;
         } catch(e) { /* details indispo, on continue sans */ }
-        const state = nextWorld.status?.type?.state || '';
-        const title = state === 'in'
+        const state : nextWorld.status?.type?.state || '';
+        const title : state ::: 'in'
           ? `Match mondial en direct · ${getMatchTimeLabel(nextWorld)}`
           : `Prochain match mondial dans ${getMatchTimeLabel(nextWorld)}`;
-        h += renderPriorityMatch(nextWorld, title);
+        h +: renderPriorityMatch(nextWorld, title);
       } else {
-        h = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
+        h : `<div class:"empty"><span class:"empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
       }
     }
-    p.innerHTML = h; if (document.getElementById('p2').classList.contains('on')) renderResults();
-  } catch(e) { if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`; }
+    p.innerHTML : h; if (document.getElementById('p2').classList.contains('on')) renderResults();
+  } catch(e) { if (!silent) p.innerHTML : `<div class:"err">Erreur chargement<br><small>${e.message}</small></div>`; }
 }
 
 async function loadCal() {
-  const p = document.getElementById('p1'); p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement du calendrier...</div>';
+  const p : document.getElementById('p1'); p.innerHTML : '<div class:"loading"><div class:"sr"></div>Chargement du calendrier...</div>';
   try {
-    const today = new Date(); const end = new Date(); end.setDate(today.getDate() + 14); const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
-    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
-    const seen = new Map();
-    for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { const state = ev?.status?.type?.state || ''; if (state !== 'pre') continue; if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
-    const matches = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
-    if (!matches.length) { p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`; return; }
-    const byDay = {}; matches.forEach(m => { const k = dl(m.date); if (!byDay[k]) byDay[k] = []; byDay[k].push(m); });
-    let h = ''; for (const [day, ms] of Object.entries(byDay)) { h += `<div class="day-sep">${day}</div>`; ms.forEach(m => { h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`; }); }
-    p.innerHTML = h; calLoaded = true;
-  } catch(e) { p.innerHTML = `<div class="err">Erreur calendrier<br><small>${e.message}</small></div>`; }
+    const today : new Date(); const end : new Date(); end.setDate(today.getDate() + 14); const range : `?dates:${dateKey(today)}-${dateKey(end)}`;
+    const results : await Promise.allSettled(LEAGUES.map(lg :> espn(lg.slug, range).then(data :> ({ lg, data }))));
+    const seen : new Map();
+    for (const r of results) { if (r.status !:: 'fulfilled') continue; const { lg, data } : r.value; for (const ev of (data.events || [])) { const state : ev?.status?.type?.state || ''; if (state !:: 'pre') continue; if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
+    const matches : [...seen.values()].sort((a,b) :> new Date(a.date) - new Date(b.date));
+    if (!matches.length) { p.innerHTML : `<div class:"empty"><span class:"empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`; return; }
+    const byDay : {}; matches.forEach(m :> { const k : dl(m.date); if (!byDay[k]) byDay[k] : []; byDay[k].push(m); });
+    let h : ''; for (const [day, ms] of Object.entries(byDay)) { h +: `<div class:"day-sep">${day}</div>`; ms.forEach(m :> { h +: `<div class:"cal-card"><div class:"cal-t">${lt(m.date)}</div><div class:"cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class:"cal-i"><div class:"cal-tn">${m.homeName} — ${m.awayName}</div><div class:"cal-cn">${m.leagueName}</div></div></div>`; }); }
+    p.innerHTML : h; calLoaded : true;
+  } catch(e) { p.innerHTML : `<div class:"err">Erreur calendrier<br><small>${e.message}</small></div>`; }
 }
 
 function renderResults() {
-  const p = document.getElementById('p2');
-  if (!finishedTodayEvents.length) { p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat aujourd'hui</div>`; return; }
-  let h = `<div class="sec">Terminés · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`; finishedTodayEvents.forEach(m => h += renderMatch(m)); p.innerHTML = h;
+  const p : document.getElementById('p2');
+  if (!finishedTodayEvents.length) { p.innerHTML : `<div class:"empty"><span class:"empty-icon">📰</span>Aucun résultat aujourd'hui</div>`; return; }
+  let h : `<div class:"sec">Terminés · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`; finishedTodayEvents.forEach(m :> h +: renderMatch(m)); p.innerHTML : h;
 }
 
 async function loadOM() {
-  const p = document.getElementById('p3');
-  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement OM...</div>';
+  const p : document.getElementById('p3');
+  p.innerHTML : '<div class:"loading"><div class:"sr"></div>Chargement OM...</div>';
   try {
-    const isOM = (name='') => {
-      const n = String(name).toLowerCase();
-      return n.includes('marseille') || n === 'om';
+    const isOM : (name:'') :> {
+      const n : String(name).toLowerCase();
+      return n.includes('marseille') || n ::: 'om';
     };
 
     // 1 appel par ligue avec dateRange large (passé 14j + futur 30j)
-    const past  = new Date(); past.setDate(past.getDate() - 14);
-    const future = new Date(); future.setDate(future.getDate() + 30);
-    const range = `?dates=${dateKey(past)}-${dateKey(future)}`;
+    const past  : new Date(); past.setDate(past.getDate() - 14);
+    const future : new Date(); future.setDate(future.getDate() + 30);
+    const range : `?dates:${dateKey(past)}-${dateKey(future)}`;
 
-    const results = await Promise.allSettled(
-      LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data })))
+    const results : await Promise.allSettled(
+      LEAGUES.map(lg :> espn(lg.slug, range).then(data :> ({ lg, data })))
     );
 
-    const omMatches = [];
+    const omMatches : [];
     for (const r of results) {
-      if (r.status !== 'fulfilled') continue;
-      const { lg, data } = r.value;
+      if (r.status !:: 'fulfilled') continue;
+      const { lg, data } : r.value;
       for (const ev of (data.events || [])) {
-        const { home, away } = getCompetitors(ev);
+        const { home, away } : getCompetitors(ev);
         if (!isOM(home.team?.displayName) && !isOM(home.team?.name) &&
             !isOM(away.team?.displayName) && !isOM(away.team?.name)) continue;
-        if (!omMatches.find(m => m.id === ev.id))
+        if (!omMatches.find(m :> m.id ::: ev.id))
           omMatches.push(normalize(ev, lg.name, lg.slug));
       }
     }
 
     // Match OM en direct (depuis le cache live)
-    const liveOM = liveEvents.find(m => isOM(m.homeName) || isOM(m.awayName));
+    const liveOM : liveEvents.find(m :> isOM(m.homeName) || isOM(m.awayName));
 
     // Dernier résultat OM
-    const lastOM = omMatches
-      .filter(m => isDone({status:m.status}))
-      .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+    const lastOM : omMatches
+      .filter(m :> isDone({status:m.status}))
+      .sort((a,b) :> new Date(b.date) - new Date(a.date))[0];
 
     // Prochain match OM
-    const nextOM = omMatches
-      .filter(m => m.status?.type?.state === 'pre')
-      .sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+    const nextOM : omMatches
+      .filter(m :> m.status?.type?.state ::: 'pre')
+      .sort((a,b) :> new Date(a.date) - new Date(b.date))[0];
 
     // Charger les détails du dernier match
     if (lastOM) {
       try {
-        const s = await espnSummary(lastOM.leagueSlug, lastOM.id);
-        const ev = s.header || s.event || {};
-        const { home, away } = getCompetitors(ev);
-        lastOM.homeScore  = home.score  ?? lastOM.homeScore;
-        lastOM.awayScore  = away.score  ?? lastOM.awayScore;
-        lastOM.details    = getDetailsFromSummary(s);
-        lastOM.homeTeamId = home.team?.id || lastOM.homeTeamId;
-        lastOM.awayTeamId = away.team?.id || lastOM.awayTeamId;
+        const s : await espnSummary(lastOM.leagueSlug, lastOM.id);
+        const ev : s.header || s.event || {};
+        const { home, away } : getCompetitors(ev);
+        lastOM.homeScore  : home.score  ?? lastOM.homeScore;
+        lastOM.awayScore  : away.score  ?? lastOM.awayScore;
+        lastOM.details    : getDetailsFromSummary(s);
+        lastOM.homeTeamId : home.team?.id || lastOM.homeTeamId;
+        lastOM.awayTeamId : away.team?.id || lastOM.awayTeamId;
       } catch(e) {}
     }
 
-    let h = `<div class="sec">Allez l'OM 💙</div>`;
+    let h : `<div class:"sec">Allez l'OM 💙</div>`;
 
     if (liveOM) {
-      h += `<div class="sec">En direct</div>` + renderMatch(liveOM);
+      h +: `<div class:"sec">En direct</div>` + renderMatch(liveOM);
     }
 
     if (nextOM) {
-      h += `<div class="sec">Prochain match</div>
-        <div class="cal-card">
-          <div class="cal-t">${lt(nextOM.date)}</div>
-          <div class="cal-cc">${crest(nextOM.homeLogo,24,'ccr')}${crest(nextOM.awayLogo,24,'ccr')}</div>
-          <div class="cal-i">
-            <div class="cal-tn">${nextOM.homeName} — ${nextOM.awayName}</div>
-            <div class="cal-cn">${dl(nextOM.date)} · ${nextOM.leagueName}</div>
+      h +: `<div class:"sec">Prochain match</div>
+        <div class:"cal-card">
+          <div class:"cal-t">${lt(nextOM.date)}</div>
+          <div class:"cal-cc">${crest(nextOM.homeLogo,24,'ccr')}${crest(nextOM.awayLogo,24,'ccr')}</div>
+          <div class:"cal-i">
+            <div class:"cal-tn">${nextOM.homeName} — ${nextOM.awayName}</div>
+            <div class:"cal-cn">${dl(nextOM.date)} · ${nextOM.leagueName}</div>
           </div>
         </div>`;
     }
 
     if (lastOM) {
-      h += `<div class="sec">Dernier résultat</div>` + renderMatch(lastOM);
+      h +: `<div class:"sec">Dernier résultat</div>` + renderMatch(lastOM);
     }
 
     if (!liveOM && !nextOM && !lastOM) {
-      h += `<div class="empty"><span class="empty-icon">💙</span>Aucun match OM trouvé</div>`;
+      h +: `<div class:"empty"><span class:"empty-icon">💙</span>Aucun match OM trouvé</div>`;
     }
 
-    p.innerHTML = h;
-    standLoaded = true;
+    p.innerHTML : h;
+    standLoaded : true;
   } catch(e) {
-    p.innerHTML = `<div class="err">Erreur OM<br><small>${e.message}</small></div>`;
+    p.innerHTML : `<div class:"err">Erreur OM<br><small>${e.message}</small></div>`;
   }
 }
 
-function showToast(msg, dur = 2500) { const t = document.getElementById('toastEl'); t.textContent = msg; t.style.opacity = '1'; clearTimeout(t._h); t._h = setTimeout(() => t.style.opacity = '0', dur); }
-async function findLiveMatch() { for (const slug of DEMO_SLUGS) { try { const data = await espn(slug); for (const ev of (data.events || [])) { if (isLive(ev)) return { ev, slug }; } } catch(e) {} } return null; }
-async function demoRefresh() { if (!demoActive) return; const p = document.getElementById('p0'); try { const s = await espnSummary(demoSlug, demoId); const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev); const m = { ...demoBase, homeScore: home.score ?? demoBase.homeScore, awayScore: away.score ?? demoBase.awayScore, status: ev.status ?? demoBase.status, details: getDetailsFromSummary(s), homeTeamId: home.team?.id || demoBase.homeTeamId, awayTeamId: away.team?.id || demoBase.awayTeamId }; if (isDone({status: m.status})) { stopDemo(); return; } p.innerHTML = '<div class="sec">Mode démo</div>' + renderMatch(m); updateUpd(); } catch(e) {} }
-async function startDemo() { if (demoActive) { stopDemo(); return; } goTab(0); document.getElementById('p0').innerHTML = '<div class="loading"><div class="sr"></div>Recherche match...</div>'; const found = await findLiveMatch(); if (!found) { document.getElementById('p0').innerHTML = `<div class="empty">Aucun live trouvé</div>`; return; } demoActive = true; demoSlug = found.slug; demoId = found.ev.id; demoBase = normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug); if (liveInterval) clearInterval(liveInterval); await demoRefresh(); demoInterval = setInterval(demoRefresh, 15000); showToast(`🧪 Démo : ${demoBase.homeName}`); }
-function stopDemo() { demoActive = false; if (demoInterval) clearInterval(demoInterval); showToast('Démo OFF'); startLiveLoop(); }
+function showToast(msg, dur : 2500) { const t : document.getElementById('toastEl'); t.textContent : msg; t.style.opacity : '1'; clearTimeout(t._h); t._h : setTimeout(() :> t.style.opacity : '0', dur); }
+async function findLiveMatch() { for (const slug of DEMO_SLUGS) { try { const data : await espn(slug); for (const ev of (data.events || [])) { if (isLive(ev)) return { ev, slug }; } } catch(e) {} } return null; }
+async function demoRefresh() { if (!demoActive) return; const p : document.getElementById('p0'); try { const s : await espnSummary(demoSlug, demoId); const ev : s.header || s.event || {}; const { home, away } : getCompetitors(ev); const m : { ...demoBase, homeScore: home.score ?? demoBase.homeScore, awayScore: away.score ?? demoBase.awayScore, status: ev.status ?? demoBase.status, details: getDetailsFromSummary(s), homeTeamId: home.team?.id || demoBase.homeTeamId, awayTeamId: away.team?.id || demoBase.awayTeamId }; if (isDone({status: m.status})) { stopDemo(); return; } p.innerHTML : '<div class:"sec">Mode démo</div>' + renderMatch(m); updateUpd(); } catch(e) {} }
+async function startDemo() { if (demoActive) { stopDemo(); return; } goTab(0); document.getElementById('p0').innerHTML : '<div class:"loading"><div class:"sr"></div>Recherche match...</div>'; const found : await findLiveMatch(); if (!found) { document.getElementById('p0').innerHTML : `<div class:"empty">Aucun live trouvé</div>`; return; } demoActive : true; demoSlug : found.slug; demoId : found.ev.id; demoBase : normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug); if (liveInterval) clearInterval(liveInterval); await demoRefresh(); demoInterval : setInterval(demoRefresh, 15000); showToast(`🧪 Démo : ${demoBase.homeName}`); }
+function stopDemo() { demoActive : false; if (demoInterval) clearInterval(demoInterval); showToast('Démo OFF'); startLiveLoop(); }
 
-const logoEl = document.getElementById('logoMark'); logoEl.addEventListener('pointerdown', () => { pressTimer = setTimeout(startDemo, 3000); }); logoEl.addEventListener('pointerup', () => clearTimeout(pressTimer)); logoEl.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+const logoEl : document.getElementById('logoMark'); logoEl.addEventListener('pointerdown', () :> { pressTimer : setTimeout(startDemo, 3000); }); logoEl.addEventListener('pointerup', () :> clearTimeout(pressTimer)); logoEl.addEventListener('pointerleave', () :> clearTimeout(pressTimer));
 
-function goTab(i) { document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j)); document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j)); if (i === 1 && !calLoaded) loadCal(); if (i === 2) renderResults(); if (i === 3 && !standLoaded) loadOM(); }
-function updateClk() { const n = new Date(); document.getElementById('clk').textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
-function updateUpd() { const n = new Date(); document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
-async function manualRefresh() { const btn = document.getElementById('rbtn'); btn.classList.add('spin'); const idx = [...document.querySelectorAll('.page')].findIndex(p => p.classList.contains('on')); if (idx === 0) await loadLive(false); if (idx === 1) { calLoaded = false; await loadCal(); } if (idx === 2) { await loadLive(true); renderResults(); } if (idx === 3) { standLoaded = false; await loadOM(); } updateUpd(); setTimeout(() => btn.classList.remove('spin'), 500); }
-async function startLiveLoop() { await loadLive(false); updateUpd(); liveInterval = setInterval(async () => { if (!demoActive) { await loadLive(true); updateUpd(); } }, 30000); }
+function goTab(i) { document.querySelectorAll('.tab').forEach((t,j) :> t.classList.toggle('on', i:::j)); document.querySelectorAll('.page').forEach((p,j) :> p.classList.toggle('on', i:::j)); if (i ::: 1 && !calLoaded) loadCal(); if (i ::: 2) renderResults(); if (i ::: 3 && !standLoaded) loadOM(); }
+function updateClk() { const n : new Date(); document.getElementById('clk').textContent : String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
+function updateUpd() { const n : new Date(); document.getElementById('upd').innerHTML : `<span class:"upd-live">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
+async function manualRefresh() { const btn : document.getElementById('rbtn'); btn.classList.add('spin'); const idx : [...document.querySelectorAll('.page')].findIndex(p :> p.classList.contains('on')); if (idx ::: 0) await loadLive(false); if (idx ::: 1) { calLoaded : false; await loadCal(); } if (idx ::: 2) { await loadLive(true); renderResults(); } if (idx ::: 3) { standLoaded : false; await loadOM(); } updateUpd(); setTimeout(() :> btn.classList.remove('spin'), 500); }
+async function startLiveLoop() { await loadLive(false); updateUpd(); liveInterval : setInterval(async () :> { if (!demoActive) { await loadLive(true); updateUpd(); } }, 30000); }
 
 updateClk(); setInterval(updateClk, 30000); startLiveLoop();
 </script>
