@@ -206,16 +206,19 @@ async function getNextWorldMatch() {
 }
 
 async function loadLive(silent = false) {
+  console.log("[VL] loadLive lancé");
   const p = document.getElementById('p0'); if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
   try {
     const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug).then(data => ({ lg, data }))));
     const seen = new Map();
     for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
     let matches = [...seen.values()];
+    console.log("[VL] matchs récupérés:", matches);
     const liveMatches = matches.filter(m => isLive({status:m.status}));
     const doneMatches = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
     const toDetail = [...liveMatches, ...doneMatches].slice(0, 15);
     const details = await Promise.allSettled(toDetail.map(m => espnSummary(m.leagueSlug, m.id)));
+    console.log("[VL] details summary:", details);
     details.forEach((r, i) => { if (r.status !== 'fulfilled' || !r.value) return; const s = r.value; const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev); const idx = matches.findIndex(m => m.id === toDetail[i].id); if (idx >= 0) { matches[idx] = { ...matches[idx], homeScore: home.score ?? matches[idx].homeScore, awayScore: away.score ?? matches[idx].awayScore, status: ev.status || matches[idx].status, details: s.details || ev.competitions?.[0]?.details || [], homeTeamId: home.team?.id || matches[idx].homeTeamId, awayTeamId: away.team?.id || matches[idx].awayTeamId }; } });
 
     liveEvents = matches.filter(m => isLive({status:m.status}));
