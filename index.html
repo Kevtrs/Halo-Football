@@ -352,7 +352,7 @@ function getEventName(d) {
 
   return '';
 }
-  
+
 function normalize(event, leagueName, leagueSlug) {
   const { home, away, comp } = getCompetitors(event);
   return {
@@ -423,45 +423,6 @@ function scorerBlock(details, homeId, awayId) {
   return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows}</div></div>`;
 }
 
-  if (!goals.length) return '';
-
-  const homeGoals = [];
-  const awayGoals = [];
-
-  goals
-    .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
-    .slice(0, 8)
-    .forEach(g => {
-      const nameRaw = getEventName(g);
-      if (!nameRaw) return;
-
-      const min = g.clock?.displayValue || '';
-      const tid = String(g.team?.id || '');
-
-      const lineHome = `<div class="goal-left"><span class="gname">${nameRaw}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
-      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${nameRaw}</span></div>`;
-
-      if (tid && String(homeId) === tid) {
-        homeGoals.push(lineHome);
-      } else if (tid && String(awayId) === tid) {
-        awayGoals.push(lineAway);
-      } else {
-        homeGoals.push(lineHome);
-      }
-    });
-
-  if (!homeGoals.length && !awayGoals.length) return '';
-
-  const maxRows = Math.max(homeGoals.length, awayGoals.length);
-  let rows = '';
-
-  for (let i = 0; i < maxRows; i++) {
-    rows += `${homeGoals[i] || '<div class="goal-left"></div>'}${awayGoals[i] || '<div class="goal-right"></div>'}`;
-  }
-
-  return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows}</div></div>`;
-}
-
 function bookingsBlock(details, homeTeamId, awayTeamId) {
   const cards = (details || []).filter(d => d.yellowCard || d.redCard);
   if (!cards.length) return '';
@@ -501,49 +462,7 @@ function bookingsBlock(details, homeTeamId, awayTeamId) {
     </div>
   `;
 }
-  
-function bookingsBlockWithSides(details, homeTeamId, awayTeamId) {
-  const cards = (details || []).filter(d => d.yellowCard || d.redCard);
-  if (!cards.length) return '';
 
-  const homeCards = [];
-  const awayCards = [];
-
-  cards.forEach(c => {
-    const name = getEventName(c);
-    if (!name) return;
-
-    const min = c.clock?.displayValue || '';
-    const icon = c.redCard ? '🟥' : '🟨';
-    const tid = String(c.team?.id || '');
-
-    const lineHome = `<div class="bk-line">${icon}<span>${name}${min ? ' ' + min : ''}</span></div>`;
-    const lineAway = `<div class="bk-line" style="justify-content:flex-end"><span>${name}${min ? ' ' + min : ''}</span>${icon}</div>`;
-
-    if (tid && String(homeTeamId) === tid) {
-      homeCards.push(lineHome);
-    } else if (tid && String(awayTeamId) === tid) {
-      awayCards.push(lineAway);
-    } else {
-      homeCards.push(lineHome);
-    }
-  });
-
-  return `
-    <div class="scorers" style="margin-top:8px;">
-      <div class="scorers-hdr">Cartons</div>
-      <div class="scorers-grid">
-        <div style="padding:6px 10px;">
-          ${homeCards.join('')}
-        </div>
-        <div style="padding:6px 10px;">
-          ${awayCards.join('')}
-        </div>
-      </div>
-    </div>
-  `;
-}
-  
 function renderMatch(m) {
   const state = m.status?.type?.state || '';
   const liveNow = state === 'in';
@@ -573,7 +492,7 @@ function renderPriorityMatch(m, title) {
       </div>
       ${minHtml}
       ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
-${bookingsBlockWithSides(m.details, m.homeTeamId, m.awayTeamId)}
+      ${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId)}
     </div>`;
 }
 
