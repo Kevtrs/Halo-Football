@@ -59,7 +59,8 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06)}
 .goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
 .gmin{color:var(--om);font-weight:700;font-size:11px;flex-shrink:0}.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:0 2px}.bk-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-weight:500}
+.bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:0 2px}
+.bk-line{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim);font-weight:500}
 .cal-card{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:12px 14px;margin-bottom:7px;display:flex;align-items:center;gap:12px}
 .cal-t{font-size:17px;font-weight:800;color:var(--om);min-width:46px;flex-shrink:0}.cal-cc{display:flex;align-items:center;gap:4px;flex-shrink:0}
 .ccr{width:24px;height:24px;object-fit:contain}.ccr-e{width:24px;height:24px;background:var(--bg3);border-radius:50%;border:1px solid var(--b2)}
@@ -105,8 +106,30 @@ const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
 let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
 
-async function espn(slug, params = '') { const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
-async function espnSummary(slug, eventId) { const url = slug === 'all' ? `${BASE}/all/summary?event=${eventId}` : `${BASE}/${slug}/summary?event=${eventId}`; const r = await fetch(url, { signal: AbortSignal.timeout(10000) }); if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); }
+async function espn(slug, params = '') {
+  const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
+  const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  if (!r.ok) throw new Error('HTTP ' + r.status);
+  return r.json();
+}
+
+async function espnSummary(slug, eventId) {
+  const urls = [
+    slug === 'all'
+      ? `${BASE}/all/summary?event=${eventId}`
+      : `${BASE}/${slug}/summary?event=${eventId}`,
+    `${BASE}/all/summary?event=${eventId}`
+  ];
+
+  for (const url of urls) {
+    try {
+      const r = await fetch(url, { signal: AbortSignal.timeout(10000) });
+      if (r.ok) return await r.json();
+    } catch(e) {}
+  }
+
+  throw new Error('Summary indisponible');
+}
 
 function formatCountdown(ms) {
   if (ms <= 0) return "0'";
@@ -141,41 +164,62 @@ function getLiveLabel(match) {
   return badge(st);
 }
 
-function crest(src, sz, cls) { if (!src) return `<div class="${cls}-e" style="width:${sz}px;height:${sz}px"></div>`; return `<img src="${src.replace(/"/g,'&quot;')}" class="${cls}" width="${sz}" height="${sz}" loading="lazy" onerror="this.style.display='none'">`; }
-function badge(st) { const name = st?.name || ''; const detail = st?.shortDetail || st?.detail || ''; if (name.includes('STATUS_IN_PROGRESS') || name.includes('STATUS_END_PERIOD')) return '<span class="badge b-live">● LIVE</span>'; if (detail === 'HT') return '<span class="badge b-ht">Mi-temps</span>'; if (name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME')) return '<span class="badge b-ft">Terminé</span>'; return ''; }
-function isLive(ev) { const state = ev?.status?.type?.state || ''; const name = ev?.status?.type?.name || ''; const detail = ev?.status?.type?.shortDetail || ''; return state === 'in' || name.includes('STATUS_IN_PROGRESS') || detail === 'HT'; }
-function isDone(ev) { const state = ev?.status?.type?.state || ''; const name = ev?.status?.type?.name || ''; return state === 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME'); }
-function lt(u) { return new Date(u).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' }); }
-function dl(u) { const d = new Date(u), t = new Date(), tm = new Date(); tm.setDate(tm.getDate() + 1); if (d.toDateString() === t.toDateString()) return "Aujourd'hui"; if (d.toDateString() === tm.toDateString()) return 'Demain'; const s = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' }); return s.charAt(0).toUpperCase() + s.slice(1); }
-function dateKey(d) { return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`; }
-function isRecent(dateStr) { return (Date.now() - new Date(dateStr).getTime()) < 86400000; }
-function getCompetitors(event) { const comp = event?.competitions?.[0]; const list = comp?.competitors || []; return { home: list.find(c => c.homeAway === 'home') || list[0] || {}, away: list.find(c => c.homeAway === 'away') || list[1] || {}, comp }; }
-function getDetailsFromSummary(s) {
-  const fromHeader = s?.header?.competitions?.[0]?.details || [];
-  const fromEvent  = s?.event?.competitions?.[0]?.details || [];
-  const fromDirect = s?.details || [];
-  const fromPlays  = s?.plays?.length ? extractFromPlays(s.plays) : [];
-  const fromKey    = s?.keyPlays?.length ? extractFromPlays(s.keyPlays) : [];
+function crest(src, sz, cls) {
+  if (!src) return `<div class="${cls}-e" style="width:${sz}px;height:${sz}px"></div>`;
+  return `<img src="${src.replace(/"/g,'&quot;')}" class="${cls}" width="${sz}" height="${sz}" loading="lazy" onerror="this.style.display='none'">`;
+}
 
-  // On fusionne tout, au lieu de retourner la première source trouvée
-  const merged = [...fromHeader, ...fromEvent, ...fromDirect, ...fromPlays, ...fromKey];
+function badge(st) {
+  const name = st?.name || '';
+  const detail = st?.shortDetail || st?.detail || '';
+  if (name.includes('STATUS_IN_PROGRESS') || name.includes('STATUS_END_PERIOD')) return '<span class="badge b-live">● LIVE</span>';
+  if (detail === 'HT') return '<span class="badge b-ht">Mi-temps</span>';
+  if (name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME')) return '<span class="badge b-ft">Terminé</span>';
+  return '';
+}
 
-  // On enlève les doublons simples
-  const seen = new Set();
-  return merged.filter(d => {
-    const key = [
-      d?.team?.id || '',
-      d?.clock?.displayValue || '',
-      d?.athletesInvolved?.[0]?.displayName || d?.athlete?.displayName || '',
-      d?.scoringPlay ? 'goal' : '',
-      d?.yellowCard ? 'yellow' : '',
-      d?.redCard ? 'red' : ''
-    ].join('|');
+function isLive(ev) {
+  const state = ev?.status?.type?.state || '';
+  const name = ev?.status?.type?.name || '';
+  const detail = ev?.status?.type?.shortDetail || '';
+  return state === 'in' || name.includes('STATUS_IN_PROGRESS') || detail === 'HT';
+}
 
-    if (seen.has(key)) return false;
-    seen.add(key);
-    return true;
-  });
+function isDone(ev) {
+  const state = ev?.status?.type?.state || '';
+  const name = ev?.status?.type?.name || '';
+  return state === 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME');
+}
+
+function lt(u) {
+  return new Date(u).toLocaleTimeString('fr-FR', { hour:'2-digit', minute:'2-digit' });
+}
+
+function dl(u) {
+  const d = new Date(u), t = new Date(), tm = new Date();
+  tm.setDate(tm.getDate() + 1);
+  if (d.toDateString() === t.toDateString()) return "Aujourd'hui";
+  if (d.toDateString() === tm.toDateString()) return 'Demain';
+  const s = d.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function dateKey(d) {
+  return `${d.getFullYear()}${String(d.getMonth()+1).padStart(2,'0')}${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function isRecent(dateStr) {
+  return (Date.now() - new Date(dateStr).getTime()) < 86400000;
+}
+
+function getCompetitors(event) {
+  const comp = event?.competitions?.[0];
+  const list = comp?.competitors || [];
+  return {
+    home: list.find(c => c.homeAway === 'home') || list[0] || {},
+    away: list.find(c => c.homeAway === 'away') || list[1] || {},
+    comp
+  };
 }
 
 function extractFromPlays(plays) {
@@ -186,11 +230,15 @@ function extractFromPlays(plays) {
 
       return (
         p?.scoringPlay === true ||
+        p?.yellowCard === true ||
+        p?.redCard === true ||
         txt.includes('goal') ||
         txt.includes('but') ||
         txt.includes('yellow') ||
         txt.includes('red') ||
         txt.includes('card') ||
+        txt.includes('penalty scored') ||
+        txt.includes('own goal') ||
         typeId === '70' ||
         typeId === '137' ||
         typeId === '138' ||
@@ -209,18 +257,73 @@ function extractFromPlays(plays) {
         null;
 
       return {
-        scoringPlay: p?.scoringPlay === true || txt.includes('goal') || txt.includes('but') || ['70','137','138'].includes(typeId),
-        yellowCard:  p?.yellowCard === true || txt.includes('yellow') || (txt.includes('card') && !txt.includes('red')) || typeId === '94',
-        redCard:     p?.redCard === true || txt.includes('red') || typeId === '93',
-        clock:       p?.clock || { displayValue: '' },
-        team:        p?.team || {},
-        text:        p?.text || p?.shortText || '',
+        scoringPlay:
+          p?.scoringPlay === true ||
+          txt.includes('goal') ||
+          txt.includes('but') ||
+          txt.includes('penalty scored') ||
+          txt.includes('own goal') ||
+          ['70','137','138'].includes(typeId),
+
+        yellowCard:
+          p?.yellowCard === true ||
+          txt.includes('yellow') ||
+          (txt.includes('card') && !txt.includes('red')) ||
+          typeId === '94',
+
+        redCard:
+          p?.redCard === true ||
+          txt.includes('red') ||
+          typeId === '93',
+
+        clock: p?.clock || { displayValue: '' },
+        team: p?.team || {},
+        text: p?.text || '',
+        shortText: p?.shortText || '',
         athletesInvolved: athlete0 ? [athlete0] : []
       };
     });
 }
 
-  function getEventName(d) {
+function getDetailsFromSummary(s) {
+  const fromHeader = s?.header?.competitions?.[0]?.details || [];
+  const fromEvent  = s?.event?.competitions?.[0]?.details || [];
+  const fromDirect = s?.details || [];
+  const fromPlays  = s?.plays?.length ? extractFromPlays(s.plays) : [];
+  const fromKey    = s?.keyPlays?.length ? extractFromPlays(s.keyPlays) : [];
+  const fromComm   = s?.commentary?.length ? extractFromPlays(s.commentary) : [];
+
+  const merged = [
+    ...fromHeader,
+    ...fromEvent,
+    ...fromDirect,
+    ...fromPlays,
+    ...fromKey,
+    ...fromComm
+  ];
+
+  const seen = new Set();
+  return merged.filter(d => {
+    const key = [
+      d?.team?.id || '',
+      d?.clock?.displayValue || '',
+      d?.athletesInvolved?.[0]?.displayName ||
+      d?.athletesInvolved?.[0]?.fullName ||
+      d?.text ||
+      d?.shortText ||
+      '',
+      d?.scoringPlay ? 'goal' : '',
+      d?.yellowCard ? 'yellow' : '',
+      d?.redCard ? 'red' : ''
+    ].join('|');
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function getEventName(d) {
   const athleteName =
     d?.athletesInvolved?.[0]?.displayName ||
     d?.athletesInvolved?.[0]?.fullName ||
@@ -232,16 +335,17 @@ function extractFromPlays(plays) {
   const txt = String(d?.text || d?.shortText || '').trim();
   if (!txt) return '';
 
-  // nettoie un peu les textes ESPN
   return txt
-    .replace(/\s*goal\s*/i, '')
-    .replace(/\s*yellow card\s*/i, '')
-    .replace(/\s*red card\s*/i, '')
-    .replace(/\s*\(\d+\)\s*/g, '')
+    .replace(/goal/i, '')
+    .replace(/yellow card/i, '')
+    .replace(/red card/i, '')
+    .replace(/penalty scored/i, '')
+    .replace(/own goal/i, '')
+    .replace(/\s+/g, ' ')
     .trim();
 }
 
-  function normalize(event, leagueName, leagueSlug) {
+function normalize(event, leagueName, leagueSlug) {
   const { home, away, comp } = getCompetitors(event);
   return {
     id:         event.id,
@@ -295,7 +399,7 @@ function scorerBlock(details, homeId, awayId) {
   if (!rows.length) return '';
   return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows.join('')}</div></div>`;
 }
-  
+
 function bookingsBlock(details) {
   const cards = (details || []).filter(d => d.yellowCard || d.redCard);
   if (!cards.length) return '';
@@ -309,14 +413,15 @@ function bookingsBlock(details) {
 
   return lines ? `<div class="bookings">${lines}</div>` : '';
 }
-  
+
 function renderMatch(m) {
   const state = m.status?.type?.state || '';
   const liveNow = state === 'in';
-  const showScore = m.homeScore != null && m.awayScore != null;
-  const scoreHtml = (liveNow || state === 'post') ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>` : `<div class="sct">${lt(m.date)}</div>`;
-  const timeLabel = getMatchTimeLabel(m);
-  const minHtml = liveNow ? `<div class="mc-min">${timeLabel}</div>` : '';
+  const scoreHtml = (liveNow || state === 'post')
+    ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
+    : `<div class="sct">${lt(m.date)}</div>`;
+  const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
+
   return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
 }
 
@@ -327,6 +432,7 @@ function renderPriorityMatch(m, title) {
     ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
     : `<div class="sct">${getMatchTimeLabel(m)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
+
   return `<div class="sec" style="color:var(--om)">${title}</div>
     <div class="mc${liveNow ? ' live' : ''}">
       <div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div>
@@ -350,54 +456,61 @@ async function getNextWorldMatch() {
       const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
       return normalize(ev, leagueName, leagueSlug);
     });
-    const live = matches.filter(m => (m.status?.type?.state || '') === 'in').sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const live = matches
+      .filter(m => (m.status?.type?.state || '') === 'in')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
     if (live.length) return live[0];
-    const upcoming = matches.filter(m => (m.status?.type?.state || '') === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    const upcoming = matches
+      .filter(m => (m.status?.type?.state || '') === 'pre')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
     return upcoming[0] || null;
-  } catch (e) { return null; }
+  } catch (e) {
+    return null;
+  }
 }
 
 async function loadLive(silent = false) {
-  const p = document.getElementById('p0'); if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
+  const p = document.getElementById('p0');
+  if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
+
   try {
     const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug).then(data => ({ lg, data }))));
     const seen = new Map();
-    for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
+
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const { lg, data } = r.value;
+      for (const ev of (data.events || [])) {
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
+      }
+    }
+
     let matches = [...seen.values()];
     const liveMatches = matches.filter(m => isLive({status:m.status}));
     const doneMatches = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
     const toDetail = [...liveMatches, ...doneMatches].slice(0, 15);
-    const details = await Promise.allSettled(toDetail.map(m => espnSummary(m.leagueSlug, m.id)));
+
+    const details = await Promise.allSettled(
+      toDetail.map(async m => {
+        try {
+          return await espnSummary(m.leagueSlug, m.id);
+        } catch(e) {
+          return null;
+        }
+      })
+    );
+
     details.forEach((r, i) => {
       if (r.status !== 'fulfilled' || !r.value) return;
       const s = r.value;
-
-      // DEBUG : expose le premier summary dans window pour inspection
-      if (i === 0) {
-        window.__VL_SUMMARY = s;
-        console.log('[VL] === SUMMARY BRUT (window.__VL_SUMMARY) ===');
-        console.log('[VL] clés top-level:', Object.keys(s));
-        console.log('[VL] s.plays exists?', !!s.plays, 'length:', s.plays?.length);
-        console.log('[VL] s.keyPlays exists?', !!s.keyPlays, 'length:', s.keyPlays?.length);
-        console.log('[VL] s.details exists?', !!s.details, 'length:', s.details?.length);
-        console.log('[VL] s.header exists?', !!s.header);
-        if (s.header) {
-          console.log('[VL] header.competitions[0] keys:', Object.keys(s.header.competitions?.[0] || {}));
-          console.log('[VL] header.comp.details length:', s.header.competitions?.[0]?.details?.length);
-        }
-        if (s.plays?.length) {
-          console.log('[VL] premier play:', s.plays[0]);
-          console.log('[VL] plays avec scoringPlay:', s.plays.filter(p => p.scoringPlay).length);
-        }
-      }
-
       const ev = s.header || s.event || {};
       const { home, away } = getCompetitors(ev);
       const idx = matches.findIndex(m => m.id === toDetail[i].id);
       if (idx < 0) return;
 
       const extractedDetails = getDetailsFromSummary(s);
-      console.log('[VL] match', toDetail[i].homeName, 'vs', toDetail[i].awayName, '→ details extraits:', extractedDetails.length);
 
       matches[idx] = {
         ...matches[idx],
@@ -421,7 +534,6 @@ async function loadLive(silent = false) {
     } else {
       const nextWorld = await getNextWorldMatch();
       if (nextWorld) {
-        // Charger les détails (buteurs, cartons) du match mondial
         try {
           const s = await espnSummary(nextWorld.leagueSlug || 'all', nextWorld.id);
           const ev = s.header || s.event || {};
@@ -432,7 +544,8 @@ async function loadLive(silent = false) {
           nextWorld.details    = getDetailsFromSummary(s);
           nextWorld.homeTeamId = home.team?.id || nextWorld.homeTeamId;
           nextWorld.awayTeamId = away.team?.id || nextWorld.awayTeamId;
-        } catch(e) { /* details indispo, on continue sans */ }
+        } catch(e) {}
+
         const state = nextWorld.status?.type?.state || '';
         const title = state === 'in'
           ? `Match mondial en direct · ${getMatchTimeLabel(nextWorld)}`
@@ -442,43 +555,91 @@ async function loadLive(silent = false) {
         h = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
       }
     }
-    p.innerHTML = h; if (document.getElementById('p2').classList.contains('on')) renderResults();
-  } catch(e) { if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`; }
+
+    p.innerHTML = h;
+    if (document.getElementById('p2').classList.contains('on')) renderResults();
+  } catch(e) {
+    if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`;
+  }
 }
 
 async function loadCal() {
-  const p = document.getElementById('p1'); p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement du calendrier...</div>';
+  const p = document.getElementById('p1');
+  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement du calendrier...</div>';
+
   try {
-    const today = new Date(); const end = new Date(); end.setDate(today.getDate() + 14); const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
+    const today = new Date();
+    const end = new Date();
+    end.setDate(today.getDate() + 14);
+    const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
+
     const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
     const seen = new Map();
-    for (const r of results) { if (r.status !== 'fulfilled') continue; const { lg, data } = r.value; for (const ev of (data.events || [])) { const state = ev?.status?.type?.state || ''; if (state !== 'pre') continue; if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug)); } }
+
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const { lg, data } = r.value;
+      for (const ev of (data.events || [])) {
+        const state = ev?.status?.type?.state || '';
+        if (state !== 'pre') continue;
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
+      }
+    }
+
     const matches = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
-    if (!matches.length) { p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`; return; }
-    const byDay = {}; matches.forEach(m => { const k = dl(m.date); if (!byDay[k]) byDay[k] = []; byDay[k].push(m); });
-    let h = ''; for (const [day, ms] of Object.entries(byDay)) { h += `<div class="day-sep">${day}</div>`; ms.forEach(m => { h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`; }); }
-    p.innerHTML = h; calLoaded = true;
-  } catch(e) { p.innerHTML = `<div class="err">Erreur calendrier<br><small>${e.message}</small></div>`; }
+    if (!matches.length) {
+      p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`;
+      return;
+    }
+
+    const byDay = {};
+    matches.forEach(m => {
+      const k = dl(m.date);
+      if (!byDay[k]) byDay[k] = [];
+      byDay[k].push(m);
+    });
+
+    let h = '';
+    for (const [day, ms] of Object.entries(byDay)) {
+      h += `<div class="day-sep">${day}</div>`;
+      ms.forEach(m => {
+        h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
+      });
+    }
+
+    p.innerHTML = h;
+    calLoaded = true;
+  } catch(e) {
+    p.innerHTML = `<div class="err">Erreur calendrier<br><small>${e.message}</small></div>`;
+  }
 }
 
 function renderResults() {
   const p = document.getElementById('p2');
-  if (!finishedTodayEvents.length) { p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat aujourd'hui</div>`; return; }
-  let h = `<div class="sec">Terminés · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`; finishedTodayEvents.forEach(m => h += renderMatch(m)); p.innerHTML = h;
+  if (!finishedTodayEvents.length) {
+    p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat aujourd'hui</div>`;
+    return;
+  }
+
+  let h = `<div class="sec">Terminés · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`;
+  finishedTodayEvents.forEach(m => h += renderMatch(m));
+  p.innerHTML = h;
 }
 
 async function loadOM() {
   const p = document.getElementById('p3');
   p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement OM...</div>';
+
   try {
     const isOM = (name='') => {
       const n = String(name).toLowerCase();
       return n.includes('marseille') || n === 'om';
     };
 
-    // 1 appel par ligue avec dateRange large (passé 14j + futur 30j)
-    const past  = new Date(); past.setDate(past.getDate() - 14);
-    const future = new Date(); future.setDate(future.getDate() + 30);
+    const past = new Date();
+    past.setDate(past.getDate() - 14);
+    const future = new Date();
+    future.setDate(future.getDate() + 30);
     const range = `?dates=${dateKey(past)}-${dateKey(future)}`;
 
     const results = await Promise.allSettled(
@@ -493,25 +654,19 @@ async function loadOM() {
         const { home, away } = getCompetitors(ev);
         if (!isOM(home.team?.displayName) && !isOM(home.team?.name) &&
             !isOM(away.team?.displayName) && !isOM(away.team?.name)) continue;
-        if (!omMatches.find(m => m.id === ev.id))
-          omMatches.push(normalize(ev, lg.name, lg.slug));
+        if (!omMatches.find(m => m.id === ev.id)) omMatches.push(normalize(ev, lg.name, lg.slug));
       }
     }
 
-    // Match OM en direct (depuis le cache live)
     const liveOM = liveEvents.find(m => isOM(m.homeName) || isOM(m.awayName));
-
-    // Dernier résultat OM
     const lastOM = omMatches
       .filter(m => isDone({status:m.status}))
       .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
 
-    // Prochain match OM
     const nextOM = omMatches
       .filter(m => m.status?.type?.state === 'pre')
       .sort((a,b) => new Date(a.date) - new Date(b.date))[0];
 
-    // Charger les détails du dernier match
     if (lastOM) {
       try {
         const s = await espnSummary(lastOM.leagueSlug, lastOM.id);
@@ -527,9 +682,7 @@ async function loadOM() {
 
     let h = `<div class="sec">Allez l'OM 💙</div>`;
 
-    if (liveOM) {
-      h += `<div class="sec">En direct</div>` + renderMatch(liveOM);
-    }
+    if (liveOM) h += `<div class="sec">En direct</div>` + renderMatch(liveOM);
 
     if (nextOM) {
       h += `<div class="sec">Prochain match</div>
@@ -543,9 +696,7 @@ async function loadOM() {
         </div>`;
     }
 
-    if (lastOM) {
-      h += `<div class="sec">Dernier résultat</div>` + renderMatch(lastOM);
-    }
+    if (lastOM) h += `<div class="sec">Dernier résultat</div>` + renderMatch(lastOM);
 
     if (!liveOM && !nextOM && !lastOM) {
       h += `<div class="empty"><span class="empty-icon">💙</span>Aucun match OM trouvé</div>`;
@@ -558,21 +709,129 @@ async function loadOM() {
   }
 }
 
-function showToast(msg, dur = 2500) { const t = document.getElementById('toastEl'); t.textContent = msg; t.style.opacity = '1'; clearTimeout(t._h); t._h = setTimeout(() => t.style.opacity = '0', dur); }
-async function findLiveMatch() { for (const slug of DEMO_SLUGS) { try { const data = await espn(slug); for (const ev of (data.events || [])) { if (isLive(ev)) return { ev, slug }; } } catch(e) {} } return null; }
-async function demoRefresh() { if (!demoActive) return; const p = document.getElementById('p0'); try { const s = await espnSummary(demoSlug, demoId); const ev = s.header || s.event || {}; const { home, away } = getCompetitors(ev); const m = { ...demoBase, homeScore: home.score ?? demoBase.homeScore, awayScore: away.score ?? demoBase.awayScore, status: ev.status ?? demoBase.status, details: getDetailsFromSummary(s), homeTeamId: home.team?.id || demoBase.homeTeamId, awayTeamId: away.team?.id || demoBase.awayTeamId }; if (isDone({status: m.status})) { stopDemo(); return; } p.innerHTML = '<div class="sec">Mode démo</div>' + renderMatch(m); updateUpd(); } catch(e) {} }
-async function startDemo() { if (demoActive) { stopDemo(); return; } goTab(0); document.getElementById('p0').innerHTML = '<div class="loading"><div class="sr"></div>Recherche match...</div>'; const found = await findLiveMatch(); if (!found) { document.getElementById('p0').innerHTML = `<div class="empty">Aucun live trouvé</div>`; return; } demoActive = true; demoSlug = found.slug; demoId = found.ev.id; demoBase = normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug); if (liveInterval) clearInterval(liveInterval); await demoRefresh(); demoInterval = setInterval(demoRefresh, 15000); showToast(`🧪 Démo : ${demoBase.homeName}`); }
-function stopDemo() { demoActive = false; if (demoInterval) clearInterval(demoInterval); showToast('Démo OFF'); startLiveLoop(); }
+function showToast(msg, dur = 2500) {
+  const t = document.getElementById('toastEl');
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._h);
+  t._h = setTimeout(() => t.style.opacity = '0', dur);
+}
 
-const logoEl = document.getElementById('logoMark'); logoEl.addEventListener('pointerdown', () => { pressTimer = setTimeout(startDemo, 3000); }); logoEl.addEventListener('pointerup', () => clearTimeout(pressTimer)); logoEl.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+async function findLiveMatch() {
+  for (const slug of DEMO_SLUGS) {
+    try {
+      const data = await espn(slug);
+      for (const ev of (data.events || [])) {
+        if (isLive(ev)) return { ev, slug };
+      }
+    } catch(e) {}
+  }
+  return null;
+}
 
-function goTab(i) { document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j)); document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j)); if (i === 1 && !calLoaded) loadCal(); if (i === 2) renderResults(); if (i === 3 && !standLoaded) loadOM(); }
-function updateClk() { const n = new Date(); document.getElementById('clk').textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0'); }
-function updateUpd() { const n = new Date(); document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; }
-async function manualRefresh() { const btn = document.getElementById('rbtn'); btn.classList.add('spin'); const idx = [...document.querySelectorAll('.page')].findIndex(p => p.classList.contains('on')); if (idx === 0) await loadLive(false); if (idx === 1) { calLoaded = false; await loadCal(); } if (idx === 2) { await loadLive(true); renderResults(); } if (idx === 3) { standLoaded = false; await loadOM(); } updateUpd(); setTimeout(() => btn.classList.remove('spin'), 500); }
-async function startLiveLoop() { await loadLive(false); updateUpd(); liveInterval = setInterval(async () => { if (!demoActive) { await loadLive(true); updateUpd(); } }, 30000); }
+async function demoRefresh() {
+  if (!demoActive) return;
+  const p = document.getElementById('p0');
+  try {
+    const s = await espnSummary(demoSlug, demoId);
+    const ev = s.header || s.event || {};
+    const { home, away } = getCompetitors(ev);
+    const m = {
+      ...demoBase,
+      homeScore: home.score ?? demoBase.homeScore,
+      awayScore: away.score ?? demoBase.awayScore,
+      status: ev.status ?? demoBase.status,
+      details: getDetailsFromSummary(s),
+      homeTeamId: home.team?.id || demoBase.homeTeamId,
+      awayTeamId: away.team?.id || demoBase.awayTeamId
+    };
+    if (isDone({status: m.status})) {
+      stopDemo();
+      return;
+    }
+    p.innerHTML = '<div class="sec">Mode démo</div>' + renderMatch(m);
+    updateUpd();
+  } catch(e) {}
+}
 
-updateClk(); setInterval(updateClk, 30000); startLiveLoop();
+async function startDemo() {
+  if (demoActive) {
+    stopDemo();
+    return;
+  }
+  goTab(0);
+  document.getElementById('p0').innerHTML = '<div class="loading"><div class="sr"></div>Recherche match...</div>';
+  const found = await findLiveMatch();
+  if (!found) {
+    document.getElementById('p0').innerHTML = `<div class="empty">Aucun live trouvé</div>`;
+    return;
+  }
+  demoActive = true;
+  demoSlug = found.slug;
+  demoId = found.ev.id;
+  demoBase = normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug);
+  if (liveInterval) clearInterval(liveInterval);
+  await demoRefresh();
+  demoInterval = setInterval(demoRefresh, 15000);
+  showToast(`🧪 Démo : ${demoBase.homeName}`);
+}
+
+function stopDemo() {
+  demoActive = false;
+  if (demoInterval) clearInterval(demoInterval);
+  showToast('Démo OFF');
+  startLiveLoop();
+}
+
+const logoEl = document.getElementById('logoMark');
+logoEl.addEventListener('pointerdown', () => { pressTimer = setTimeout(startDemo, 3000); });
+logoEl.addEventListener('pointerup', () => clearTimeout(pressTimer));
+logoEl.addEventListener('pointerleave', () => clearTimeout(pressTimer));
+
+function goTab(i) {
+  document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j));
+  document.querySelectorAll('.page').forEach((p,j) => p.classList.toggle('on', i===j));
+  if (i === 1 && !calLoaded) loadCal();
+  if (i === 2) renderResults();
+  if (i === 3 && !standLoaded) loadOM();
+}
+
+function updateClk() {
+  const n = new Date();
+  document.getElementById('clk').textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+
+function updateUpd() {
+  const n = new Date();
+  document.getElementById('upd').innerHTML = `<span class="upd-live">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+
+async function manualRefresh() {
+  const btn = document.getElementById('rbtn');
+  btn.classList.add('spin');
+  const idx = [...document.querySelectorAll('.page')].findIndex(p => p.classList.contains('on'));
+  if (idx === 0) await loadLive(false);
+  if (idx === 1) { calLoaded = false; await loadCal(); }
+  if (idx === 2) { await loadLive(true); renderResults(); }
+  if (idx === 3) { standLoaded = false; await loadOM(); }
+  updateUpd();
+  setTimeout(() => btn.classList.remove('spin'), 500);
+}
+
+async function startLiveLoop() {
+  await loadLive(false);
+  updateUpd();
+  liveInterval = setInterval(async () => {
+    if (!demoActive) {
+      await loadLive(true);
+      updateUpd();
+    }
+  }, 30000);
+}
+
+updateClk();
+setInterval(updateClk, 30000);
+startLiveLoop();
 </script>
 </body>
 </html>
