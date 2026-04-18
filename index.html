@@ -399,8 +399,8 @@ function normalize(event, leagueName, leagueSlug) {
 
 function scorerBlock(details, homeId, awayId) {
   const goals = (details || []).filter(d => {
-    const txt = String(d?.text || d?.shortText || '').trim();
-    return d?.scoringPlay === true || /^Goal/i.test(txt);
+    const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
+    return d?.scoringPlay === true || txt.includes('goal') || txt.includes('but');
   });
 
   if (!goals.length) return '';
@@ -411,20 +411,39 @@ function scorerBlock(details, homeId, awayId) {
 
   goals
     .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
-    .slice(0, 12)
     .forEach(g => {
-      const nameRaw = getEventName(g);
-      if (!nameRaw) return;
+      const txt = String(g?.text || g?.shortText || '').trim();
+
+      let name =
+        g?.athletesInvolved?.[0]?.displayName ||
+        g?.athletesInvolved?.[0]?.fullName ||
+        '';
+
+      if (!name && txt) {
+        let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(/i);
+        if (m?.[1]) name = m[1].trim();
+      }
+
+      if (!name && txt) {
+        let m = txt.match(/^Goal!?\.?\s*([^,.]+)/i);
+        if (m?.[1]) {
+          const candidate = m[1].trim();
+          if (!/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(candidate)) {
+            name = candidate;
+          }
+        }
+      }
+
+      if (!name) return;
 
       const min = g.clock?.displayValue || '';
       const tid = String(g.team?.id || '');
-      const uniq = `${tid}|${nameRaw}|${min}`;
-
+      const uniq = `${tid}|${name}|${min}`;
       if (seen.has(uniq)) return;
       seen.add(uniq);
 
-      const lineHome = `<div class="goal-left"><span class="gname">${nameRaw}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
-      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${nameRaw}</span></div>`;
+      const lineHome = `<div class="goal-left"><span class="gname">${name}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
+      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${name}</span></div>`;
 
       if (tid && String(homeId) === tid) {
         homeGoals.push(lineHome);
