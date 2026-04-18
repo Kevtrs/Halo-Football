@@ -512,7 +512,7 @@ function renderMatch(m) {
     : `<div class="sct">${lt(m.date)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
 
-  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details)}</div>`;
+  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlockWithSides(m.details, m.homeTeamId, m.awayTeamId)}</div>`;
 }
 
 function renderPriorityMatch(m, title) {
