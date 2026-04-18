@@ -335,6 +335,15 @@ function getEventName(d) {
   const txt = String(d?.text || d?.shortText || '').trim();
   if (!txt) return '';
 
+  if (/^\s*by\s+/i.test(txt)) return '';
+  if (/^\s*[A-Za-zÀ-ÿ0-9 .'-]+,\s*[A-Za-zÀ-ÿ0-9 .'-]+\s*\d+\s*,\s*[A-Za-zÀ-ÿ0-9 .'-]+\s*\d+/i.test(txt)) return '';
+  if (/^VAR Decision:/i.test(txt)) return '';
+  if (/^Attempt/i.test(txt)) return '';
+  if (/^Shot/i.test(txt)) return '';
+  if (/^Missed/i.test(txt)) return '';
+  if (/^Saved/i.test(txt)) return '';
+  if (/^Penalty/i.test(txt)) return '';
+
   const goalMatch = txt.match(/Goal!?\.?\s*([^.(]+)/i);
   if (goalMatch?.[1]) return goalMatch[1].trim();
 
@@ -343,7 +352,7 @@ function getEventName(d) {
 
   return '';
 }
-
+  
 function normalize(event, leagueName, leagueSlug) {
   const { home, away, comp } = getCompetitors(event);
   return {
@@ -366,9 +375,53 @@ function normalize(event, leagueName, leagueSlug) {
 
 function scorerBlock(details, homeId, awayId) {
   const goals = (details || []).filter(d => {
-    const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
-    return d?.scoringPlay === true || txt.startsWith('goal');
+    const txt = String(d?.text || d?.shortText || '').trim();
+    return d?.scoringPlay === true || /^Goal/i.test(txt);
   });
+
+  if (!goals.length) return '';
+
+  const homeGoals = [];
+  const awayGoals = [];
+  const seen = new Set();
+
+  goals
+    .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
+    .slice(0, 12)
+    .forEach(g => {
+      const nameRaw = getEventName(g);
+      if (!nameRaw) return;
+
+      const min = g.clock?.displayValue || '';
+      const tid = String(g.team?.id || '');
+      const uniq = `${tid}|${nameRaw}|${min}`;
+
+      if (seen.has(uniq)) return;
+      seen.add(uniq);
+
+      const lineHome = `<div class="goal-left"><span class="gname">${nameRaw}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
+      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${nameRaw}</span></div>`;
+
+      if (tid && String(homeId) === tid) {
+        homeGoals.push(lineHome);
+      } else if (tid && String(awayId) === tid) {
+        awayGoals.push(lineAway);
+      } else {
+        homeGoals.push(lineHome);
+      }
+    });
+
+  if (!homeGoals.length && !awayGoals.length) return '';
+
+  const maxRows = Math.max(homeGoals.length, awayGoals.length);
+  let rows = '';
+
+  for (let i = 0; i < maxRows; i++) {
+    rows += `${homeGoals[i] || '<div class="goal-left"></div>'}${awayGoals[i] || '<div class="goal-right"></div>'}`;
+  }
+
+  return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows}</div></div>`;
+}
 
   if (!goals.length) return '';
 
@@ -435,6 +488,8 @@ function bookingsBlock(details, homeTeamId, awayTeamId) {
       homeCards.push(lineHome);
     }
   });
+
+  if (!homeCards.length && !awayCards.length) return '';
 
   return `
     <div class="scorers" style="margin-top:8px;">
