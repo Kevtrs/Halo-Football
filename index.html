@@ -329,11 +329,12 @@ function getEventName(d) {
     d?.athletesInvolved?.[0]?.shortName ||
     '';
 
-  if (athleteName) return athleteName;
+  if (athleteName) return athleteName.trim();
 
   const txt = String(d?.text || d?.shortText || '').trim();
   if (!txt) return '';
 
+  // ignorer les lignes parasites
   if (/^\s*by\s+/i.test(txt)) return '';
   if (/^VAR Decision:/i.test(txt)) return '';
   if (/^Attempt/i.test(txt)) return '';
@@ -341,16 +342,31 @@ function getEventName(d) {
   if (/^Missed/i.test(txt)) return '';
   if (/^Saved/i.test(txt)) return '';
   if (/^Penalty/i.test(txt)) return '';
-  if (/^\s*!?[^,]+ \d+\s*,\s*[^,]+ \d+\s*$/i.test(txt)) return '';
 
-  const goalMatch = txt.match(/^Goal!?\.?\s*([^,(]+)/i);
-  if (goalMatch?.[1]) return goalMatch[1].trim();
+  // ignorer les faux textes du type "Celta Vigo 0" ou "SC Freiburg 3"
+  if (/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(txt)) return '';
 
-  const playerTeamMatch = txt.match(/^([^,(]+)\s*\(([^)]+)\)/i);
-  if (playerTeamMatch?.[1]) return playerTeamMatch[1].trim();
+  // Goal! Player Name (...)
+  let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(/i);
+  if (m?.[1]) return m[1].trim();
 
-  const cardMatch = txt.match(/^([^.(]+)\s*\((.*?)\)\s+is shown/i);
-  if (cardMatch?.[1]) return cardMatch[1].trim();
+  // Goal! Player Name
+  m = txt.match(/^Goal!?\.?\s*([^,.]+)/i);
+  if (m?.[1]) {
+    const candidate = m[1].trim();
+    if (!/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(candidate)) return candidate;
+  }
+
+  // "Player Name (Team) is shown ..."
+  m = txt.match(/^([^,(]+)\s*\([^)]+\)\s+is shown/i);
+  if (m?.[1]) return m[1].trim();
+
+  // "Player Name (Team)"
+  m = txt.match(/^([^,(]+)\s*\([^)]+\)/i);
+  if (m?.[1]) {
+    const candidate = m[1].trim();
+    if (!/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(candidate)) return candidate;
+  }
 
   return '';
 }
