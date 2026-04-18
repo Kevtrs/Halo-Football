@@ -279,38 +279,33 @@ function getDetailsFromSummary(s) {
   const fromPlays = s?.plays?.length ? extractFromPlays(s.plays) : [];
   const fromKey = s?.keyPlays?.length ? extractFromPlays(s.keyPlays) : [];
   const fromComm = s?.commentary?.length ? extractFromPlays(s.commentary) : [];
-
-  const fromHeader = (s?.header?.competitions?.[0]?.details || []).filter(d =>
-    d?.athletesInvolved?.[0] && (d?.scoringPlay || d?.yellowCard || d?.redCard)
-  );
-
-  const fromEvent = (s?.event?.competitions?.[0]?.details || []).filter(d =>
-    d?.athletesInvolved?.[0] && (d?.scoringPlay || d?.yellowCard || d?.redCard)
-  );
-
-  const fromDirect = (s?.details || []).filter(d =>
-    d?.athletesInvolved?.[0] && (d?.scoringPlay || d?.yellowCard || d?.redCard)
-  );
+  const fromHeader = s?.header?.competitions?.[0]?.details || [];
+  const fromEvent = s?.event?.competitions?.[0]?.details || [];
+  const fromDirect = s?.details || [];
 
   const merged = [
-    ...fromPlays,
-    ...fromKey,
-    ...fromComm,
     ...fromHeader,
     ...fromEvent,
-    ...fromDirect
+    ...fromDirect,
+    ...fromPlays,
+    ...fromKey,
+    ...fromComm
   ];
 
   const seen = new Set();
   return merged.filter(d => {
+    const athlete =
+      d?.athletesInvolved?.[0]?.displayName ||
+      d?.athletesInvolved?.[0]?.fullName ||
+      '';
+
+    const txt = String(d?.text || d?.shortText || '').trim();
+
     const key = [
       d?.team?.id || '',
       d?.clock?.displayValue || '',
-      d?.athletesInvolved?.[0]?.displayName ||
-      d?.athletesInvolved?.[0]?.fullName ||
-      d?.text ||
-      d?.shortText ||
-      '',
+      athlete,
+      txt,
       d?.scoringPlay ? 'goal' : '',
       d?.yellowCard ? 'yellow' : '',
       d?.redCard ? 'red' : ''
@@ -334,39 +329,16 @@ function getEventName(d) {
   const txt = String(d?.text || d?.shortText || '').trim();
   if (!txt) return '';
 
-  // ignorer les lignes parasites
-  if (/^\s*by\s+/i.test(txt)) return '';
-  if (/^VAR Decision:/i.test(txt)) return '';
-  if (/^Attempt/i.test(txt)) return '';
-  if (/^Shot/i.test(txt)) return '';
-  if (/^Missed/i.test(txt)) return '';
-  if (/^Saved/i.test(txt)) return '';
-  if (/^Penalty/i.test(txt)) return '';
+  let m;
 
-  // ignorer les faux textes du type "Celta Vigo 0" ou "SC Freiburg 3"
-  if (/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(txt)) return '';
-
-  // Goal! Player Name (...)
-  let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(/i);
+  m = txt.match(/Goal!?\.?.*?\.\s*([^,(]+)\s*\(([^)]+)\)/i);
   if (m?.[1]) return m[1].trim();
 
-  // Goal! Player Name
-  m = txt.match(/^Goal!?\.?\s*([^,.]+)/i);
-  if (m?.[1]) {
-    const candidate = m[1].trim();
-    if (!/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(candidate)) return candidate;
-  }
+  m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(([^)]+)\)/i);
+  if (m?.[1]) return m[1].trim();
 
-  // "Player Name (Team) is shown ..."
   m = txt.match(/^([^,(]+)\s*\([^)]+\)\s+is shown/i);
   if (m?.[1]) return m[1].trim();
-
-  // "Player Name (Team)"
-  m = txt.match(/^([^,(]+)\s*\([^)]+\)/i);
-  if (m?.[1]) {
-    const candidate = m[1].trim();
-    if (!/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(candidate)) return candidate;
-  }
 
   return '';
 }
@@ -412,26 +384,21 @@ function scorerBlock(details, homeId, awayId) {
   goals
     .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
     .forEach(g => {
-      const txt = String(g?.text || g?.shortText || '').trim();
-
       let name =
         g?.athletesInvolved?.[0]?.displayName ||
         g?.athletesInvolved?.[0]?.fullName ||
         '';
 
+      const txt = String(g?.text || g?.shortText || '').trim();
+
       if (!name && txt) {
-        let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(/i);
+        let m = txt.match(/Goal!?\.?.*?\.\s*([^,(]+)\s*\(([^)]+)\)/i);
         if (m?.[1]) name = m[1].trim();
       }
 
       if (!name && txt) {
-        let m = txt.match(/^Goal!?\.?\s*([^,.]+)/i);
-        if (m?.[1]) {
-          const candidate = m[1].trim();
-          if (!/^[A-Za-zÀ-ÿ0-9 .'\-]+\s+\d+\s*$/i.test(candidate)) {
-            name = candidate;
-          }
-        }
+        let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(([^)]+)\)/i);
+        if (m?.[1]) name = m[1].trim();
       }
 
       if (!name) return;
