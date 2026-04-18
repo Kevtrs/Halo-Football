@@ -90,9 +90,9 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
   <div class="page" id="p2"><div class="loading"><div class="sr"></div>Chargement des résultats...</div></div>
   <div class="page" id="p3"><div class="loading"><div class="sr"></div>Chargement OM...</div></div>
 </div>
-<div style="text-align:center;font-size:10px;color:var(--muted);padding:4px 0">v1.5</div><div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
+<div style="text-align:center;font-size:10px;color:var(--muted);padding:4px 0">v1.8</div><div class="ftr"><span id="upd">Connexion...</span><span class="ok">● connecté</span></div>
 <div id="toastEl" class="toast" style="opacity:0"></div>
-<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.2</div>
+<div style="text-align:center;font-size:11px;color:#7a9fc0;margin:10px 0">vOM1.7</div>
 
 <script>
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
@@ -151,28 +151,68 @@ function dateKey(d) { return `${d.getFullYear()}${String(d.getMonth()+1).padStar
 function isRecent(dateStr) { return (Date.now() - new Date(dateStr).getTime()) < 86400000; }
 function getCompetitors(event) { const comp = event?.competitions?.[0]; const list = comp?.competitors || []; return { home: list.find(c => c.homeAway === 'home') || list[0] || {}, away: list.find(c => c.homeAway === 'away') || list[1] || {}, comp }; }
 function getDetailsFromSummary(s) {
-  // Ordre de recherche : details directs, puis header, puis event, puis plays
-  if (s.details?.length)                            return s.details;
-  if (s.header?.competitions?.[0]?.details?.length) return s.header.competitions[0].details;
-  if (s.event?.competitions?.[0]?.details?.length)  return s.event.competitions[0].details;
-  if (s.plays?.length)                              return extractFromPlays(s.plays);
-  if (s.keyPlays?.length)                           return extractFromPlays(s.keyPlays);
-  return [];
+  const fromHeader = s?.header?.competitions?.[0]?.details || [];
+  const fromEvent  = s?.event?.competitions?.[0]?.details || [];
+  const fromDirect = s?.details || [];
+  const fromPlays  = s?.plays?.length ? extractFromPlays(s.plays) : [];
+  const fromKey    = s?.keyPlays?.length ? extractFromPlays(s.keyPlays) : [];
+
+  // On fusionne tout, au lieu de retourner la première source trouvée
+  const merged = [...fromHeader, ...fromEvent, ...fromDirect, ...fromPlays, ...fromKey];
+
+  // On enlève les doublons simples
+  const seen = new Set();
+  return merged.filter(d => {
+    const key = [
+      d?.team?.id || '',
+      d?.clock?.displayValue || '',
+      d?.athletesInvolved?.[0]?.displayName || d?.athlete?.displayName || '',
+      d?.scoringPlay ? 'goal' : '',
+      d?.yellowCard ? 'yellow' : '',
+      d?.redCard ? 'red' : ''
+    ].join('|');
+
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function extractFromPlays(plays) {
-  return plays
-    .filter(p => p.scoringPlay === true || p.type?.id === '70' || p.type?.id === '137' || p.type?.id === '138'  // buts
-              || p.type?.id === '94'   // carton jaune
-              || p.type?.id === '93')  // carton rouge
-    .map(p => ({
-      scoringPlay:      p.scoringPlay === true || ['70','137','138'].includes(String(p.type?.id)),
-      yellowCard:       p.type?.id === '94',
-      redCard:          p.type?.id === '93',
-      clock:            p.clock || { displayValue: '' },
-      team:             p.team || {},
-      athletesInvolved: p.athletesInvolved || p.participants || [],
-    }));
+  return (plays || [])
+    .filter(p => {
+      const txt = String(p?.text || p?.shortText || p?.type?.text || '').toLowerCase();
+      const typeId = String(p?.type?.id || '');
+
+      return (
+        p?.scoringPlay === true ||
+        txt.includes('goal') ||
+        txt.includes('but') ||
+        txt.includes('yellow') ||
+        txt.includes('red') ||
+        txt.includes('card') ||
+        typeId === '70' ||
+        typeId === '137' ||
+        typeId === '138' ||
+        typeId === '93' ||
+        typeId === '94'
+      );
+    })
+    .map(p => {
+      const txt = String(p?.text || p?.shortText || p?.type?.text || '').toLowerCase();
+      const typeId = String(p?.type?.id || '');
+
+      const athlete0 = p?.athletesInvolved?.[0] || p?.participants?.[0] || p?.athlete || null;
+
+      return {
+        scoringPlay: p?.scoringPlay === true || txt.includes('goal') || txt.includes('but') || ['70','137','138'].includes(typeId),
+        yellowCard:  p?.yellowCard === true || txt.includes('yellow') || (txt.includes('card') && !txt.includes('red')) || typeId === '94',
+        redCard:     p?.redCard === true || txt.includes('red') || typeId === '93',
+        clock:       p?.clock || { displayValue: '' },
+        team:        p?.team || {},
+        athletesInvolved: athlete0 ? [athlete0] : []
+      };
+    });
 }
 
 function normalize(event, leagueName, leagueSlug) {
