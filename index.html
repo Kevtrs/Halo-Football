@@ -462,6 +462,48 @@ function bookingsBlock(details) {
   `;
 }
 
+function bookingsBlockWithSides(details, homeTeamId, awayTeamId) {
+  const cards = (details || []).filter(d => d.yellowCard || d.redCard);
+  if (!cards.length) return '';
+
+  const homeCards = [];
+  const awayCards = [];
+
+  cards.forEach(c => {
+    const name = getEventName(c);
+    if (!name) return;
+
+    const min = c.clock?.displayValue || '';
+    const icon = c.redCard ? '🟥' : '🟨';
+    const tid = String(c.team?.id || '');
+
+    const lineHome = `<div class="bk-line">${icon}<span>${name}${min ? ' ' + min : ''}</span></div>`;
+    const lineAway = `<div class="bk-line" style="justify-content:flex-end"><span>${name}${min ? ' ' + min : ''}</span>${icon}</div>`;
+
+    if (tid && String(homeTeamId) === tid) {
+      homeCards.push(lineHome);
+    } else if (tid && String(awayTeamId) === tid) {
+      awayCards.push(lineAway);
+    } else {
+      homeCards.push(lineHome);
+    }
+  });
+
+  return `
+    <div class="scorers" style="margin-top:8px;">
+      <div class="scorers-hdr">Cartons</div>
+      <div class="scorers-grid">
+        <div style="padding:6px 10px;">
+          ${homeCards.join('')}
+        </div>
+        <div style="padding:6px 10px;">
+          ${awayCards.join('')}
+        </div>
+      </div>
+    </div>
+  `;
+}
+  
 function renderMatch(m) {
   const state = m.status?.type?.state || '';
   const liveNow = state === 'in';
