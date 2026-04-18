@@ -115,9 +115,7 @@ async function espn(slug, params = '') {
 
 async function espnSummary(slug, eventId) {
   const urls = [
-    slug === 'all'
-      ? `${BASE}/all/summary?event=${eventId}`
-      : `${BASE}/${slug}/summary?event=${eventId}`,
+    slug === 'all' ? `${BASE}/all/summary?event=${eventId}` : `${BASE}/${slug}/summary?event=${eventId}`,
     `${BASE}/all/summary?event=${eventId}`
   ];
 
@@ -249,12 +247,7 @@ function extractFromPlays(plays) {
     .map(p => {
       const txt = String(p?.text || p?.shortText || p?.type?.text || '').toLowerCase();
       const typeId = String(p?.type?.id || '');
-
-      const athlete0 =
-        p?.athletesInvolved?.[0] ||
-        p?.participants?.[0] ||
-        p?.athlete ||
-        null;
+      const athlete0 = p?.athletesInvolved?.[0] || p?.participants?.[0] || p?.athlete || null;
 
       return {
         scoringPlay:
@@ -264,18 +257,15 @@ function extractFromPlays(plays) {
           txt.includes('penalty scored') ||
           txt.includes('own goal') ||
           ['70','137','138'].includes(typeId),
-
         yellowCard:
           p?.yellowCard === true ||
           txt.includes('yellow') ||
           (txt.includes('card') && !txt.includes('red')) ||
           typeId === '94',
-
         redCard:
           p?.redCard === true ||
           txt.includes('red') ||
           typeId === '93',
-
         clock: p?.clock || { displayValue: '' },
         team: p?.team || {},
         text: p?.text || '',
@@ -286,20 +276,29 @@ function extractFromPlays(plays) {
 }
 
 function getDetailsFromSummary(s) {
-  const fromHeader = s?.header?.competitions?.[0]?.details || [];
-  const fromEvent  = s?.event?.competitions?.[0]?.details || [];
-  const fromDirect = s?.details || [];
-  const fromPlays  = s?.plays?.length ? extractFromPlays(s.plays) : [];
-  const fromKey    = s?.keyPlays?.length ? extractFromPlays(s.keyPlays) : [];
-  const fromComm   = s?.commentary?.length ? extractFromPlays(s.commentary) : [];
+  const fromPlays = s?.plays?.length ? extractFromPlays(s.plays) : [];
+  const fromKey = s?.keyPlays?.length ? extractFromPlays(s.keyPlays) : [];
+  const fromComm = s?.commentary?.length ? extractFromPlays(s.commentary) : [];
+
+  const fromHeader = (s?.header?.competitions?.[0]?.details || []).filter(d =>
+    d?.athletesInvolved?.[0] && (d?.scoringPlay || d?.yellowCard || d?.redCard)
+  );
+
+  const fromEvent = (s?.event?.competitions?.[0]?.details || []).filter(d =>
+    d?.athletesInvolved?.[0] && (d?.scoringPlay || d?.yellowCard || d?.redCard)
+  );
+
+  const fromDirect = (s?.details || []).filter(d =>
+    d?.athletesInvolved?.[0] && (d?.scoringPlay || d?.yellowCard || d?.redCard)
+  );
 
   const merged = [
-    ...fromHeader,
-    ...fromEvent,
-    ...fromDirect,
     ...fromPlays,
     ...fromKey,
-    ...fromComm
+    ...fromComm,
+    ...fromHeader,
+    ...fromEvent,
+    ...fromDirect
   ];
 
   const seen = new Set();
@@ -336,16 +335,19 @@ function getEventName(d) {
   if (!txt) return '';
 
   if (/^\s*by\s+/i.test(txt)) return '';
-  if (/^\s*[A-Za-zÀ-ÿ0-9 .'-]+,\s*[A-Za-zÀ-ÿ0-9 .'-]+\s*\d+\s*,\s*[A-Za-zÀ-ÿ0-9 .'-]+\s*\d+/i.test(txt)) return '';
   if (/^VAR Decision:/i.test(txt)) return '';
   if (/^Attempt/i.test(txt)) return '';
   if (/^Shot/i.test(txt)) return '';
   if (/^Missed/i.test(txt)) return '';
   if (/^Saved/i.test(txt)) return '';
   if (/^Penalty/i.test(txt)) return '';
+  if (/^\s*!?[^,]+ \d+\s*,\s*[^,]+ \d+\s*$/i.test(txt)) return '';
 
-  const goalMatch = txt.match(/Goal!?\.?\s*([^.(]+)/i);
+  const goalMatch = txt.match(/^Goal!?\.?\s*([^,(]+)/i);
   if (goalMatch?.[1]) return goalMatch[1].trim();
+
+  const playerTeamMatch = txt.match(/^([^,(]+)\s*\(([^)]+)\)/i);
+  if (playerTeamMatch?.[1]) return playerTeamMatch[1].trim();
 
   const cardMatch = txt.match(/^([^.(]+)\s*\((.*?)\)\s+is shown/i);
   if (cardMatch?.[1]) return cardMatch[1].trim();
@@ -353,21 +355,27 @@ function getEventName(d) {
   return '';
 }
 
+function getEventTeamName(d) {
+  const txt = String(d?.text || d?.shortText || '').trim();
+  const m = txt.match(/\(([^)]+)\)/);
+  return m?.[1]?.trim() || '';
+}
+
 function normalize(event, leagueName, leagueSlug) {
   const { home, away, comp } = getCompetitors(event);
   return {
-    id:         event.id,
+    id: event.id,
     leagueName,
     leagueSlug,
-    date:       event.date,
-    homeName:   home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '?',
-    awayName:   away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '?',
-    homeLogo:   home.team?.logo || '',
-    awayLogo:   away.team?.logo || '',
-    homeScore:  home.score,
-    awayScore:  away.score,
-    status:     comp?.status || event.status || {},
-    details:    comp?.details || [],
+    date: event.date,
+    homeName: home.team?.shortDisplayName || home.team?.displayName || home.team?.name || '?',
+    awayName: away.team?.shortDisplayName || away.team?.displayName || away.team?.name || '?',
+    homeLogo: home.team?.logo || '',
+    awayLogo: away.team?.logo || '',
+    homeScore: home.score,
+    awayScore: away.score,
+    status: comp?.status || event.status || {},
+    details: comp?.details || [],
     homeTeamId: home.team?.id,
     awayTeamId: away.team?.id,
   };
@@ -423,7 +431,7 @@ function scorerBlock(details, homeId, awayId) {
   return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows}</div></div>`;
 }
 
-function bookingsBlock(details, homeTeamId, awayTeamId) {
+function bookingsBlock(details, homeTeamId, awayTeamId, homeName = '', awayName = '') {
   const cards = (details || []).filter(d => d.yellowCard || d.redCard);
   if (!cards.length) return '';
 
@@ -437,17 +445,34 @@ function bookingsBlock(details, homeTeamId, awayTeamId) {
     const min = c.clock?.displayValue || '';
     const icon = c.redCard ? '🟥' : '🟨';
     const tid = String(c.team?.id || '');
+    const textTeam = getEventTeamName(c).toLowerCase();
+    const homeRef = String(homeName).toLowerCase();
+    const awayRef = String(awayName).toLowerCase();
 
     const lineHome = `<div class="bk-line">${icon}<span>${name}${min ? ' ' + min : ''}</span></div>`;
     const lineAway = `<div class="bk-line" style="justify-content:flex-end"><span>${name}${min ? ' ' + min : ''}</span>${icon}</div>`;
 
     if (tid && String(homeTeamId) === tid) {
       homeCards.push(lineHome);
-    } else if (tid && String(awayTeamId) === tid) {
-      awayCards.push(lineAway);
-    } else {
-      homeCards.push(lineHome);
+      return;
     }
+
+    if (tid && String(awayTeamId) === tid) {
+      awayCards.push(lineAway);
+      return;
+    }
+
+    if (textTeam && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) {
+      homeCards.push(lineHome);
+      return;
+    }
+
+    if (textTeam && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) {
+      awayCards.push(lineAway);
+      return;
+    }
+
+    homeCards.push(lineHome);
   });
 
   if (!homeCards.length && !awayCards.length) return '';
@@ -471,7 +496,7 @@ function renderMatch(m) {
     : `<div class="sct">${lt(m.date)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
 
-  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId)}</div>`;
+  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
 }
 
 function renderPriorityMatch(m, title) {
@@ -492,7 +517,7 @@ function renderPriorityMatch(m, title) {
       </div>
       ${minHtml}
       ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
-      ${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId)}
+      ${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}
     </div>`;
 }
 
@@ -506,14 +531,10 @@ async function getNextWorldMatch() {
       return normalize(ev, leagueName, leagueSlug);
     });
 
-    const live = matches
-      .filter(m => (m.status?.type?.state || '') === 'in')
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const live = matches.filter(m => (m.status?.type?.state || '') === 'in').sort((a, b) => new Date(a.date) - new Date(b.date));
     if (live.length) return live[0];
 
-    const upcoming = matches
-      .filter(m => (m.status?.type?.state || '') === 'pre')
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    const upcoming = matches.filter(m => (m.status?.type?.state || '') === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
     return upcoming[0] || null;
   } catch (e) {
     return null;
@@ -563,10 +584,10 @@ async function loadLive(silent = false) {
 
       matches[idx] = {
         ...matches[idx],
-        homeScore:  home.score  ?? matches[idx].homeScore,
-        awayScore:  away.score  ?? matches[idx].awayScore,
-        status:     ev.status   || matches[idx].status,
-        details:    extractedDetails,
+        homeScore: home.score ?? matches[idx].homeScore,
+        awayScore: away.score ?? matches[idx].awayScore,
+        status: ev.status || matches[idx].status,
+        details: extractedDetails,
         homeTeamId: home.team?.id || matches[idx].homeTeamId,
         awayTeamId: away.team?.id || matches[idx].awayTeamId
       };
@@ -708,13 +729,8 @@ async function loadOM() {
     }
 
     const liveOM = liveEvents.find(m => isOM(m.homeName) || isOM(m.awayName));
-    const lastOM = omMatches
-      .filter(m => isDone({status:m.status}))
-      .sort((a,b) => new Date(b.date) - new Date(a.date))[0];
-
-    const nextOM = omMatches
-      .filter(m => m.status?.type?.state === 'pre')
-      .sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+    const lastOM = omMatches.filter(m => isDone({status:m.status})).sort((a,b) => new Date(b.date) - new Date(a.date))[0];
+    const nextOM = omMatches.filter(m => m.status?.type?.state === 'pre').sort((a,b) => new Date(a.date) - new Date(b.date))[0];
 
     if (lastOM) {
       try {
