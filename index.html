@@ -202,7 +202,11 @@ function extractFromPlays(plays) {
       const txt = String(p?.text || p?.shortText || p?.type?.text || '').toLowerCase();
       const typeId = String(p?.type?.id || '');
 
-      const athlete0 = p?.athletesInvolved?.[0] || p?.participants?.[0] || p?.athlete || null;
+      const athlete0 =
+        p?.athletesInvolved?.[0] ||
+        p?.participants?.[0] ||
+        p?.athlete ||
+        null;
 
       return {
         scoringPlay: p?.scoringPlay === true || txt.includes('goal') || txt.includes('but') || ['70','137','138'].includes(typeId),
@@ -210,12 +214,34 @@ function extractFromPlays(plays) {
         redCard:     p?.redCard === true || txt.includes('red') || typeId === '93',
         clock:       p?.clock || { displayValue: '' },
         team:        p?.team || {},
+        text:        p?.text || p?.shortText || '',
         athletesInvolved: athlete0 ? [athlete0] : []
       };
     });
 }
 
-function normalize(event, leagueName, leagueSlug) {
+  function getEventName(d) {
+  const athleteName =
+    d?.athletesInvolved?.[0]?.displayName ||
+    d?.athletesInvolved?.[0]?.fullName ||
+    d?.athletesInvolved?.[0]?.shortName ||
+    '';
+
+  if (athleteName) return athleteName;
+
+  const txt = String(d?.text || d?.shortText || '').trim();
+  if (!txt) return '';
+
+  // nettoie un peu les textes ESPN
+  return txt
+    .replace(/\s*goal\s*/i, '')
+    .replace(/\s*yellow card\s*/i, '')
+    .replace(/\s*red card\s*/i, '')
+    .replace(/\s*\(\d+\)\s*/g, '')
+    .trim();
+}
+
+  function normalize(event, leagueName, leagueSlug) {
   const { home, away, comp } = getCompetitors(event);
   return {
     id:         event.id,
@@ -238,39 +264,52 @@ function normalize(event, leagueName, leagueSlug) {
 function scorerBlock(details, homeId, awayId) {
   const goals = (details || []).filter(d => d.scoringPlay);
   if (!goals.length) return '';
+
   const rows = [...goals]
     .sort((a,b) => (a.clock?.value || 0) - (b.clock?.value || 0))
     .slice(0, 8)
     .map(g => {
-      const nameRaw = g.athletesInvolved?.[0]?.displayName || g.athletesInvolved?.[0]?.fullName || '';
+      const nameRaw = getEventName(g);
       if (!nameRaw) return null;
+
       const min = g.clock?.displayValue || '';
-      // Comparer en string pour éviter les problèmes de type
       const tid = String(g.team?.id || '');
       const isHome = tid && String(homeId) === tid;
       const isAway = tid && String(awayId) === tid;
+
       const minSpan  = min ? `<span class="gmin">${min}</span>` : '';
       const nameSpan = `<span class="gname">${nameRaw}</span>`;
-      // Si on ne sait pas de quel côté → on met à gauche par défaut
-      const left  = (isHome || (!isHome && !isAway))
+
+      const left = (isHome || (!isHome && !isAway))
         ? `<div class="goal-left">${nameSpan}<span>⚽</span>${minSpan}</div>`
         : `<div class="goal-left"></div>`;
+
       const right = isAway
         ? `<div class="goal-right">${minSpan}<span>⚽</span>${nameSpan}</div>`
         : `<div class="goal-right"></div>`;
+
       return left + right;
     })
     .filter(Boolean);
+
   if (!rows.length) return '';
   return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows.join('')}</div></div>`;
 }
-
+  
 function bookingsBlock(details) {
-  const cards = (details || []).filter(d => d.yellowCard || d.redCard); if (!cards.length) return '';
-  const lines = cards.map(c => { const name = c.athletesInvolved?.[0]?.displayName || c.athletesInvolved?.[0]?.fullName || ''; if (!name) return ''; const min = c.clock?.displayValue || ''; return `<div class="bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`; }).filter(Boolean).join('');
+  const cards = (details || []).filter(d => d.yellowCard || d.redCard);
+  if (!cards.length) return '';
+
+  const lines = cards.map(c => {
+    const name = getEventName(c);
+    if (!name) return '';
+    const min = c.clock?.displayValue || '';
+    return `<div class="bk-line"><span>${c.redCard ? '🟥' : '🟨'}</span><span>${name}${min ? ' ' + min : ''}</span></div>`;
+  }).filter(Boolean).join('');
+
   return lines ? `<div class="bookings">${lines}</div>` : '';
 }
-
+  
 function renderMatch(m) {
   const state = m.status?.type?.state || '';
   const liveNow = state === 'in';
