@@ -927,7 +927,7 @@ async function startDemo() {
   demoSlug = found.slug;
   demoId = found.ev.id;
   demoBase = normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug);
-  if (liveInterval) clearInterval(liveInterval);
+  if (liveInterval) clearTimeout(liveInterval);
   await demoRefresh();
   demoInterval = setInterval(demoRefresh, 15000);
   showToast(`🧪 Démo : ${demoBase.homeName}`);
@@ -978,12 +978,19 @@ async function manualRefresh() {
 async function startLiveLoop() {
   await loadLive(false);
   updateUpd();
-  liveInterval = setInterval(async () => {
+  scheduleNextPoll();
+}
+
+function scheduleNextPoll() {
+  clearTimeout(liveInterval);
+  const delay = liveEvents.length > 0 ? 15000 : 30000;
+  liveInterval = setTimeout(async () => {
     if (!demoActive) {
       await loadLive(true);
       updateUpd();
     }
-  }, 30000);
+    scheduleNextPoll();
+  }, delay);
 }
 
 updateClk();
