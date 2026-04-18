@@ -67,6 +67,9 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .cal-i{flex:1;min-width:0}.cal-tn{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;color:var(--white)}.cal-cn{font-size:11px;color:var(--dim);font-weight:500}
 .day-sep{font-size:11px;color:var(--om2);font-weight:700;letter-spacing:.5px;padding:14px 2px 6px;border-top:1px solid var(--bg3);margin-top:4px}.day-sep:first-child{border-top:none;margin-top:0;padding-top:2px}
 .ftr{padding:8px 20px 6px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600}.ok{color:var(--om)}.upd-live{color:var(--om2)}
+.lf-bar{display:flex;gap:6px;padding:6px 0 12px;overflow-x:auto;scrollbar-width:none}.lf-bar::-webkit-scrollbar{display:none}
+.lf{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;color:var(--dim);background:var(--bg3);border:1px solid var(--muted);cursor:pointer;user-select:none;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.lf.on{background:var(--om);color:#fff;border-color:var(--om)}
 .demo-btn{background:rgba(0,155,222,.12);border:1px solid rgba(0,155,222,.25);color:var(--om);padding:11px 22px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:14px;display:inline-block}
 .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--b2);color:var(--white);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;transition:opacity .4s;white-space:nowrap;pointer-events:none;font-family:var(--f)}
 @media(min-width:640px){.hdr,.content,.ftr{max-width:780px;margin-left:auto;margin-right:auto;padding-left:32px;padding-right:32px}html,body{background:#02060e}.hdr{background:#02060e}}
@@ -111,6 +114,7 @@ const LEAGUES = [
 const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1','uefa.europa.conf','usa.1','mex.1','bra.1','arg.1','jpn.1'];
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
 let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
+let activeLeagueFilter = 'all', cachedNextWorld = null;
 
 async function espn(slug, params = '') {
   const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
@@ -561,6 +565,52 @@ async function getNextWorldMatch() {
   }
 }
 
+function setLeagueFilter(slug) {
+  activeLeagueFilter = slug;
+  renderLivePage();
+}
+
+function renderLivePage() {
+  const p = document.getElementById('p0');
+
+  if (!liveEvents.length) {
+    if (cachedNextWorld) {
+      const state = cachedNextWorld.status?.type?.state || '';
+      const title = state === 'in'
+        ? `Match mondial en direct · ${getMatchTimeLabel(cachedNextWorld)}`
+        : `Prochain match mondial dans ${getMatchTimeLabel(cachedNextWorld)}`;
+      p.innerHTML = renderPriorityMatch(cachedNextWorld, title);
+    } else {
+      p.innerHTML = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
+    }
+    return;
+  }
+
+  const presentSlugs = [...new Set(liveEvents.map(m => m.leagueSlug))];
+  const presentLeagues = LEAGUES.filter(lg => presentSlugs.includes(lg.slug));
+
+  let filterBar = '';
+  if (presentLeagues.length > 1) {
+    if (activeLeagueFilter !== 'all' && !presentSlugs.includes(activeLeagueFilter)) activeLeagueFilter = 'all';
+    const pills = presentLeagues.map(lg =>
+      `<div class="lf${activeLeagueFilter === lg.slug ? ' on' : ''}" onclick="setLeagueFilter('${lg.slug}')">${lg.name}</div>`
+    ).join('');
+    filterBar = `<div class="lf-bar"><div class="lf${activeLeagueFilter === 'all' ? ' on' : ''}" onclick="setLeagueFilter('all')">Toutes</div>${pills}</div>`;
+  }
+
+  const filtered = activeLeagueFilter === 'all' ? liveEvents : liveEvents.filter(m => m.leagueSlug === activeLeagueFilter);
+
+  let h = filterBar;
+  if (filtered.length) {
+    h += `<div class="sec">En cours · <b>${filtered.length} match${filtered.length > 1 ? 's' : ''}</b></div>`;
+    filtered.forEach(m => h += renderMatch(m));
+  } else {
+    h += `<div class="empty"><span class="empty-icon">⚽</span>Aucun match en direct pour cette compétition</div>`;
+  }
+
+  p.innerHTML = h;
+}
+
 async function loadLive(silent = false) {
   const p = document.getElementById('p0');
   if (!silent) p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement...</div>';
@@ -617,11 +667,7 @@ async function loadLive(silent = false) {
     finishedTodayEvents = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
     document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
 
-    let h = '';
-    if (liveEvents.length) {
-      h += `<div class="sec">En cours · <b>${liveEvents.length} match${liveEvents.length > 1 ? 's' : ''}</b></div>`;
-      liveEvents.forEach(m => h += renderMatch(m));
-    } else {
+    if (!liveEvents.length) {
       const nextWorld = await getNextWorldMatch();
       if (nextWorld) {
         try {
@@ -635,18 +681,13 @@ async function loadLive(silent = false) {
           nextWorld.homeTeamId = home.team?.id || nextWorld.homeTeamId;
           nextWorld.awayTeamId = away.team?.id || nextWorld.awayTeamId;
         } catch(e) {}
-
-        const state = nextWorld.status?.type?.state || '';
-        const title = state === 'in'
-          ? `Match mondial en direct · ${getMatchTimeLabel(nextWorld)}`
-          : `Prochain match mondial dans ${getMatchTimeLabel(nextWorld)}`;
-        h += renderPriorityMatch(nextWorld, title);
+        cachedNextWorld = nextWorld;
       } else {
-        h = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
+        cachedNextWorld = null;
       }
     }
 
-    p.innerHTML = h;
+    renderLivePage();
     if (document.getElementById('p2').classList.contains('on')) renderResults();
   } catch(e) {
     if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`;
