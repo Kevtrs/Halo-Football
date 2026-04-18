@@ -370,7 +370,7 @@ function normalize(event, leagueName, leagueSlug) {
   };
 }
 
-function scorerBlock(details, homeId, awayId) {
+function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
   const goals = (details || []).filter(d => {
     const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
     return d?.scoringPlay === true || txt.includes('goal') || txt.includes('but');
@@ -385,23 +385,12 @@ function scorerBlock(details, homeId, awayId) {
   goals
     .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
     .forEach(g => {
-      let name =
-        g?.athletesInvolved?.[0]?.displayName ||
-        g?.athletesInvolved?.[0]?.fullName ||
-        '';
-
+      let name = g?.athletesInvolved?.[0]?.displayName || g?.athletesInvolved?.[0]?.fullName || '';
       const txt = String(g?.text || g?.shortText || '').trim();
-
       if (!name && txt) {
         let m = txt.match(/Goal!?\.?.*?\.\s*([^,(]+)\s*\(([^)]+)\)/i);
         if (m?.[1]) name = m[1].trim();
       }
-
-      if (!name && txt) {
-        let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(([^)]+)\)/i);
-        if (m?.[1]) name = m[1].trim();
-      }
-
       if (!name) return;
 
       const min = g.clock?.displayValue || '';
@@ -410,12 +399,20 @@ function scorerBlock(details, homeId, awayId) {
       if (seen.has(uniq)) return;
       seen.add(uniq);
 
-      const lineHome = `<div class="goal-left"><span class="gname">${name}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
-      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${name}</span></div>`;
+      const lineHome = `<div class="bk-line"><span>⚽</span><span>${name}${min ? ' ' + min : ''}</span></div>`;
+      const lineAway = `<div class="bk-line" style="justify-content:flex-end"><span>${name}${min ? ' ' + min : ''}</span><span>⚽</span></div>`;
+
+      const textTeam = String(g?.teamName || '').toLowerCase();
+      const homeRef  = String(homeName).toLowerCase();
+      const awayRef  = String(awayName).toLowerCase();
 
       if (tid && String(homeId) === tid) {
         homeGoals.push(lineHome);
       } else if (tid && String(awayId) === tid) {
+        awayGoals.push(lineAway);
+      } else if (textTeam && homeRef && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) {
+        homeGoals.push(lineHome);
+      } else if (textTeam && awayRef && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) {
         awayGoals.push(lineAway);
       } else {
         homeGoals.push(lineHome);
@@ -424,25 +421,18 @@ function scorerBlock(details, homeId, awayId) {
 
   if (!homeGoals.length && !awayGoals.length) return '';
 
-  // Même structure que les cartons : colonne dom à gauche, colonne ext à droite
   const maxRows = Math.max(homeGoals.length, awayGoals.length);
   let rows = '';
   for (let i = 0; i < maxRows; i++) {
-    rows += (homeGoals[i] || '<div class="goal-left"></div>') +
-            (awayGoals[i] || '<div class="goal-right"></div>');
+    rows += (homeGoals[i] || '<div class="bk-line"></div>') +
+            (awayGoals[i] || '<div class="bk-line"></div>');
   }
-
-  const colHome = homeGoals.length
-    ? `<div style="display:flex;flex-direction:column;gap:2px">${homeGoals.join('')}</div>`
-    : `<div></div>`;
-  const colAway = awayGoals.length
-    ? `<div style="display:flex;flex-direction:column;gap:2px">${awayGoals.join('')}</div>`
-    : `<div></div>`;
 
   return `<div class="scorers">
     <div class="scorers-hdr">Buteurs</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;padding:4px 0">
-      ${colHome}${colAway}
+      <div style="display:flex;flex-direction:column">${homeGoals.join('')}</div>
+      <div style="display:flex;flex-direction:column">${awayGoals.join('')}</div>
     </div>
   </div>`;
 }
@@ -512,7 +502,7 @@ function renderMatch(m) {
     : `<div class="sct">${lt(m.date)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
 
-  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
+  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
 }
 
 function renderPriorityMatch(m, title) {
@@ -532,7 +522,7 @@ function renderPriorityMatch(m, title) {
         <div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div>
       </div>
       ${minHtml}
-      ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
+      ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}
       ${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}
     </div>`;
 }
