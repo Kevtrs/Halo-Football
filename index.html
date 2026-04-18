@@ -115,6 +115,7 @@ const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
 let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
 let activeLeagueFilter = 'all', cachedNextWorld = null;
+let activeCalFilter = 'all', calEvents = [];
 
 async function espn(slug, params = '') {
   const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
@@ -694,6 +695,56 @@ async function loadLive(silent = false) {
   }
 }
 
+function setCalFilter(slug) {
+  activeCalFilter = slug;
+  renderCalPage();
+}
+
+function renderCalPage() {
+  const p = document.getElementById('p1');
+
+  if (!calEvents.length) {
+    p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`;
+    return;
+  }
+
+  const presentSlugs = [...new Set(calEvents.map(m => m.leagueSlug))];
+  const presentLeagues = LEAGUES.filter(lg => presentSlugs.includes(lg.slug));
+
+  let filterBar = '';
+  if (presentLeagues.length > 1) {
+    if (activeCalFilter !== 'all' && !presentSlugs.includes(activeCalFilter)) activeCalFilter = 'all';
+    const pills = presentLeagues.map(lg =>
+      `<div class="lf${activeCalFilter === lg.slug ? ' on' : ''}" onclick="setCalFilter('${lg.slug}')">${lg.name}</div>`
+    ).join('');
+    filterBar = `<div class="lf-bar"><div class="lf${activeCalFilter === 'all' ? ' on' : ''}" onclick="setCalFilter('all')">Toutes</div>${pills}</div>`;
+  }
+
+  const filtered = activeCalFilter === 'all' ? calEvents : calEvents.filter(m => m.leagueSlug === activeCalFilter);
+
+  if (!filtered.length) {
+    p.innerHTML = filterBar + `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu pour cette compétition</div>`;
+    return;
+  }
+
+  const byDay = {};
+  filtered.forEach(m => {
+    const k = dl(m.date);
+    if (!byDay[k]) byDay[k] = [];
+    byDay[k].push(m);
+  });
+
+  let h = filterBar;
+  for (const [day, ms] of Object.entries(byDay)) {
+    h += `<div class="day-sep">${day}</div>`;
+    ms.forEach(m => {
+      h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
+    });
+  }
+
+  p.innerHTML = h;
+}
+
 async function loadCal() {
   const p = document.getElementById('p1');
   p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement du calendrier...</div>';
@@ -717,28 +768,8 @@ async function loadCal() {
       }
     }
 
-    const matches = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
-    if (!matches.length) {
-      p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`;
-      return;
-    }
-
-    const byDay = {};
-    matches.forEach(m => {
-      const k = dl(m.date);
-      if (!byDay[k]) byDay[k] = [];
-      byDay[k].push(m);
-    });
-
-    let h = '';
-    for (const [day, ms] of Object.entries(byDay)) {
-      h += `<div class="day-sep">${day}</div>`;
-      ms.forEach(m => {
-        h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
-      });
-    }
-
-    p.innerHTML = h;
+    calEvents = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
+    renderCalPage();
     calLoaded = true;
   } catch(e) {
     p.innerHTML = `<div class="err">Erreur calendrier<br><small>${e.message}</small></div>`;
