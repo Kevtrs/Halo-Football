@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
@@ -423,14 +424,27 @@ function scorerBlock(details, homeId, awayId) {
 
   if (!homeGoals.length && !awayGoals.length) return '';
 
+  // Même structure que les cartons : colonne dom à gauche, colonne ext à droite
   const maxRows = Math.max(homeGoals.length, awayGoals.length);
   let rows = '';
-
   for (let i = 0; i < maxRows; i++) {
-    rows += `${homeGoals[i] || '<div class="goal-left"></div>'}${awayGoals[i] || '<div class="goal-right"></div>'}`;
+    rows += (homeGoals[i] || '<div class="goal-left"></div>') +
+            (awayGoals[i] || '<div class="goal-right"></div>');
   }
 
-  return `<div class="scorers"><div class="scorers-hdr">Buteurs</div><div class="scorers-grid">${rows}</div></div>`;
+  const colHome = homeGoals.length
+    ? `<div style="display:flex;flex-direction:column;gap:2px">${homeGoals.join('')}</div>`
+    : `<div></div>`;
+  const colAway = awayGoals.length
+    ? `<div style="display:flex;flex-direction:column;gap:2px">${awayGoals.join('')}</div>`
+    : `<div></div>`;
+
+  return `<div class="scorers">
+    <div class="scorers-hdr">Buteurs</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;padding:4px 0">
+      ${colHome}${colAway}
+    </div>
+  </div>`;
 }
 
 function bookingsBlock(details, homeTeamId, awayTeamId, homeName = '', awayName = '') {
@@ -900,5 +914,6 @@ updateClk();
 setInterval(updateClk, 30000);
 startLiveLoop();
 </script>
+
 </body>
 </html>
