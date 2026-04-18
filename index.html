@@ -369,7 +369,7 @@ function normalize(event, leagueName, leagueSlug) {
   };
 }
 
-function scorerBlock(details, homeId, awayId) {
+function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
   const goals = (details || []).filter(d => {
     const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
     return d?.scoringPlay === true || txt.includes('goal') || txt.includes('but');
@@ -384,27 +384,14 @@ function scorerBlock(details, homeId, awayId) {
   goals
     .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
     .forEach(g => {
-      let name =
-        g?.athletesInvolved?.[0]?.displayName ||
-        g?.athletesInvolved?.[0]?.fullName ||
-        '';
-
-      const txt = String(g?.text || g?.shortText || '').trim();
-
-      if (!name && txt) {
-        let m = txt.match(/Goal!?\.?.*?\.\s*([^,(]+)\s*\(([^)]+)\)/i);
-        if (m?.[1]) name = m[1].trim();
-      }
-
-      if (!name && txt) {
-        let m = txt.match(/^Goal!?\.?\s*([^,(]+)\s*\(([^)]+)\)/i);
-        if (m?.[1]) name = m[1].trim();
-      }
-
+      const name = getEventName(g);
       if (!name) return;
 
       const min = g.clock?.displayValue || '';
       const tid = String(g.team?.id || '');
+      const textTeam = getEventTeamName(g).toLowerCase();
+      const homeRef = String(homeName).toLowerCase();
+      const awayRef = String(awayName).toLowerCase();
       const uniq = `${tid}|${name}|${min}`;
       if (seen.has(uniq)) return;
       seen.add(uniq);
@@ -414,11 +401,25 @@ function scorerBlock(details, homeId, awayId) {
 
       if (tid && String(homeId) === tid) {
         homeGoals.push(lineHome);
-      } else if (tid && String(awayId) === tid) {
-        awayGoals.push(lineAway);
-      } else {
-        homeGoals.push(lineHome);
+        return;
       }
+
+      if (tid && String(awayId) === tid) {
+        awayGoals.push(lineAway);
+        return;
+      }
+
+      if (textTeam && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) {
+        homeGoals.push(lineHome);
+        return;
+      }
+
+      if (textTeam && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) {
+        awayGoals.push(lineAway);
+        return;
+      }
+
+      homeGoals.push(lineHome);
     });
 
   if (!homeGoals.length && !awayGoals.length) return '';
@@ -498,7 +499,7 @@ function renderMatch(m) {
     : `<div class="sct">${lt(m.date)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
 
-  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
+  return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
 }
 
 function renderPriorityMatch(m, title) {
@@ -518,7 +519,7 @@ function renderPriorityMatch(m, title) {
         <div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div>
       </div>
       ${minHtml}
-      ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId)}
+      ${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}
       ${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}
     </div>`;
 }
