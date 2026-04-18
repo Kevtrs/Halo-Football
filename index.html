@@ -389,6 +389,7 @@ function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
 
       const min = g.clock?.displayValue || '';
       const tid = String(g.team?.id || '');
+      const teamDisplayName = String(g.team?.displayName || g.team?.name || g.team?.shortDisplayName || '').toLowerCase();
       const textTeam = getEventTeamName(g).toLowerCase();
       const homeRef = String(homeName).toLowerCase();
       const awayRef = String(awayName).toLowerCase();
@@ -405,6 +406,16 @@ function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
       }
 
       if (tid && String(awayId) === tid) {
+        awayGoals.push(lineAway);
+        return;
+      }
+
+      if (teamDisplayName && (homeRef.includes(teamDisplayName) || teamDisplayName.includes(homeRef))) {
+        homeGoals.push(lineHome);
+        return;
+      }
+
+      if (teamDisplayName && (awayRef.includes(teamDisplayName) || teamDisplayName.includes(awayRef))) {
         awayGoals.push(lineAway);
         return;
       }
