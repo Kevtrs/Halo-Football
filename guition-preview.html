@@ -3,515 +3,410 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Guition Preview — 480×272</title>
+<title>Guition Preview — 272×480</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg:#050810;--bg2:#080d18;--bg3:#0d1428;
+  --om:#009BDE;--om2:#38bdf8;--white:#f0f6ff;
+  --dim:#7a9fc0;--muted:#243650;
+  --b1:rgba(0,155,222,0.1);--b2:rgba(0,155,222,0.25);
+  --f:'Outfit',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body {
-  background: #02060e;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  font-family: 'Segoe UI', sans-serif;
-  gap: 16px;
+  background:#02060e;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  font-family:var(--f);
+  gap:14px;
 }
-.label {
-  color: #3a5a7a;
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-/* Device frame */
+.outer-label { color:#1a3050;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-family:var(--f); }
+
+/* ── Device shell 272×480 portrait ── */
 .device {
-  width: 480px;
-  height: 272px;
-  background: #111;
-  border-radius: 8px;
-  border: 2px solid #1a2a3a;
-  box-shadow: 0 0 60px rgba(0,155,222,.15), 0 0 0 1px #0a1520;
-  overflow: hidden;
-  position: relative;
-  cursor: grab;
-  user-select: none;
-}
-.device:active { cursor: grabbing; }
-
-/* Pages container */
-.pages {
-  display: flex;
-  height: 100%;
-  transition: transform .3s cubic-bezier(.4,0,.2,1);
-  will-change: transform;
+  width:272px;
+  height:480px;
+  background:var(--bg);
+  border-radius:10px;
+  border:2px solid #111d2e;
+  box-shadow:0 0 80px rgba(0,155,222,.12),0 0 0 1px #080d18;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 
-/* Single page = one match */
-.page {
-  min-width: 480px;
-  height: 272px;
-  background: #050810;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-  overflow: hidden;
+/* ── Header ── */
+.hdr { background:var(--bg);padding:10px 12px 0;flex-shrink:0; }
+.hdr-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:10px; }
+.logo { display:flex;align-items:center;gap:7px; }
+.logo-mark {
+  width:28px;height:28px;border-radius:8px;background:var(--om);
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;color:#fff;
+  box-shadow:0 0 12px rgba(0,155,222,.45);letter-spacing:-.5px;
+}
+.logo-text { font-size:15px;font-weight:800;color:var(--white); }
+.logo-text span{color:var(--om)}
+.hdr-r { display:flex;align-items:center;gap:6px; }
+.clk { font-size:11px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums; }
+.rbtn {
+  background:var(--bg3);border:1px solid var(--b2);color:var(--om);
+  width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;user-select:none;
 }
 
-/* Top bar */
-.top-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 10px 16px 8px;
-  border-bottom: 1px solid rgba(0,155,222,.1);
-  flex-shrink: 0;
+/* ── Tabs ── */
+.tabs-wrap {
+  display:flex;gap:5px;padding:0 0 10px;
+  overflow-x:auto;scrollbar-width:none;
 }
-.comp-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: #4a7a9b;
-  letter-spacing: 1px;
-  text-transform: uppercase;
+.tabs-wrap::-webkit-scrollbar{display:none}
+.tab {
+  display:flex;align-items:center;gap:5px;
+  padding:6px 12px;border-radius:50px;
+  font-size:11px;font-weight:700;color:var(--dim);
+  background:var(--bg2);border:1px solid var(--muted);
+  cursor:pointer;white-space:nowrap;flex-shrink:0;
+  transition:all .15s;user-select:none;
 }
-.status-badge {
-  font-size: 10px;
-  font-weight: 800;
-  padding: 3px 10px;
-  border-radius: 20px;
-  letter-spacing: .5px;
-  text-transform: uppercase;
-}
-.badge-live {
-  background: rgba(0,155,222,.2);
-  color: #009BDE;
-  border: 1px solid rgba(0,155,222,.4);
-  animation: blink 1.4s infinite;
-}
-.badge-ft {
-  background: rgba(36,54,80,.5);
-  color: #4a7a9b;
-  border: 1px solid #1a2a3a;
-}
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+.tab.on{background:var(--om);color:#fff;border-color:var(--om);box-shadow:0 0 12px rgba(0,155,222,.3)}
+.tab-dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:blink 1.3s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* Match zone */
-.match-zone {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0;
-  padding: 8px 10px 6px;
-  flex-shrink: 0;
+/* ── Content ── */
+.content {
+  flex:1;overflow-y:auto;overflow-x:hidden;
+  padding:6px 10px 10px;
+  scrollbar-width:thin;scrollbar-color:var(--muted) transparent;
 }
-.team {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  width: 130px;
-}
-.team-logo {
-  width: 42px;
-  height: 42px;
-  object-fit: contain;
-  filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
-}
-.team-logo-placeholder {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #0d1428;
-  border: 1px solid rgba(0,155,222,.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  font-weight: 900;
-  color: #009BDE;
-}
-.team-name {
-  font-size: 15px;
-  font-weight: 800;
-  color: #f0f6ff;
-  text-align: center;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-.score-block {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  flex-shrink: 0;
-  width: 110px;
-}
-.score-nums {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-.score-n {
-  font-size: 52px;
-  font-weight: 900;
-  color: #f0f6ff;
-  line-height: 1;
-  min-width: 32px;
-  text-align: center;
-}
-.score-sep {
-  font-size: 24px;
-  color: #2a4060;
-  font-weight: 300;
-  margin-top: -4px;
-}
-.match-time {
-  font-size: 12px;
-  font-weight: 700;
-  color: #009BDE;
-  letter-spacing: .5px;
-}
-.match-time.ft { color: #2a4060; }
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--muted);border-radius:3px}
+.page{display:none}.page.on{display:block}
 
-/* Bottom info */
-.bottom {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  border-top: 1px solid rgba(0,155,222,.08);
-  overflow: hidden;
-}
-.goals-col, .cards-col {
-  padding: 6px 12px;
-  overflow: hidden;
-}
-.goals-col {
-  border-right: 1px solid rgba(0,155,222,.08);
-}
-.col-title {
-  font-size: 9px;
-  font-weight: 800;
-  color: #009BDE;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-.goal-row {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  margin-bottom: 3px;
-  font-size: 11px;
-  color: #c0d8ee;
-  font-weight: 600;
-}
-.goal-row .side-away {
-  justify-content: flex-end;
-  text-align: right;
-}
-.gmin { color: #009BDE; font-size: 10px; font-weight: 700; flex-shrink: 0; }
-.card-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  margin-bottom: 3px;
-  font-size: 11px;
-  color: #6a8aaa;
-  font-weight: 500;
-}
-.cy { display:inline-block;width:8px;height:11px;background:#FBBF24;border-radius:1px;flex-shrink:0; }
-.cr { display:inline-block;width:8px;height:11px;background:#EF4444;border-radius:1px;flex-shrink:0; }
+/* ── Sections ── */
+.sec{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1.5px;padding:6px 2px 5px;text-transform:uppercase}
+.sec:first-child{padding-top:2px}
+.sec b{color:var(--om2)}
 
-/* Nav dots */
-.nav {
-  position: absolute;
-  bottom: 7px;
-  left: 0; right: 0;
-  display: flex;
-  justify-content: center;
-  gap: 5px;
-  z-index: 10;
-}
-.dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
-  background: #1a3050;
-  transition: all .2s;
-  cursor: pointer;
-}
-.dot.on { background: #009BDE; width: 14px; border-radius: 3px; }
+/* ── Match card ── */
+.mc{background:var(--bg2);border:1px solid var(--b1);border-radius:14px;padding:10px 11px;margin-bottom:8px}
+.mc.live{border-color:var(--b2);background:linear-gradient(150deg,#060c1e,#080d18);box-shadow:0 2px 18px rgba(0,155,222,.08)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:4px}
+.mc-comp{font-size:9px;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:60%}
+.badge{font-size:8px;font-weight:800;padding:3px 8px;border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase;flex-shrink:0}
+.b-live{background:rgba(0,155,222,.18);color:var(--om);border:1px solid rgba(0,155,222,.35);animation:blink 1.4s infinite}
+.b-ft{background:rgba(36,54,80,.4);color:var(--muted);border:1px solid var(--muted)}
+.teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:5px}
+.th{display:flex;align-items:center;gap:7px}
+.ta{display:flex;align-items:center;gap:7px;flex-direction:row-reverse}
+.cr{width:24px;height:24px;object-fit:contain;flex-shrink:0}
+.cr-e{width:24px;height:24px;background:var(--bg3);border-radius:50%;flex-shrink:0;border:1px solid var(--b2)}
+.tn{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white)}
+.th .tn{text-align:left}.ta .tn{text-align:right}
+.scb{display:flex;align-items:center;gap:3px;flex-shrink:0;padding:4px 9px;background:var(--bg3);border-radius:11px;border:1px solid var(--b2)}
+.scn{font-size:22px;font-weight:900;color:var(--white);min-width:15px;text-align:center;line-height:1}
+.scs{font-size:12px;color:var(--muted);font-weight:400}
+.sct{font-size:14px;font-weight:800;color:var(--om2);text-align:center;white-space:nowrap;padding:4px 9px;background:rgba(56,189,248,.07);border-radius:9px;border:1px solid rgba(56,189,248,.15)}
+.mc-min{text-align:center;font-size:11px;color:var(--om);margin-top:7px;font-weight:700}
 
-/* Swipe hint */
-.hint {
-  position: absolute;
-  bottom: 30px;
-  left: 0; right: 0;
-  text-align: center;
-  font-size: 9px;
-  color: #1a3050;
-  letter-spacing: 1px;
-  pointer-events: none;
-}
+/* ── Scorers ── */
+.scorers{margin-top:9px;background:rgba(0,155,222,.06);border-radius:10px;border:1px solid rgba(0,155,222,.15);overflow:hidden}
+.scorers-hdr{padding:5px 10px 4px;font-size:8px;font-weight:800;color:var(--om);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid rgba(0,155,222,.1)}
+.scorers-grid{display:grid;grid-template-columns:1fr 1fr}
+.goal-left,.goal-right{padding:4px 10px;font-size:11px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:4px;border-top:1px solid rgba(0,155,222,.06);min-width:0;overflow:hidden}
+.goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
+.gmin{color:var(--om);font-weight:700;font-size:10px;flex-shrink:0}
+.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-line{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--dim);font-weight:500}
 
-/* Countdown page */
-.countdown-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  gap: 6px;
-  background: #050810;
-}
-.cd-label { font-size: 10px; color: #2a4060; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
-.cd-teams { font-size: 18px; font-weight: 800; color: #f0f6ff; }
-.cd-time { font-size: 48px; font-weight: 900; color: #009BDE; letter-spacing: -2px; line-height: 1; }
-.cd-date { font-size: 12px; color: #2a5070; font-weight: 600; }
+/* ── Calendar ── */
+.cal-card{background:var(--bg2);border:1px solid var(--b1);border-radius:12px;padding:9px 11px;margin-bottom:7px;display:flex;align-items:center;gap:9px}
+.cal-t{font-size:14px;font-weight:800;color:var(--om);min-width:40px;flex-shrink:0}
+.cal-cc{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.ccr{width:20px;height:20px;object-fit:contain}
+.ccr-e{width:20px;height:20px;background:var(--bg3);border-radius:50%;border:1px solid var(--b2)}
+.cal-i{flex:1;min-width:0}
+.cal-tn{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;color:var(--white)}
+.cal-cn{font-size:10px;color:var(--dim);font-weight:500}
+.day-sep{font-size:10px;color:var(--om2);font-weight:700;letter-spacing:.5px;padding:9px 2px 5px;border-top:1px solid var(--bg3);margin-top:4px}
+.day-sep:first-child{border-top:none;margin-top:0;padding-top:2px}
 
-/* Night mode page */
-.night-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  background: #020408;
-  gap: 8px;
-}
-.night-score { font-size: 64px; font-weight: 900; color: #0a2030; line-height:1; }
-.night-teams { font-size: 13px; color: #0a2030; font-weight: 700; }
-.night-hint { font-size: 9px; color: #0a1828; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+/* ── OM ── */
+.om-hdr{text-align:center;padding:8px 0 6px;font-size:9px;font-weight:700;color:var(--om);letter-spacing:2px;text-transform:uppercase}
+.om-sec{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;padding:0 2px}
+.om-block{background:var(--bg2);border:1px solid var(--b1);border-radius:12px;padding:10px 11px;margin-bottom:8px}
 
-/* Spoiler page */
-.spoiler-page {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  background: #050810;
-  gap: 10px;
-  cursor: pointer;
-}
-.spoiler-teams { font-size: 17px; font-weight: 800; color: #f0f6ff; }
-.spoiler-score {
-  font-size: 52px; font-weight: 900;
-  color: #050810;
-  background: #0d1428;
-  border-radius: 12px;
-  padding: 4px 24px;
-  border: 2px solid #1a2a3a;
-  letter-spacing: 4px;
-}
-.spoiler-tap { font-size: 10px; color: #2a4060; letter-spacing: 2px; text-transform: uppercase; }
-
+/* ── Footer ── */
+.ftr{padding:4px 12px;display:flex;justify-content:space-between;font-size:9px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600;flex-shrink:0}
+.ok{color:var(--om)}
 </style>
 </head>
 <body>
 
-<div class="label">Guition ESP32-S3 · 480 × 272 · Aperçu</div>
+<div class="outer-label">Guition · 272 × 480 · Portrait</div>
 
-<div class="device" id="device">
-  <div class="pages" id="pages">
-
-    <!-- PAGE 1 : Match live -->
-    <div class="page">
-      <div class="top-bar">
-        <span class="comp-name">Ligue 1</span>
-        <span class="status-badge badge-live">⬤ 67'</span>
+<div class="device">
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="logo">
+        <div class="logo-mark">VL</div>
+        <div class="logo-text">Veher <span>Live</span></div>
       </div>
-      <div class="match-zone">
-        <div class="team">
-          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/160.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
-          <div class="team-logo-placeholder" style="display:none">PSG</div>
-          <div class="team-name">Paris S-G</div>
+      <div class="hdr-r">
+        <span class="clk" id="clk">--:--</span>
+        <div class="rbtn">↻</div>
+      </div>
+    </div>
+    <div class="tabs-wrap">
+      <div class="tab on" id="t0" onclick="goTab(0)">
+        <div class="tab-dot"></div><span>⚽</span>En direct
+      </div>
+      <div class="tab" id="t1" onclick="goTab(1)"><span>📅</span>Calendrier</div>
+      <div class="tab" id="t2" onclick="goTab(2)"><span>🏁</span>Résultats</div>
+      <div class="tab" id="t3" onclick="goTab(3)"><span>🔵</span>OM</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- EN DIRECT -->
+    <div class="page on" id="p0">
+      <div class="sec">En cours · <b>2 matchs</b></div>
+
+      <div class="mc live">
+        <div class="mc-top">
+          <span class="mc-comp">Ligue 1</span>
+          <span class="badge b-live">⬤ 67'</span>
         </div>
-        <div class="score-block">
-          <div class="score-nums">
-            <span class="score-n">2</span>
-            <span class="score-sep">—</span>
-            <span class="score-n">1</span>
+        <div class="teams">
+          <div class="th">
+            <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/160.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+            <span class="tn">Paris S-G</span>
           </div>
-          <div class="match-time">67'</div>
-        </div>
-        <div class="team">
-          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/5009.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
-          <div class="team-logo-placeholder" style="display:none">OL</div>
-          <div class="team-name">Lyon</div>
-        </div>
-      </div>
-      <div class="bottom">
-        <div class="goals-col">
-          <div class="col-title">Buteurs</div>
-          <div class="goal-row">Mbappé ⚽ <span class="gmin">23'</span></div>
-          <div class="goal-row">Dembélé ⚽ <span class="gmin">61'</span></div>
-          <div class="goal-row" style="color:#4a7a9b;font-size:10px">— <span class="gmin" style="color:#2a4060">45'</span> ⚽ Lacazette</div>
-        </div>
-        <div class="cards-col">
-          <div class="col-title">Cartons</div>
-          <div class="card-row"><span class="cy"></span> Marquinhos</div>
-          <div class="card-row"><span class="cy"></span> Tolisso</div>
-          <div class="card-row"><span class="cr"></span> Tagliafico</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- PAGE 2 : Match terminé -->
-    <div class="page">
-      <div class="top-bar">
-        <span class="comp-name">Bundesliga</span>
-        <span class="status-badge badge-ft">Terminé</span>
-      </div>
-      <div class="match-zone">
-        <div class="team">
-          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/132.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
-          <div class="team-logo-placeholder" style="display:none">FCB</div>
-          <div class="team-name">Bayern</div>
-        </div>
-        <div class="score-block">
-          <div class="score-nums">
-            <span class="score-n">4</span>
-            <span class="score-sep">—</span>
-            <span class="score-n">2</span>
+          <div class="scb"><span class="scn">2</span><span class="scs">–</span><span class="scn">1</span></div>
+          <div class="ta">
+            <span class="tn">Lyon</span>
+            <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/5009.png" onerror="this.outerHTML='<div class=cr-e></div>'">
           </div>
-          <div class="match-time ft">Terminé</div>
         </div>
-        <div class="team">
-          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/157.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
-          <div class="team-logo-placeholder" style="display:none">VFB</div>
-          <div class="team-name">Stuttgart</div>
+        <div class="mc-min">67'</div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Mbappé</span>⚽<span class="gmin">23'</span></div>
+            <div class="goal-right"><span class="gmin">45'</span>⚽<span class="gname">Lacazette</span></div>
+            <div class="goal-left"><span class="gname">Dembélé</span>⚽<span class="gmin">61'</span></div>
+            <div class="goal-right"></div>
+          </div>
+        </div>
+        <div class="scorers" style="margin-top:5px">
+          <div class="scorers-hdr" style="color:#FBBF24">Cartons</div>
+          <div style="padding:5px 10px"><div class="bk-line">🟨 <span>Marquinhos 34'</span></div></div>
         </div>
       </div>
-      <div class="bottom">
-        <div class="goals-col">
-          <div class="col-title">Buteurs</div>
-          <div class="goal-row">Guerreiro ⚽</div>
-          <div class="goal-row">Kane ⚽⚽</div>
-          <div class="goal-row" style="color:#4a7a9b;font-size:10px">— ⚽ Führich</div>
-          <div class="goal-row" style="color:#4a7a9b;font-size:10px">— ⚽ Andres</div>
+
+      <div class="mc live">
+        <div class="mc-top">
+          <span class="mc-comp">Premier League</span>
+          <span class="badge b-live">⬤ 34'</span>
         </div>
-        <div class="cards-col">
-          <div class="col-title">Cartons</div>
-          <div class="card-row"><span class="cy"></span> Upamecano</div>
-          <div class="card-row"><span class="cr"></span> Chabot</div>
+        <div class="teams">
+          <div class="th">
+            <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/364.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+            <span class="tn">Man City</span>
+          </div>
+          <div class="scb"><span class="scn">1</span><span class="scs">–</span><span class="scn">0</span></div>
+          <div class="ta">
+            <span class="tn">Arsenal</span>
+            <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/359.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+          </div>
+        </div>
+        <div class="mc-min">34'</div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Haaland</span>⚽<span class="gmin">18'</span></div>
+            <div class="goal-right"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- PAGE 3 : Prochain match (countdown) -->
-    <div class="page">
-      <div class="countdown-page">
-        <div class="cd-label">Prochain match</div>
-        <div class="cd-teams">Marseille — Nice</div>
-        <div class="cd-time">08:27:14</div>
-        <div class="cd-date">Dimanche 27 avril · 20:45 · Ligue 1</div>
+    <!-- CALENDRIER -->
+    <div class="page" id="p1">
+      <div class="day-sep">Aujourd'hui — 20 avril</div>
+      <div class="cal-card">
+        <div class="cal-t">20:45</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i">
+          <div class="cal-tn">Marseille — Nice</div>
+          <div class="cal-cn">Ligue 1</div>
+        </div>
+      </div>
+      <div class="cal-card">
+        <div class="cal-t">21:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i">
+          <div class="cal-tn">Espanyol — Real Madrid</div>
+          <div class="cal-cn">La Liga</div>
+        </div>
+      </div>
+      <div class="day-sep">Lundi 21 avril</div>
+      <div class="cal-card">
+        <div class="cal-t">16:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i">
+          <div class="cal-tn">Chelsea — Nottm Forest</div>
+          <div class="cal-cn">Premier League</div>
+        </div>
+      </div>
+      <div class="cal-card">
+        <div class="cal-t">21:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i">
+          <div class="cal-tn">Inter Milan — Parma</div>
+          <div class="cal-cn">Serie A</div>
+        </div>
+      </div>
+      <div class="cal-card">
+        <div class="cal-t">21:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i">
+          <div class="cal-tn">Everton — Man City</div>
+          <div class="cal-cn">Premier League</div>
+        </div>
       </div>
     </div>
 
-    <!-- PAGE 4 : Mode nuit -->
-    <div class="page">
-      <div class="night-page">
-        <div class="night-teams">Bayern — Stuttgart</div>
-        <div class="night-score">4—2</div>
-        <div class="night-hint">Mode nuit · Tap pour éclairer</div>
+    <!-- RÉSULTATS -->
+    <div class="page" id="p2">
+      <div class="sec">Terminés · <b>3 matchs</b></div>
+
+      <div class="mc">
+        <div class="mc-top">
+          <span class="mc-comp">Bundesliga</span>
+          <span class="badge b-ft">Terminé</span>
+        </div>
+        <div class="teams">
+          <div class="th">
+            <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/132.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+            <span class="tn">Bayern</span>
+          </div>
+          <div class="scb"><span class="scn">4</span><span class="scs">–</span><span class="scn">2</span></div>
+          <div class="ta">
+            <span class="tn">Stuttgart</span>
+            <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/157.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+          </div>
+        </div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Guerreiro</span>⚽</div>
+            <div class="goal-right">⚽<span class="gname">Führich</span></div>
+            <div class="goal-left"><span class="gname">Kane</span>⚽⚽</div>
+            <div class="goal-right">⚽<span class="gname">Andres</span></div>
+            <div class="goal-left"><span class="gname">Davies</span>⚽</div>
+            <div class="goal-right"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mc">
+        <div class="mc-top">
+          <span class="mc-comp">Ligue 1</span>
+          <span class="badge b-ft">Terminé</span>
+        </div>
+        <div class="teams">
+          <div class="th"><div class="cr-e"></div><span class="tn">Lorient</span></div>
+          <div class="scb"><span class="scn">2</span><span class="scs">–</span><span class="scn">0</span></div>
+          <div class="ta"><span class="tn">Marseille</span><div class="cr-e"></div></div>
+        </div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Katseris</span>⚽</div>
+            <div class="goal-right"></div>
+            <div class="goal-left"><span class="gname">B. Dieng</span>⚽</div>
+            <div class="goal-right"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="mc">
+        <div class="mc-top">
+          <span class="mc-comp">Bundesliga</span>
+          <span class="badge b-ft">Terminé</span>
+        </div>
+        <div class="teams">
+          <div class="th"><div class="cr-e"></div><span class="tn">Gladbach</span></div>
+          <div class="scb"><span class="scn">1</span><span class="scs">–</span><span class="scn">1</span></div>
+          <div class="ta"><span class="tn">Mainz</span><div class="cr-e"></div></div>
+        </div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Joe Scally</span>⚽</div>
+            <div class="goal-right">⚽<span class="gname">N. Amiri</span></div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- PAGE 5 : Anti-spoiler -->
-    <div class="page" onclick="toggleSpoiler(this)">
-      <div class="spoiler-page">
-        <div class="spoiler-teams">Real Madrid — Barcelone</div>
-        <div class="spoiler-score" id="spoilerScore">█—█</div>
-        <div class="spoiler-tap" id="spoilerTap">Tap pour révéler le score</div>
+    <!-- OM -->
+    <div class="page" id="p3">
+      <div class="om-hdr">Allez l'OM 💙</div>
+      <div class="om-block">
+        <div class="om-sec">Prochain match</div>
+        <div class="cal-card" style="background:transparent;border:none;padding:4px 0 0;margin:0">
+          <div class="cal-t">20:45</div>
+          <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+          <div class="cal-i">
+            <div class="cal-tn">Marseille — Nice</div>
+            <div class="cal-cn">Dim. 27 avril · Ligue 1</div>
+          </div>
+        </div>
+      </div>
+      <div class="om-block">
+        <div class="om-sec">Dernier résultat</div>
+        <div class="teams" style="margin-top:2px">
+          <div class="th"><div class="cr-e"></div><span class="tn">Lorient</span></div>
+          <div class="scb"><span class="scn">2</span><span class="scs">–</span><span class="scn">0</span></div>
+          <div class="ta"><span class="tn">Marseille</span><div class="cr-e"></div></div>
+        </div>
       </div>
     </div>
 
   </div>
 
-  <div class="nav" id="nav"></div>
-  <div class="hint">← swipe →</div>
+  <div class="ftr">
+    <span>MàJ <span id="upd">--:--</span></span>
+    <span class="ok">● connecté</span>
+  </div>
 </div>
 
-<div class="label" style="color:#1a3050">swipe ou clic · 5 écrans : live · terminé · countdown · nuit · anti-spoiler</div>
+<div class="outer-label">clic sur les onglets · scroll dans le contenu</div>
 
 <script>
-const pages = document.getElementById('pages');
-const navEl = document.getElementById('nav');
-const total = 5;
-let current = 0;
-let startX = 0, dragging = false, dragDelta = 0;
-
-function buildDots() {
-  navEl.innerHTML = '';
-  for (let i = 0; i < total; i++) {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === current ? ' on' : '');
-    d.onclick = (e) => { e.stopPropagation(); goTo(i); };
-    navEl.appendChild(d);
+function goTab(i) {
+  for (let j = 0; j < 4; j++) {
+    document.getElementById('t'+j).classList.toggle('on', j===i);
+    document.getElementById('p'+j).classList.toggle('on', j===i);
   }
+  document.querySelector('.content').scrollTop = 0;
 }
-
-function goTo(i) {
-  current = Math.max(0, Math.min(total - 1, i));
-  pages.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
-  pages.style.transform = `translateX(-${current * 480}px)`;
-  buildDots();
+function updateClk() {
+  const n = new Date();
+  const t = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('clk').textContent = t;
+  document.getElementById('upd').textContent = t;
 }
-
-// Touch / mouse swipe
-const device = document.getElementById('device');
-
-device.addEventListener('mousedown', e => { startX = e.clientX; dragging = true; pages.style.transition = 'none'; });
-document.addEventListener('mousemove', e => {
-  if (!dragging) return;
-  dragDelta = e.clientX - startX;
-  pages.style.transform = `translateX(${-current * 480 + dragDelta}px)`;
-});
-document.addEventListener('mouseup', () => {
-  if (!dragging) return;
-  dragging = false;
-  if (dragDelta < -40) goTo(current + 1);
-  else if (dragDelta > 40) goTo(current - 1);
-  else goTo(current);
-  dragDelta = 0;
-});
-
-device.addEventListener('touchstart', e => { startX = e.touches[0].clientX; pages.style.transition = 'none'; }, {passive:true});
-device.addEventListener('touchmove', e => {
-  dragDelta = e.touches[0].clientX - startX;
-  pages.style.transform = `translateX(${-current * 480 + dragDelta}px)`;
-}, {passive:true});
-device.addEventListener('touchend', () => {
-  if (dragDelta < -40) goTo(current + 1);
-  else if (dragDelta > 40) goTo(current - 1);
-  else goTo(current);
-  dragDelta = 0;
-});
-
-// Countdown live
-function updateCountdown() {
-  const target = new Date();
-  target.setHours(20, 45, 0, 0);
-  if (target < new Date()) target.setDate(target.getDate() + 1);
-  const diff = target - new Date();
-  const h = String(Math.floor(diff / 3600000)).padStart(2,'0');
-  const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
-  const s = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
-  document.querySelector('.cd-time').textContent = `${h}:${m}:${s}`;
-}
-setInterval(updateCountdown, 1000);
-updateCountdown();
-
-// Anti-spoiler
-let revealed = false;
-function toggleSpoiler(el) {
-  revealed = !revealed;
-  document.getElementById('spoilerScore').textContent = revealed ? '2—1' : '█—█';
-  document.getElementById('spoilerScore').style.color = revealed ? '#009BDE' : '#050810';
-  document.getElementById('spoilerTap').textContent = revealed ? 'Tap pour masquer' : 'Tap pour révéler le score';
-}
-
-goTo(0);
+updateClk();
+setInterval(updateClk, 10000);
 </script>
 </body>
 </html>
