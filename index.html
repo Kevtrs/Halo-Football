@@ -56,7 +56,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .scorers{margin-top:12px;background:rgba(0,155,222,.06);border-radius:12px;border:1px solid rgba(0,155,222,.15);overflow:hidden}
 .scorers-hdr{padding:8px 12px 6px;font-size:9px;font-weight:800;color:var(--om);letter-spacing:1.8px;text-transform:uppercase;border-bottom:1px solid rgba(0,155,222,.1)}
 .scorers-grid{display:grid;grid-template-columns:1fr 1fr}
-.goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06)}
+.goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06);min-width:0;overflow:hidden}
 .goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
 .gmin{color:var(--om);font-weight:700;font-size:11px;flex-shrink:0}.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:0 2px}
@@ -328,6 +328,12 @@ function getDetailsFromSummary(s) {
   });
 }
 
+function getClockDisplay(clock) {
+  if (clock?.displayValue) return clock.displayValue;
+  if (clock?.value != null && clock.value > 0) return Math.ceil(clock.value / 60) + "'";
+  return '';
+}
+
 function getEventName(d) {
   const athleteName =
     d?.athletesInvolved?.[0]?.displayName ||
@@ -383,6 +389,7 @@ function normalize(event, leagueName, leagueSlug) {
 function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
   const goals = (details || []).filter(d => {
     const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
+    if (txt.includes('overturned') || txt.includes('annulé')) return false;
     return d?.scoringPlay === true || txt.includes('goal') || txt.includes('but');
   });
 
@@ -390,65 +397,56 @@ function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
 
   const homeGoals = [];
   const awayGoals = [];
-  const seen = new Set();
+  const playerMap = new Map();
 
   goals
     .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
     .forEach(g => {
-      const name = getEventName(g);
+      let name = getEventName(g);
+      if (!name) return;
+      if (/overturned|annulé|var/i.test(name)) return;
+      name = name.replace(/^[A-Z][\w\s]+?\d+\.\s+/, '').trim();
       if (!name) return;
 
-      const min = g.clock?.displayValue || '';
+      const min = getClockDisplay(g.clock);
       const tid = String(g.team?.id || '');
       const teamDisplayName = String(g.team?.displayName || g.team?.name || g.team?.shortDisplayName || '').toLowerCase();
       const textTeam = getEventTeamName(g).toLowerCase();
       const homeRef = String(homeName).toLowerCase();
       const awayRef = String(awayName).toLowerCase();
-      const uniq = `${tid}|${name}|${min}`;
-      if (seen.has(uniq)) return;
-      seen.add(uniq);
 
-      const lineHome = `<div class="goal-left"><span class="gname">${name}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
-      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${name}</span></div>`;
+      let side = null;
+      if (tid && String(homeId) === tid) side = 'home';
+      else if (tid && String(awayId) === tid) side = 'away';
+      else if (teamDisplayName && (homeRef.includes(teamDisplayName) || teamDisplayName.includes(homeRef))) side = 'home';
+      else if (teamDisplayName && (awayRef.includes(teamDisplayName) || teamDisplayName.includes(awayRef))) side = 'away';
+      else if (textTeam && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) side = 'home';
+      else if (textTeam && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) side = 'away';
+      else side = 'home';
 
-      if (tid && String(homeId) === tid) {
-        homeGoals.push(lineHome);
-        return;
+      const key = `${side}|${name}`;
+      if (playerMap.has(key)) {
+        playerMap.get(key).mins.push(min);
+      } else {
+        playerMap.set(key, { name, side, mins: [min] });
       }
-
-      if (tid && String(awayId) === tid) {
-        awayGoals.push(lineAway);
-        return;
-      }
-
-      if (teamDisplayName && (homeRef.includes(teamDisplayName) || teamDisplayName.includes(homeRef))) {
-        homeGoals.push(lineHome);
-        return;
-      }
-
-      if (teamDisplayName && (awayRef.includes(teamDisplayName) || teamDisplayName.includes(awayRef))) {
-        awayGoals.push(lineAway);
-        return;
-      }
-
-      if (textTeam && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) {
-        homeGoals.push(lineHome);
-        return;
-      }
-
-      if (textTeam && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) {
-        awayGoals.push(lineAway);
-        return;
-      }
-
-      homeGoals.push(lineHome);
     });
+
+  playerMap.forEach(({ name, side, mins }) => {
+    const balls = '⚽'.repeat(mins.length);
+    const minText = mins.filter(Boolean).join(' ');
+    const minSpan = minText ? `<span class="gmin">${minText}</span>` : '';
+    if (side === 'home') {
+      homeGoals.push(`<div class="goal-left"><span class="gname">${name}</span>${balls}${minSpan}</div>`);
+    } else {
+      awayGoals.push(`<div class="goal-right">${minSpan}${balls}<span class="gname">${name}</span></div>`);
+    }
+  });
 
   if (!homeGoals.length && !awayGoals.length) return '';
 
   const maxRows = Math.max(homeGoals.length, awayGoals.length);
   let rows = '';
-
   for (let i = 0; i < maxRows; i++) {
     rows += `${homeGoals[i] || '<div class="goal-left"></div>'}${awayGoals[i] || '<div class="goal-right"></div>'}`;
   }
@@ -752,7 +750,7 @@ async function loadCal() {
   try {
     const today = new Date();
     const end = new Date();
-    end.setDate(today.getDate() + 14);
+    end.setDate(today.getDate() + 3);
     const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
 
     const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
