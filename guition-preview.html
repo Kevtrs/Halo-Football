@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guition Preview — 480×272</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: #02060e;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  font-family: 'Segoe UI', sans-serif;
+  gap: 16px;
+}
+.label {
+  color: #3a5a7a;
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+/* Device frame */
+.device {
+  width: 480px;
+  height: 272px;
+  background: #111;
+  border-radius: 8px;
+  border: 2px solid #1a2a3a;
+  box-shadow: 0 0 60px rgba(0,155,222,.15), 0 0 0 1px #0a1520;
+  overflow: hidden;
+  position: relative;
+  cursor: grab;
+  user-select: none;
+}
+.device:active { cursor: grabbing; }
+
+/* Pages container */
+.pages {
+  display: flex;
+  height: 100%;
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+  will-change: transform;
+}
+
+/* Single page = one match */
+.page {
+  min-width: 480px;
+  height: 272px;
+  background: #050810;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Top bar */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid rgba(0,155,222,.1);
+  flex-shrink: 0;
+}
+.comp-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #4a7a9b;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.status-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 20px;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+}
+.badge-live {
+  background: rgba(0,155,222,.2);
+  color: #009BDE;
+  border: 1px solid rgba(0,155,222,.4);
+  animation: blink 1.4s infinite;
+}
+.badge-ft {
+  background: rgba(36,54,80,.5);
+  color: #4a7a9b;
+  border: 1px solid #1a2a3a;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* Match zone */
+.match-zone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 8px 10px 6px;
+  flex-shrink: 0;
+}
+.team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  width: 130px;
+}
+.team-logo {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 6px rgba(0,0,0,.5));
+}
+.team-logo-placeholder {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: #0d1428;
+  border: 1px solid rgba(0,155,222,.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 900;
+  color: #009BDE;
+}
+.team-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: #f0f6ff;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+.score-block {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  width: 110px;
+}
+.score-nums {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.score-n {
+  font-size: 52px;
+  font-weight: 900;
+  color: #f0f6ff;
+  line-height: 1;
+  min-width: 32px;
+  text-align: center;
+}
+.score-sep {
+  font-size: 24px;
+  color: #2a4060;
+  font-weight: 300;
+  margin-top: -4px;
+}
+.match-time {
+  font-size: 12px;
+  font-weight: 700;
+  color: #009BDE;
+  letter-spacing: .5px;
+}
+.match-time.ft { color: #2a4060; }
+
+/* Bottom info */
+.bottom {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-top: 1px solid rgba(0,155,222,.08);
+  overflow: hidden;
+}
+.goals-col, .cards-col {
+  padding: 6px 12px;
+  overflow: hidden;
+}
+.goals-col {
+  border-right: 1px solid rgba(0,155,222,.08);
+}
+.col-title {
+  font-size: 9px;
+  font-weight: 800;
+  color: #009BDE;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.goal-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 3px;
+  font-size: 11px;
+  color: #c0d8ee;
+  font-weight: 600;
+}
+.goal-row .side-away {
+  justify-content: flex-end;
+  text-align: right;
+}
+.gmin { color: #009BDE; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+.card-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+  font-size: 11px;
+  color: #6a8aaa;
+  font-weight: 500;
+}
+.cy { display:inline-block;width:8px;height:11px;background:#FBBF24;border-radius:1px;flex-shrink:0; }
+.cr { display:inline-block;width:8px;height:11px;background:#EF4444;border-radius:1px;flex-shrink:0; }
+
+/* Nav dots */
+.nav {
+  position: absolute;
+  bottom: 7px;
+  left: 0; right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  z-index: 10;
+}
+.dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: #1a3050;
+  transition: all .2s;
+  cursor: pointer;
+}
+.dot.on { background: #009BDE; width: 14px; border-radius: 3px; }
+
+/* Swipe hint */
+.hint {
+  position: absolute;
+  bottom: 30px;
+  left: 0; right: 0;
+  text-align: center;
+  font-size: 9px;
+  color: #1a3050;
+  letter-spacing: 1px;
+  pointer-events: none;
+}
+
+/* Countdown page */
+.countdown-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 6px;
+  background: #050810;
+}
+.cd-label { font-size: 10px; color: #2a4060; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
+.cd-teams { font-size: 18px; font-weight: 800; color: #f0f6ff; }
+.cd-time { font-size: 48px; font-weight: 900; color: #009BDE; letter-spacing: -2px; line-height: 1; }
+.cd-date { font-size: 12px; color: #2a5070; font-weight: 600; }
+
+/* Night mode page */
+.night-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #020408;
+  gap: 8px;
+}
+.night-score { font-size: 64px; font-weight: 900; color: #0a2030; line-height:1; }
+.night-teams { font-size: 13px; color: #0a2030; font-weight: 700; }
+.night-hint { font-size: 9px; color: #0a1828; letter-spacing: 2px; text-transform: uppercase; margin-top: 4px; }
+
+/* Spoiler page */
+.spoiler-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  background: #050810;
+  gap: 10px;
+  cursor: pointer;
+}
+.spoiler-teams { font-size: 17px; font-weight: 800; color: #f0f6ff; }
+.spoiler-score {
+  font-size: 52px; font-weight: 900;
+  color: #050810;
+  background: #0d1428;
+  border-radius: 12px;
+  padding: 4px 24px;
+  border: 2px solid #1a2a3a;
+  letter-spacing: 4px;
+}
+.spoiler-tap { font-size: 10px; color: #2a4060; letter-spacing: 2px; text-transform: uppercase; }
+
+</style>
+</head>
+<body>
+
+<div class="label">Guition ESP32-S3 · 480 × 272 · Aperçu</div>
+
+<div class="device" id="device">
+  <div class="pages" id="pages">
+
+    <!-- PAGE 1 : Match live -->
+    <div class="page">
+      <div class="top-bar">
+        <span class="comp-name">Ligue 1</span>
+        <span class="status-badge badge-live">⬤ 67'</span>
+      </div>
+      <div class="match-zone">
+        <div class="team">
+          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/160.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
+          <div class="team-logo-placeholder" style="display:none">PSG</div>
+          <div class="team-name">Paris S-G</div>
+        </div>
+        <div class="score-block">
+          <div class="score-nums">
+            <span class="score-n">2</span>
+            <span class="score-sep">—</span>
+            <span class="score-n">1</span>
+          </div>
+          <div class="match-time">67'</div>
+        </div>
+        <div class="team">
+          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/5009.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
+          <div class="team-logo-placeholder" style="display:none">OL</div>
+          <div class="team-name">Lyon</div>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="goals-col">
+          <div class="col-title">Buteurs</div>
+          <div class="goal-row">Mbappé ⚽ <span class="gmin">23'</span></div>
+          <div class="goal-row">Dembélé ⚽ <span class="gmin">61'</span></div>
+          <div class="goal-row" style="color:#4a7a9b;font-size:10px">— <span class="gmin" style="color:#2a4060">45'</span> ⚽ Lacazette</div>
+        </div>
+        <div class="cards-col">
+          <div class="col-title">Cartons</div>
+          <div class="card-row"><span class="cy"></span> Marquinhos</div>
+          <div class="card-row"><span class="cy"></span> Tolisso</div>
+          <div class="card-row"><span class="cr"></span> Tagliafico</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 2 : Match terminé -->
+    <div class="page">
+      <div class="top-bar">
+        <span class="comp-name">Bundesliga</span>
+        <span class="status-badge badge-ft">Terminé</span>
+      </div>
+      <div class="match-zone">
+        <div class="team">
+          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/132.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
+          <div class="team-logo-placeholder" style="display:none">FCB</div>
+          <div class="team-name">Bayern</div>
+        </div>
+        <div class="score-block">
+          <div class="score-nums">
+            <span class="score-n">4</span>
+            <span class="score-sep">—</span>
+            <span class="score-n">2</span>
+          </div>
+          <div class="match-time ft">Terminé</div>
+        </div>
+        <div class="team">
+          <img class="team-logo" src="https://a.espncdn.com/i/teamlogos/soccer/500/157.png" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" alt="">
+          <div class="team-logo-placeholder" style="display:none">VFB</div>
+          <div class="team-name">Stuttgart</div>
+        </div>
+      </div>
+      <div class="bottom">
+        <div class="goals-col">
+          <div class="col-title">Buteurs</div>
+          <div class="goal-row">Guerreiro ⚽</div>
+          <div class="goal-row">Kane ⚽⚽</div>
+          <div class="goal-row" style="color:#4a7a9b;font-size:10px">— ⚽ Führich</div>
+          <div class="goal-row" style="color:#4a7a9b;font-size:10px">— ⚽ Andres</div>
+        </div>
+        <div class="cards-col">
+          <div class="col-title">Cartons</div>
+          <div class="card-row"><span class="cy"></span> Upamecano</div>
+          <div class="card-row"><span class="cr"></span> Chabot</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PAGE 3 : Prochain match (countdown) -->
+    <div class="page">
+      <div class="countdown-page">
+        <div class="cd-label">Prochain match</div>
+        <div class="cd-teams">Marseille — Nice</div>
+        <div class="cd-time">08:27:14</div>
+        <div class="cd-date">Dimanche 27 avril · 20:45 · Ligue 1</div>
+      </div>
+    </div>
+
+    <!-- PAGE 4 : Mode nuit -->
+    <div class="page">
+      <div class="night-page">
+        <div class="night-teams">Bayern — Stuttgart</div>
+        <div class="night-score">4—2</div>
+        <div class="night-hint">Mode nuit · Tap pour éclairer</div>
+      </div>
+    </div>
+
+    <!-- PAGE 5 : Anti-spoiler -->
+    <div class="page" onclick="toggleSpoiler(this)">
+      <div class="spoiler-page">
+        <div class="spoiler-teams">Real Madrid — Barcelone</div>
+        <div class="spoiler-score" id="spoilerScore">█—█</div>
+        <div class="spoiler-tap" id="spoilerTap">Tap pour révéler le score</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="nav" id="nav"></div>
+  <div class="hint">← swipe →</div>
+</div>
+
+<div class="label" style="color:#1a3050">swipe ou clic · 5 écrans : live · terminé · countdown · nuit · anti-spoiler</div>
+
+<script>
+const pages = document.getElementById('pages');
+const navEl = document.getElementById('nav');
+const total = 5;
+let current = 0;
+let startX = 0, dragging = false, dragDelta = 0;
+
+function buildDots() {
+  navEl.innerHTML = '';
+  for (let i = 0; i < total; i++) {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === current ? ' on' : '');
+    d.onclick = (e) => { e.stopPropagation(); goTo(i); };
+    navEl.appendChild(d);
+  }
+}
+
+function goTo(i) {
+  current = Math.max(0, Math.min(total - 1, i));
+  pages.style.transition = 'transform .3s cubic-bezier(.4,0,.2,1)';
+  pages.style.transform = `translateX(-${current * 480}px)`;
+  buildDots();
+}
+
+// Touch / mouse swipe
+const device = document.getElementById('device');
+
+device.addEventListener('mousedown', e => { startX = e.clientX; dragging = true; pages.style.transition = 'none'; });
+document.addEventListener('mousemove', e => {
+  if (!dragging) return;
+  dragDelta = e.clientX - startX;
+  pages.style.transform = `translateX(${-current * 480 + dragDelta}px)`;
+});
+document.addEventListener('mouseup', () => {
+  if (!dragging) return;
+  dragging = false;
+  if (dragDelta < -40) goTo(current + 1);
+  else if (dragDelta > 40) goTo(current - 1);
+  else goTo(current);
+  dragDelta = 0;
+});
+
+device.addEventListener('touchstart', e => { startX = e.touches[0].clientX; pages.style.transition = 'none'; }, {passive:true});
+device.addEventListener('touchmove', e => {
+  dragDelta = e.touches[0].clientX - startX;
+  pages.style.transform = `translateX(${-current * 480 + dragDelta}px)`;
+}, {passive:true});
+device.addEventListener('touchend', () => {
+  if (dragDelta < -40) goTo(current + 1);
+  else if (dragDelta > 40) goTo(current - 1);
+  else goTo(current);
+  dragDelta = 0;
+});
+
+// Countdown live
+function updateCountdown() {
+  const target = new Date();
+  target.setHours(20, 45, 0, 0);
+  if (target < new Date()) target.setDate(target.getDate() + 1);
+  const diff = target - new Date();
+  const h = String(Math.floor(diff / 3600000)).padStart(2,'0');
+  const m = String(Math.floor((diff % 3600000) / 60000)).padStart(2,'0');
+  const s = String(Math.floor((diff % 60000) / 1000)).padStart(2,'0');
+  document.querySelector('.cd-time').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateCountdown, 1000);
+updateCountdown();
+
+// Anti-spoiler
+let revealed = false;
+function toggleSpoiler(el) {
+  revealed = !revealed;
+  document.getElementById('spoilerScore').textContent = revealed ? '2—1' : '█—█';
+  document.getElementById('spoilerScore').style.color = revealed ? '#009BDE' : '#050810';
+  document.getElementById('spoilerTap').textContent = revealed ? 'Tap pour masquer' : 'Tap pour révéler le score';
+}
+
+goTo(0);
+</script>
+</body>
+</html>
