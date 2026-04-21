@@ -111,9 +111,7 @@ const LEAGUES = [
   { slug: 'fra.cup', name: 'Coupe de France' },
   { slug: 'fifa.world', name: 'Coupe du Monde' },
 ];
-const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1','uefa.europa.conf','usa.1','mex.1','bra.1','arg.1','jpn.1'];
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
-let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
 let activeLeagueFilter = 'all', cachedNextWorld = null;
 let activeCalFilter = 'all', calEvents = [];
 
@@ -551,22 +549,27 @@ function renderPriorityMatch(m, title) {
     </div>`;
 }
 
-async function getNextWorldMatch() {
+async function getNextLeagueMatch() {
   try {
-    const data = await espn('all');
-    const events = data?.events || [];
-    const matches = events.map(ev => {
-      const leagueName = ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
-      const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
-      return normalize(ev, leagueName, leagueSlug);
-    });
-
-    const live = matches.filter(m => (m.status?.type?.state || '') === 'in').sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (live.length) return live[0];
-
-    const upcoming = matches.filter(m => (m.status?.type?.state || '') === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
+    const today = new Date();
+    const end = new Date();
+    end.setDate(today.getDate() + 7);
+    const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
+    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
+    const seen = new Map();
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const { lg, data } = r.value;
+      for (const ev of (data.events || [])) {
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
+      }
+    }
+    const matches = [...seen.values()];
+    const upcoming = matches
+      .filter(m => (m.status?.type?.state || '') === 'pre')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
     return upcoming[0] || null;
-  } catch (e) {
+  } catch(e) {
     return null;
   }
 }
@@ -581,11 +584,7 @@ function renderLivePage() {
 
   if (!liveEvents.length) {
     if (cachedNextWorld) {
-      const state = cachedNextWorld.status?.type?.state || '';
-      const title = state === 'in'
-        ? `Match mondial en direct · ${getMatchTimeLabel(cachedNextWorld)}`
-        : `Prochain match mondial dans ${getMatchTimeLabel(cachedNextWorld)}`;
-      p.innerHTML = renderPriorityMatch(cachedNextWorld, title);
+      p.innerHTML = renderPriorityMatch(cachedNextWorld, `Prochain match · ${getMatchTimeLabel(cachedNextWorld)}`);
     } else {
       p.innerHTML = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
     }
@@ -674,23 +673,7 @@ async function loadLive(silent = false) {
     document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
 
     if (!liveEvents.length) {
-      const nextWorld = await getNextWorldMatch();
-      if (nextWorld) {
-        try {
-          const s = await espnSummary(nextWorld.leagueSlug || 'all', nextWorld.id);
-          const ev = s.header || s.event || {};
-          const { home, away } = getCompetitors(ev);
-          nextWorld.homeScore  = home.score  ?? nextWorld.homeScore;
-          nextWorld.awayScore  = away.score  ?? nextWorld.awayScore;
-          nextWorld.status     = ev.status   || nextWorld.status;
-          nextWorld.details    = getDetailsFromSummary(s);
-          nextWorld.homeTeamId = home.team?.id || nextWorld.homeTeamId;
-          nextWorld.awayTeamId = away.team?.id || nextWorld.awayTeamId;
-        } catch(e) {}
-        cachedNextWorld = nextWorld;
-      } else {
-        cachedNextWorld = null;
-      }
+      cachedNextWorld = await getNextLeagueMatch();
     }
 
     renderLivePage();
@@ -879,76 +862,6 @@ function showToast(msg, dur = 2500) {
   t._h = setTimeout(() => t.style.opacity = '0', dur);
 }
 
-async function findLiveMatch() {
-  for (const slug of DEMO_SLUGS) {
-    try {
-      const data = await espn(slug);
-      for (const ev of (data.events || [])) {
-        if (isLive(ev)) return { ev, slug };
-      }
-    } catch(e) {}
-  }
-  return null;
-}
-
-async function demoRefresh() {
-  if (!demoActive) return;
-  const p = document.getElementById('p0');
-  try {
-    const s = await espnSummary(demoSlug, demoId);
-    const ev = s.header || s.event || {};
-    const { home, away } = getCompetitors(ev);
-    const m = {
-      ...demoBase,
-      homeScore: home.score ?? demoBase.homeScore,
-      awayScore: away.score ?? demoBase.awayScore,
-      status: ev.status ?? demoBase.status,
-      details: getDetailsFromSummary(s),
-      homeTeamId: home.team?.id || demoBase.homeTeamId,
-      awayTeamId: away.team?.id || demoBase.awayTeamId
-    };
-    if (isDone({status: m.status})) {
-      stopDemo();
-      return;
-    }
-    p.innerHTML = '<div class="sec">Mode démo</div>' + renderMatch(m);
-    updateUpd();
-  } catch(e) {}
-}
-
-async function startDemo() {
-  if (demoActive) {
-    stopDemo();
-    return;
-  }
-  goTab(0);
-  document.getElementById('p0').innerHTML = '<div class="loading"><div class="sr"></div>Recherche match...</div>';
-  const found = await findLiveMatch();
-  if (!found) {
-    document.getElementById('p0').innerHTML = `<div class="empty">Aucun live trouvé</div>`;
-    return;
-  }
-  demoActive = true;
-  demoSlug = found.slug;
-  demoId = found.ev.id;
-  demoBase = normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug);
-  if (liveInterval) clearTimeout(liveInterval);
-  await demoRefresh();
-  demoInterval = setInterval(demoRefresh, 15000);
-  showToast(`🧪 Démo : ${demoBase.homeName}`);
-}
-
-function stopDemo() {
-  demoActive = false;
-  if (demoInterval) clearInterval(demoInterval);
-  showToast('Démo OFF');
-  startLiveLoop();
-}
-
-const logoEl = document.getElementById('logoMark');
-logoEl.addEventListener('pointerdown', () => { pressTimer = setTimeout(startDemo, 3000); });
-logoEl.addEventListener('pointerup', () => clearTimeout(pressTimer));
-logoEl.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
 function goTab(i) {
   document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j));
@@ -990,10 +903,8 @@ function scheduleNextPoll() {
   clearTimeout(liveInterval);
   const delay = liveEvents.length > 0 ? 15000 : 30000;
   liveInterval = setTimeout(async () => {
-    if (!demoActive) {
-      await loadLive(true);
-      updateUpd();
-    }
+    await loadLive(true);
+    updateUpd();
     scheduleNextPoll();
   }, delay);
 }
