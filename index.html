@@ -766,27 +766,26 @@ async function loadCal() {
 async function renderResults() {
   const p = document.getElementById('p2');
 
-  // Si loadLive a déjà trouvé des matchs terminés, on les affiche immédiatement
-  if (finishedTodayEvents.length) {
-    renderResultsHtml();
-    return;
-  }
+  if (finishedTodayEvents.length) { renderResultsHtml(); return; }
 
-  // Sinon on fetch explicitement le scoreboard du jour pour chaque ligue
   p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement des résultats...</div>';
   try {
-    const today = dateKey(new Date());
-    const range = `?dates=${today}`;
-    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
+    const now = new Date();
+    const dates = [0, 1, 2, 3].map(i => { const d = new Date(now); d.setDate(now.getDate() - i); return dateKey(d); });
+    const fetches = dates.flatMap(d => LEAGUES.map(lg =>
+      espn(lg.slug, `?dates=${d}`).then(data => ({ lg, data })).catch(() => null)
+    ));
+    const results = await Promise.all(fetches);
     const seen = new Map();
     for (const r of results) {
-      if (r.status !== 'fulfilled') continue;
-      const { lg, data } = r.value;
-      for (const ev of (data.events || [])) {
-        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
+      if (!r) continue;
+      for (const ev of (r.data.events || [])) {
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, r.lg.name, r.lg.slug));
       }
     }
-    finishedTodayEvents = [...seen.values()].filter(m => isDone({status:m.status}));
+    finishedTodayEvents = [...seen.values()]
+      .filter(m => isDone({status: m.status}))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
   } catch(e) {}
 
   renderResultsHtml();
@@ -795,10 +794,10 @@ async function renderResults() {
 function renderResultsHtml() {
   const p = document.getElementById('p2');
   if (!finishedTodayEvents.length) {
-    p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat aujourd'hui</div>`;
+    p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat récent</div>`;
     return;
   }
-  let h = `<div class="sec">Terminés · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`;
+  let h = `<div class="sec">Résultats récents · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`;
   finishedTodayEvents.forEach(m => h += renderMatch(m));
   p.innerHTML = h;
 }
