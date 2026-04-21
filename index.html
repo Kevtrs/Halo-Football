@@ -193,9 +193,8 @@ function isLive(ev) {
 }
 
 function isDone(ev) {
-  const state = ev?.status?.type?.state || '';
-  const name = ev?.status?.type?.name || '';
-  return state === 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME');
+  const t = ev?.status?.type || {};
+  return t.state === 'post' || t.completed === true || String(t.name || '').includes('FINAL') || String(t.name || '').includes('FULL_TIME');
 }
 
 function lt(u) {
