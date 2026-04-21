@@ -56,7 +56,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .scorers{margin-top:12px;background:rgba(0,155,222,.06);border-radius:12px;border:1px solid rgba(0,155,222,.15);overflow:hidden}
 .scorers-hdr{padding:8px 12px 6px;font-size:9px;font-weight:800;color:var(--om);letter-spacing:1.8px;text-transform:uppercase;border-bottom:1px solid rgba(0,155,222,.1)}
 .scorers-grid{display:grid;grid-template-columns:1fr 1fr}
-.goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06)}
+.goal-left,.goal-right{padding:6px 12px;font-size:12px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:5px;border-top:1px solid rgba(0,155,222,.06);min-width:0;overflow:hidden}
 .goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
 .gmin{color:var(--om);font-weight:700;font-size:11px;flex-shrink:0}.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .bookings{margin-top:8px;display:flex;flex-direction:column;gap:4px;padding:0 2px}
@@ -67,6 +67,9 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .cal-i{flex:1;min-width:0}.cal-tn{font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:3px;color:var(--white)}.cal-cn{font-size:11px;color:var(--dim);font-weight:500}
 .day-sep{font-size:11px;color:var(--om2);font-weight:700;letter-spacing:.5px;padding:14px 2px 6px;border-top:1px solid var(--bg3);margin-top:4px}.day-sep:first-child{border-top:none;margin-top:0;padding-top:2px}
 .ftr{padding:8px 20px 6px;display:flex;justify-content:space-between;font-size:11px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600}.ok{color:var(--om)}.upd-live{color:var(--om2)}
+.lf-bar{display:flex;gap:6px;padding:6px 0 12px;overflow-x:auto;scrollbar-width:none}.lf-bar::-webkit-scrollbar{display:none}
+.lf{padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;color:var(--dim);background:var(--bg3);border:1px solid var(--muted);cursor:pointer;user-select:none;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.lf.on{background:var(--om);color:#fff;border-color:var(--om)}
 .demo-btn{background:rgba(0,155,222,.12);border:1px solid rgba(0,155,222,.25);color:var(--om);padding:11px 22px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:14px;display:inline-block}
 .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--b2);color:var(--white);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;transition:opacity .4s;white-space:nowrap;pointer-events:none;font-family:var(--f)}
 @media(min-width:640px){.hdr,.content,.ftr{max-width:780px;margin-left:auto;margin-right:auto;padding-left:32px;padding-right:32px}html,body{background:#02060e}.hdr{background:#02060e}}
@@ -99,12 +102,18 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 const BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const LEAGUES = [
   { slug: 'fra.1', name: 'Ligue 1' },
+  { slug: 'eng.1', name: 'Premier League' },
+  { slug: 'esp.1', name: 'La Liga' },
+  { slug: 'ger.1', name: 'Bundesliga' },
+  { slug: 'ita.1', name: 'Serie A' },
   { slug: 'uefa.champions', name: 'Champions League' },
-  { slug: 'uefa.europa', name: 'Europa League' }
+  { slug: 'uefa.europa', name: 'Europa League' },
+  { slug: 'fra.cup', name: 'Coupe de France' },
+  { slug: 'fifa.world', name: 'Coupe du Monde' },
 ];
-const DEMO_SLUGS = ['fra.1','uefa.champions','uefa.europa','eng.1','esp.1','ger.1','ita.1','uefa.europa.conf','usa.1','mex.1','bra.1','arg.1','jpn.1'];
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
-let demoActive = false, demoInterval = null, demoSlug = null, demoId = null, demoBase = null, pressTimer = null;
+let activeLeagueFilter = 'all', cachedNextWorld = null;
+let activeCalFilter = 'all', calEvents = [];
 
 async function espn(slug, params = '') {
   const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
@@ -184,9 +193,8 @@ function isLive(ev) {
 }
 
 function isDone(ev) {
-  const state = ev?.status?.type?.state || '';
-  const name = ev?.status?.type?.name || '';
-  return state === 'post' || name.includes('STATUS_FINAL') || name.includes('STATUS_FULL_TIME');
+  const t = ev?.status?.type || {};
+  return t.state === 'post' || t.completed === true || String(t.name || '').includes('FINAL') || String(t.name || '').includes('FULL_TIME');
 }
 
 function lt(u) {
@@ -317,6 +325,19 @@ function getDetailsFromSummary(s) {
   });
 }
 
+function getClockDisplay(clock, text) {
+  if (clock?.displayValue) return clock.displayValue;
+  if (clock?.value != null && clock.value > 0) {
+    const v = clock.value;
+    return (v > 120 ? Math.ceil(v / 60) : Math.round(v)) + "'";
+  }
+  if (text) {
+    const m = String(text).match(/\b(\d{1,3}(?:\+\d+)')/);
+    if (m?.[1] && Number(m[1]) <= 120) return m[1] + "'";
+  }
+  return '';
+}
+
 function getEventName(d) {
   const athleteName =
     d?.athletesInvolved?.[0]?.displayName ||
@@ -372,6 +393,7 @@ function normalize(event, leagueName, leagueSlug) {
 function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
   const goals = (details || []).filter(d => {
     const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
+    if (txt.includes('overturned') || txt.includes('annulé')) return false;
     return d?.scoringPlay === true || txt.includes('goal') || txt.includes('but');
   });
 
@@ -379,54 +401,56 @@ function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
 
   const homeGoals = [];
   const awayGoals = [];
-  const seen = new Set();
+  const playerMap = new Map();
 
   goals
     .sort((a, b) => (a.clock?.value || 0) - (b.clock?.value || 0))
     .forEach(g => {
-      const name = getEventName(g);
+      let name = getEventName(g);
+      if (!name) return;
+      if (/overturned|annulé|var/i.test(name)) return;
+      name = name.replace(/^[A-Z][\w\s]+?\d+\.\s+/, '').trim();
       if (!name) return;
 
-      const min = g.clock?.displayValue || '';
+      const min = getClockDisplay(g.clock, g.text || g.shortText || '');
       const tid = String(g.team?.id || '');
+      const teamDisplayName = String(g.team?.displayName || g.team?.name || g.team?.shortDisplayName || '').toLowerCase();
       const textTeam = getEventTeamName(g).toLowerCase();
       const homeRef = String(homeName).toLowerCase();
       const awayRef = String(awayName).toLowerCase();
-      const uniq = `${tid}|${name}|${min}`;
-      if (seen.has(uniq)) return;
-      seen.add(uniq);
 
-      const lineHome = `<div class="goal-left"><span class="gname">${name}</span><span>⚽</span>${min ? `<span class="gmin">${min}</span>` : ''}</div>`;
-      const lineAway = `<div class="goal-right">${min ? `<span class="gmin">${min}</span>` : ''}<span>⚽</span><span class="gname">${name}</span></div>`;
+      let side = null;
+      if (tid && String(homeId) === tid) side = 'home';
+      else if (tid && String(awayId) === tid) side = 'away';
+      else if (teamDisplayName && (homeRef.includes(teamDisplayName) || teamDisplayName.includes(homeRef))) side = 'home';
+      else if (teamDisplayName && (awayRef.includes(teamDisplayName) || teamDisplayName.includes(awayRef))) side = 'away';
+      else if (textTeam && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) side = 'home';
+      else if (textTeam && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) side = 'away';
+      else side = 'home';
 
-      if (tid && String(homeId) === tid) {
-        homeGoals.push(lineHome);
-        return;
+      const key = `${side}|${name}`;
+      if (playerMap.has(key)) {
+        playerMap.get(key).mins.push(min);
+      } else {
+        playerMap.set(key, { name, side, mins: [min] });
       }
-
-      if (tid && String(awayId) === tid) {
-        awayGoals.push(lineAway);
-        return;
-      }
-
-      if (textTeam && (homeRef.includes(textTeam) || textTeam.includes(homeRef))) {
-        homeGoals.push(lineHome);
-        return;
-      }
-
-      if (textTeam && (awayRef.includes(textTeam) || textTeam.includes(awayRef))) {
-        awayGoals.push(lineAway);
-        return;
-      }
-
-      homeGoals.push(lineHome);
     });
+
+  playerMap.forEach(({ name, side, mins }) => {
+    const balls = '⚽'.repeat(mins.length);
+    const minText = mins.filter(Boolean).join(' ');
+    const minSpan = minText ? `<span class="gmin">${minText}</span>` : '';
+    if (side === 'home') {
+      homeGoals.push(`<div class="goal-left"><span class="gname">${name}</span>${balls}${minSpan}</div>`);
+    } else {
+      awayGoals.push(`<div class="goal-right">${minSpan}${balls}<span class="gname">${name}</span></div>`);
+    }
+  });
 
   if (!homeGoals.length && !awayGoals.length) return '';
 
   const maxRows = Math.max(homeGoals.length, awayGoals.length);
   let rows = '';
-
   for (let i = 0; i < maxRows; i++) {
     rows += `${homeGoals[i] || '<div class="goal-left"></div>'}${awayGoals[i] || '<div class="goal-right"></div>'}`;
   }
@@ -524,24 +548,71 @@ function renderPriorityMatch(m, title) {
     </div>`;
 }
 
-async function getNextWorldMatch() {
+async function getNextLeagueMatch() {
   try {
-    const data = await espn('all');
-    const events = data?.events || [];
-    const matches = events.map(ev => {
-      const leagueName = ev?.competitions?.[0]?.league?.name || ev?.league?.name || 'Football';
-      const leagueSlug = ev?.competitions?.[0]?.league?.slug || ev?.leagues?.[0]?.slug || 'all';
-      return normalize(ev, leagueName, leagueSlug);
-    });
-
-    const live = matches.filter(m => (m.status?.type?.state || '') === 'in').sort((a, b) => new Date(a.date) - new Date(b.date));
-    if (live.length) return live[0];
-
-    const upcoming = matches.filter(m => (m.status?.type?.state || '') === 'pre').sort((a, b) => new Date(a.date) - new Date(b.date));
+    const today = new Date();
+    const end = new Date();
+    end.setDate(today.getDate() + 7);
+    const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
+    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
+    const seen = new Map();
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const { lg, data } = r.value;
+      for (const ev of (data.events || [])) {
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
+      }
+    }
+    const matches = [...seen.values()];
+    const upcoming = matches
+      .filter(m => (m.status?.type?.state || '') === 'pre')
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
     return upcoming[0] || null;
-  } catch (e) {
+  } catch(e) {
     return null;
   }
+}
+
+function setLeagueFilter(slug) {
+  activeLeagueFilter = slug;
+  renderLivePage();
+}
+
+function renderLivePage() {
+  const p = document.getElementById('p0');
+
+  if (!liveEvents.length) {
+    if (cachedNextWorld) {
+      p.innerHTML = renderPriorityMatch(cachedNextWorld, `Prochain match · ${getMatchTimeLabel(cachedNextWorld)}`);
+    } else {
+      p.innerHTML = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
+    }
+    return;
+  }
+
+  const presentSlugs = [...new Set(liveEvents.map(m => m.leagueSlug))];
+  const presentLeagues = LEAGUES.filter(lg => presentSlugs.includes(lg.slug));
+
+  let filterBar = '';
+  if (presentLeagues.length > 1) {
+    if (activeLeagueFilter !== 'all' && !presentSlugs.includes(activeLeagueFilter)) activeLeagueFilter = 'all';
+    const pills = presentLeagues.map(lg =>
+      `<div class="lf${activeLeagueFilter === lg.slug ? ' on' : ''}" onclick="setLeagueFilter('${lg.slug}')">${lg.name}</div>`
+    ).join('');
+    filterBar = `<div class="lf-bar"><div class="lf${activeLeagueFilter === 'all' ? ' on' : ''}" onclick="setLeagueFilter('all')">Toutes</div>${pills}</div>`;
+  }
+
+  const filtered = activeLeagueFilter === 'all' ? liveEvents : liveEvents.filter(m => m.leagueSlug === activeLeagueFilter);
+
+  let h = filterBar;
+  if (filtered.length) {
+    h += `<div class="sec">En cours · <b>${filtered.length} match${filtered.length > 1 ? 's' : ''}</b></div>`;
+    filtered.forEach(m => h += renderMatch(m));
+  } else {
+    h += `<div class="empty"><span class="empty-icon">⚽</span>Aucun match en direct pour cette compétition</div>`;
+  }
+
+  p.innerHTML = h;
 }
 
 async function loadLive(silent = false) {
@@ -600,40 +671,65 @@ async function loadLive(silent = false) {
     finishedTodayEvents = matches.filter(m => isDone({status:m.status}) && isRecent(m.date));
     document.getElementById('liveDot').style.display = liveEvents.length ? 'block' : 'none';
 
-    let h = '';
-    if (liveEvents.length) {
-      h += `<div class="sec">En cours · <b>${liveEvents.length} match${liveEvents.length > 1 ? 's' : ''}</b></div>`;
-      liveEvents.forEach(m => h += renderMatch(m));
-    } else {
-      const nextWorld = await getNextWorldMatch();
-      if (nextWorld) {
-        try {
-          const s = await espnSummary(nextWorld.leagueSlug || 'all', nextWorld.id);
-          const ev = s.header || s.event || {};
-          const { home, away } = getCompetitors(ev);
-          nextWorld.homeScore  = home.score  ?? nextWorld.homeScore;
-          nextWorld.awayScore  = away.score  ?? nextWorld.awayScore;
-          nextWorld.status     = ev.status   || nextWorld.status;
-          nextWorld.details    = getDetailsFromSummary(s);
-          nextWorld.homeTeamId = home.team?.id || nextWorld.homeTeamId;
-          nextWorld.awayTeamId = away.team?.id || nextWorld.awayTeamId;
-        } catch(e) {}
-
-        const state = nextWorld.status?.type?.state || '';
-        const title = state === 'in'
-          ? `Match mondial en direct · ${getMatchTimeLabel(nextWorld)}`
-          : `Prochain match mondial dans ${getMatchTimeLabel(nextWorld)}`;
-        h += renderPriorityMatch(nextWorld, title);
-      } else {
-        h = `<div class="empty"><span class="empty-icon">⚽</span>Aucun match aujourd'hui</div>`;
-      }
+    if (!liveEvents.length) {
+      cachedNextWorld = await getNextLeagueMatch();
     }
 
-    p.innerHTML = h;
+    renderLivePage();
     if (document.getElementById('p2').classList.contains('on')) renderResults();
   } catch(e) {
     if (!silent) p.innerHTML = `<div class="err">Erreur chargement<br><small>${e.message}</small></div>`;
   }
+}
+
+function setCalFilter(slug) {
+  activeCalFilter = slug;
+  renderCalPage();
+}
+
+function renderCalPage() {
+  const p = document.getElementById('p1');
+
+  if (!calEvents.length) {
+    p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`;
+    return;
+  }
+
+  const presentSlugs = [...new Set(calEvents.map(m => m.leagueSlug))];
+  const presentLeagues = LEAGUES.filter(lg => presentSlugs.includes(lg.slug));
+
+  let filterBar = '';
+  if (presentLeagues.length > 1) {
+    if (activeCalFilter !== 'all' && !presentSlugs.includes(activeCalFilter)) activeCalFilter = 'all';
+    const pills = presentLeagues.map(lg =>
+      `<div class="lf${activeCalFilter === lg.slug ? ' on' : ''}" onclick="setCalFilter('${lg.slug}')">${lg.name}</div>`
+    ).join('');
+    filterBar = `<div class="lf-bar"><div class="lf${activeCalFilter === 'all' ? ' on' : ''}" onclick="setCalFilter('all')">Toutes</div>${pills}</div>`;
+  }
+
+  const filtered = activeCalFilter === 'all' ? calEvents : calEvents.filter(m => m.leagueSlug === activeCalFilter);
+
+  if (!filtered.length) {
+    p.innerHTML = filterBar + `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu pour cette compétition</div>`;
+    return;
+  }
+
+  const byDay = {};
+  filtered.forEach(m => {
+    const k = dl(m.date);
+    if (!byDay[k]) byDay[k] = [];
+    byDay[k].push(m);
+  });
+
+  let h = filterBar;
+  for (const [day, ms] of Object.entries(byDay)) {
+    h += `<div class="day-sep">${day}</div>`;
+    ms.forEach(m => {
+      h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
+    });
+  }
+
+  p.innerHTML = h;
 }
 
 async function loadCal() {
@@ -643,7 +739,7 @@ async function loadCal() {
   try {
     const today = new Date();
     const end = new Date();
-    end.setDate(today.getDate() + 14);
+    end.setDate(today.getDate() + 3);
     const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
 
     const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
@@ -659,42 +755,49 @@ async function loadCal() {
       }
     }
 
-    const matches = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
-    if (!matches.length) {
-      p.innerHTML = `<div class="empty"><span class="empty-icon">📅</span>Aucun match prévu dans les 14 prochains jours</div>`;
-      return;
-    }
-
-    const byDay = {};
-    matches.forEach(m => {
-      const k = dl(m.date);
-      if (!byDay[k]) byDay[k] = [];
-      byDay[k].push(m);
-    });
-
-    let h = '';
-    for (const [day, ms] of Object.entries(byDay)) {
-      h += `<div class="day-sep">${day}</div>`;
-      ms.forEach(m => {
-        h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
-      });
-    }
-
-    p.innerHTML = h;
+    calEvents = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
+    renderCalPage();
     calLoaded = true;
   } catch(e) {
     p.innerHTML = `<div class="err">Erreur calendrier<br><small>${e.message}</small></div>`;
   }
 }
 
-function renderResults() {
+async function renderResults() {
+  const p = document.getElementById('p2');
+
+  if (finishedTodayEvents.length) { renderResultsHtml(); return; }
+
+  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement des résultats...</div>';
+  try {
+    const now = new Date();
+    const dates = [0, 1, 2, 3].map(i => { const d = new Date(now); d.setDate(now.getDate() - i); return dateKey(d); });
+    const fetches = dates.flatMap(d => LEAGUES.map(lg =>
+      espn(lg.slug, `?dates=${d}`).then(data => ({ lg, data })).catch(() => null)
+    ));
+    const results = await Promise.all(fetches);
+    const seen = new Map();
+    for (const r of results) {
+      if (!r) continue;
+      for (const ev of (r.data.events || [])) {
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, r.lg.name, r.lg.slug));
+      }
+    }
+    finishedTodayEvents = [...seen.values()]
+      .filter(m => isDone({status: m.status}))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+  } catch(e) {}
+
+  renderResultsHtml();
+}
+
+function renderResultsHtml() {
   const p = document.getElementById('p2');
   if (!finishedTodayEvents.length) {
-    p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat aujourd'hui</div>`;
+    p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat récent</div>`;
     return;
   }
-
-  let h = `<div class="sec">Terminés · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`;
+  let h = `<div class="sec">Résultats récents · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`;
   finishedTodayEvents.forEach(m => h += renderMatch(m));
   p.innerHTML = h;
 }
@@ -785,76 +888,6 @@ function showToast(msg, dur = 2500) {
   t._h = setTimeout(() => t.style.opacity = '0', dur);
 }
 
-async function findLiveMatch() {
-  for (const slug of DEMO_SLUGS) {
-    try {
-      const data = await espn(slug);
-      for (const ev of (data.events || [])) {
-        if (isLive(ev)) return { ev, slug };
-      }
-    } catch(e) {}
-  }
-  return null;
-}
-
-async function demoRefresh() {
-  if (!demoActive) return;
-  const p = document.getElementById('p0');
-  try {
-    const s = await espnSummary(demoSlug, demoId);
-    const ev = s.header || s.event || {};
-    const { home, away } = getCompetitors(ev);
-    const m = {
-      ...demoBase,
-      homeScore: home.score ?? demoBase.homeScore,
-      awayScore: away.score ?? demoBase.awayScore,
-      status: ev.status ?? demoBase.status,
-      details: getDetailsFromSummary(s),
-      homeTeamId: home.team?.id || demoBase.homeTeamId,
-      awayTeamId: away.team?.id || demoBase.awayTeamId
-    };
-    if (isDone({status: m.status})) {
-      stopDemo();
-      return;
-    }
-    p.innerHTML = '<div class="sec">Mode démo</div>' + renderMatch(m);
-    updateUpd();
-  } catch(e) {}
-}
-
-async function startDemo() {
-  if (demoActive) {
-    stopDemo();
-    return;
-  }
-  goTab(0);
-  document.getElementById('p0').innerHTML = '<div class="loading"><div class="sr"></div>Recherche match...</div>';
-  const found = await findLiveMatch();
-  if (!found) {
-    document.getElementById('p0').innerHTML = `<div class="empty">Aucun live trouvé</div>`;
-    return;
-  }
-  demoActive = true;
-  demoSlug = found.slug;
-  demoId = found.ev.id;
-  demoBase = normalize(found.ev, found.ev.competitions?.[0]?.league?.name || found.slug, found.slug);
-  if (liveInterval) clearInterval(liveInterval);
-  await demoRefresh();
-  demoInterval = setInterval(demoRefresh, 15000);
-  showToast(`🧪 Démo : ${demoBase.homeName}`);
-}
-
-function stopDemo() {
-  demoActive = false;
-  if (demoInterval) clearInterval(demoInterval);
-  showToast('Démo OFF');
-  startLiveLoop();
-}
-
-const logoEl = document.getElementById('logoMark');
-logoEl.addEventListener('pointerdown', () => { pressTimer = setTimeout(startDemo, 3000); });
-logoEl.addEventListener('pointerup', () => clearTimeout(pressTimer));
-logoEl.addEventListener('pointerleave', () => clearTimeout(pressTimer));
 
 function goTab(i) {
   document.querySelectorAll('.tab').forEach((t,j) => t.classList.toggle('on', i===j));
@@ -889,12 +922,17 @@ async function manualRefresh() {
 async function startLiveLoop() {
   await loadLive(false);
   updateUpd();
-  liveInterval = setInterval(async () => {
-    if (!demoActive) {
-      await loadLive(true);
-      updateUpd();
-    }
-  }, 30000);
+  scheduleNextPoll();
+}
+
+function scheduleNextPoll() {
+  clearTimeout(liveInterval);
+  const delay = liveEvents.length > 0 ? 15000 : 30000;
+  liveInterval = setTimeout(async () => {
+    await loadLive(true);
+    updateUpd();
+    scheduleNextPoll();
+  }, delay);
 }
 
 updateClk();
