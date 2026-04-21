@@ -114,6 +114,7 @@ const LEAGUES = [
 let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = [], finishedTodayEvents = [];
 let activeLeagueFilter = 'all', cachedNextWorld = null;
 let activeCalFilter = 'all', calEvents = [];
+let cachedResults = [], resultsLoaded = false;
 
 async function espn(slug, params = '') {
   const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
@@ -766,12 +767,12 @@ async function loadCal() {
 async function renderResults() {
   const p = document.getElementById('p2');
 
-  if (finishedTodayEvents.length) { renderResultsHtml(); return; }
+  if (resultsLoaded) { renderResultsHtml(); return; }
 
   p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement des résultats...</div>';
   try {
     const now = new Date();
-    const dates = [0, 1, 2, 3].map(i => { const d = new Date(now); d.setDate(now.getDate() - i); return dateKey(d); });
+    const dates = [0, 1].map(i => { const d = new Date(now); d.setDate(now.getDate() - i); return dateKey(d); });
     const fetches = dates.flatMap(d => LEAGUES.map(lg =>
       espn(lg.slug, `?dates=${d}`).then(data => ({ lg, data })).catch(() => null)
     ));
@@ -783,9 +784,10 @@ async function renderResults() {
         if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, r.lg.name, r.lg.slug));
       }
     }
-    finishedTodayEvents = [...seen.values()]
+    cachedResults = [...seen.values()]
       .filter(m => isDone({status: m.status}))
       .sort((a, b) => new Date(b.date) - new Date(a.date));
+    resultsLoaded = true;
   } catch(e) {}
 
   renderResultsHtml();
@@ -793,12 +795,12 @@ async function renderResults() {
 
 function renderResultsHtml() {
   const p = document.getElementById('p2');
-  if (!finishedTodayEvents.length) {
+  if (!cachedResults.length) {
     p.innerHTML = `<div class="empty"><span class="empty-icon">📰</span>Aucun résultat récent</div>`;
     return;
   }
-  let h = `<div class="sec">Résultats récents · <b>${finishedTodayEvents.length} match${finishedTodayEvents.length > 1 ? 's' : ''}</b></div>`;
-  finishedTodayEvents.forEach(m => h += renderMatch(m));
+  let h = `<div class="sec">Résultats récents · <b>${cachedResults.length} match${cachedResults.length > 1 ? 's' : ''}</b></div>`;
+  cachedResults.forEach(m => h += renderMatch(m));
   p.innerHTML = h;
 }
 
@@ -913,7 +915,7 @@ async function manualRefresh() {
   const idx = [...document.querySelectorAll('.page')].findIndex(p => p.classList.contains('on'));
   if (idx === 0) await loadLive(false);
   if (idx === 1) { calLoaded = false; await loadCal(); }
-  if (idx === 2) { await loadLive(true); renderResults(); }
+  if (idx === 2) { resultsLoaded = false; cachedResults = []; await renderResults(); }
   if (idx === 3) { standLoaded = false; await loadOM(); }
   updateUpd();
   setTimeout(() => btn.classList.remove('spin'), 500);
