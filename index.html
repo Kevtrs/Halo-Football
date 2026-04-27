@@ -31,7 +31,7 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 .content{padding:4px 16px calc(var(--sab) + 28px)}
 .page{display:none}.page.on{display:block;animation:fi .2s ease}
-@keyframes fi{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fi{from{opacity:0;transform:translateX(10px) translateY(4px)}to{opacity:1;transform:translateX(0) translateY(0)}}
 .loading{text-align:center;padding:60px 20px;color:var(--muted);font-size:14px;font-weight:500}
 .sr{width:26px;height:26px;border:2.5px solid var(--bg3);border-top-color:var(--om);border-radius:50%;animation:spinr .7s linear infinite;margin:0 auto 14px}
 .empty{text-align:center;padding:48px 20px;color:var(--muted);font-size:14px;line-height:2;font-weight:500}.empty-icon{font-size:32px;display:block;margin-bottom:10px}
@@ -78,6 +78,41 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .preview-screen{aspect-ratio:800/480;overflow:auto;border-radius:10px;border:1px solid rgba(0,155,222,.18);background:var(--bg)}
 .compact-mode .mc{padding:10px 11px;margin-bottom:8px}
 .compact-mode .scn{font-size:22px}
+.compact-mode .scorers,.compact-mode .bookings{max-height:0;opacity:0;margin-top:0;border-width:0;overflow:hidden;padding:0;transition:max-height .25s ease,opacity .2s ease,margin .2s ease}
+.mc,.cal-card{animation:cardIn .26s ease both}
+.mc.live{animation:cardIn .26s ease both,liveGlow 2.8s ease-in-out infinite}
+.b-live{animation:liveBadgePulse 1.6s ease-in-out infinite}
+.scb.score-flash{animation:scorePop 1s ease both}
+.goal-left,.goal-right{animation:goalPop .32s ease both}
+.sct.soon,.cal-card.soon{box-shadow:0 0 0 1px rgba(56,189,248,.28),0 0 22px rgba(56,189,248,.18);animation:soonGlow 1.8s ease-in-out infinite}
+body.sync-pulse .content,body.sync-pulse .preview-screen{animation:syncPulse .45s ease both}
+.loading{position:relative;overflow:hidden}
+.loading:after{content:'';display:block;max-width:520px;height:74px;margin:20px auto 0;border-radius:18px;border:1px solid rgba(0,155,222,.1);background:linear-gradient(110deg,rgba(13,20,40,.55) 8%,rgba(0,155,222,.16) 18%,rgba(13,20,40,.55) 33%);background-size:220% 100%;animation:shimmer 1.15s linear infinite;box-shadow:0 88px 0 rgba(13,20,40,.42),0 176px 0 rgba(13,20,40,.28)}
+.preview-screen .loading:after{max-width:92%}
+@keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes liveGlow{0%,100%{box-shadow:0 2px 24px rgba(0,155,222,.08);border-color:rgba(0,155,222,.25)}50%{box-shadow:0 2px 34px rgba(0,155,222,.22);border-color:rgba(0,155,222,.48)}}
+@keyframes liveBadgePulse{0%,100%{transform:scale(1);box-shadow:0 0 0 rgba(0,155,222,0)}50%{transform:scale(1.045);box-shadow:0 0 16px rgba(0,155,222,.28)}}
+@keyframes scorePop{0%{transform:scale(1);box-shadow:0 0 0 rgba(56,189,248,0)}22%{transform:scale(1.12);box-shadow:0 0 24px rgba(56,189,248,.45)}100%{transform:scale(1);box-shadow:0 0 0 rgba(56,189,248,0)}}
+@keyframes goalPop{from{opacity:0;transform:translateY(4px) scale(.96)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes soonGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+@keyframes syncPulse{0%{filter:brightness(1)}40%{filter:brightness(1.18)}100%{filter:brightness(1)}}
+@keyframes shimmer{0%{background-position:180% 0}100%{background-position:-80% 0}}
+.premium-strip{margin:0 0 10px;padding:9px 12px;border-radius:14px;background:linear-gradient(90deg,rgba(0,155,222,.22),rgba(56,189,248,.06));border:1px solid rgba(0,155,222,.26);font-size:12px;font-weight:800;color:#dff6ff;letter-spacing:.2px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.premium-strip .hot{color:#fff;background:rgba(0,155,222,.32);padding:3px 7px;border-radius:999px;margin-right:7px}
+.mc.fav{border-color:rgba(56,189,248,.52);box-shadow:0 0 0 1px rgba(56,189,248,.14),0 8px 28px rgba(0,155,222,.12)}
+.mc{cursor:pointer}
+.timeline{margin-top:10px;border-top:1px solid rgba(0,155,222,.12);padding-top:8px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.timeline::-webkit-scrollbar{display:none}
+.tl-i{display:flex;align-items:center;gap:5px;flex-shrink:0;background:rgba(0,155,222,.08);border:1px solid rgba(0,155,222,.14);border-radius:999px;padding:5px 8px;font-size:11px;color:var(--white);font-weight:700;max-width:210px}
+.tl-min{color:var(--om2);font-size:10px;flex-shrink:0}.tl-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tv-wall{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tv-wall .mc{padding:10px;margin-bottom:0}.tv-wall .mc-top{margin-bottom:8px}.tv-wall .tn{font-size:12px}.tv-wall .cr,.tv-wall .cr-e{width:25px!important;height:25px!important}.tv-wall .scn{font-size:22px}.tv-wall .timeline,.tv-wall .scorers{display:none}
+.next-premium{position:relative;overflow:hidden;background:radial-gradient(circle at top left,rgba(0,155,222,.22),rgba(8,13,24,.92) 42%,rgba(5,8,16,.95));border:1px solid rgba(0,155,222,.28);border-radius:20px;padding:18px 16px;margin:10px 0 12px;box-shadow:0 12px 36px rgba(0,0,0,.28)}
+.next-premium:before{content:'';position:absolute;inset:-40%;background:linear-gradient(110deg,transparent 35%,rgba(56,189,248,.08),transparent 65%);animation:shimmer 3s linear infinite}.next-premium>*{position:relative}.np-k{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--om2);font-weight:900}.np-main{font-size:22px;font-weight:900;margin-top:7px;color:var(--white)}.np-sub{font-size:12px;color:var(--dim);font-weight:700;margin-top:4px}
+.screensaver{min-height:300px;display:flex;align-items:center;justify-content:center;text-align:center;padding:26px 12px}.sv-card{width:100%;border:1px solid rgba(0,155,222,.22);border-radius:24px;padding:28px 16px;background:radial-gradient(circle at center,rgba(0,155,222,.18),rgba(5,8,16,.88) 62%);box-shadow:0 14px 46px rgba(0,0,0,.34)}.sv-logo{width:78px;height:78px;border-radius:24px;margin:0 auto 14px;background:var(--om);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:900;color:#fff;box-shadow:0 0 34px rgba(0,155,222,.45);animation:liveBadgePulse 2.4s ease-in-out infinite}.sv-title{font-size:24px;font-weight:900}.sv-sub{font-size:13px;color:var(--dim);font-weight:700;margin-top:7px;line-height:1.45}
+.focus-ov{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.72);z-index:10001;padding:18px}.focus-ov.open{display:flex}.focus-card{width:min(760px,96vw);max-height:88vh;overflow:auto;background:linear-gradient(150deg,#081025,#050810);border:1px solid rgba(0,155,222,.36);border-radius:24px;padding:18px;box-shadow:0 24px 80px rgba(0,0,0,.55)}.focus-x{float:right;border:1px solid rgba(0,155,222,.25);background:#0d1428;color:#7dd3fc;border-radius:10px;padding:7px 11px;cursor:pointer}.focus-comp{font-size:12px;text-transform:uppercase;letter-spacing:1.6px;color:var(--om2);font-weight:900;margin-bottom:12px}.focus-teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px}.focus-team{text-align:center;min-width:0}.focus-logo{width:74px;height:74px;object-fit:contain;margin-bottom:8px}.focus-name{font-size:20px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.focus-score{font-size:46px;font-weight:900;color:#fff;background:var(--bg3);border:1px solid var(--b2);border-radius:18px;padding:8px 16px;min-width:112px;text-align:center}.focus-min{margin-top:14px;text-align:center;color:var(--om);font-weight:900}
+.goal-alert{position:fixed;left:50%;top:24px;transform:translateX(-50%) translateY(-18px);z-index:10002;opacity:0;pointer-events:none;background:linear-gradient(90deg,#009BDE,#38bdf8);color:white;border-radius:999px;padding:12px 22px;font-size:15px;font-weight:900;box-shadow:0 12px 36px rgba(0,155,222,.42);transition:.25s}.goal-alert.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.today-grid{display:grid;gap:10px}.api-status{font-size:10px;color:var(--om2);font-weight:800;margin-left:8px}.theme-day{--bg:#eaf6ff;--bg2:#ffffff;--bg3:#dcecff;--white:#0b1728;--dim:#48677f;--muted:#8aa5b8;--b1:rgba(0,105,160,.12);--b2:rgba(0,105,160,.26)}.theme-day .hdr{background:#eaf6ff}.theme-day .preview-screen{background:var(--bg)}
+.burnin-on #previewWrap .preview-screen{animation:burnInMove 240s steps(12,end) infinite}@keyframes burnInMove{0%,100%{transform:translate(0,0)}20%{transform:translate(2px,1px)}40%{transform:translate(-2px,2px)}60%{transform:translate(1px,-2px)}80%{transform:translate(-1px,-1px)}}
 .no-anim *{animation:none !important;transition:none !important}
 .ghost-cfg{position:fixed;right:10px;bottom:10px;z-index:9999;width:24px;height:24px;border-radius:50%;background:rgba(0,155,222,.08);color:rgba(0,155,222,.35);border:1px solid rgba(0,155,222,.2);font-size:11px;cursor:pointer}
 .ghost-cfg:hover{color:#7dd3fc;border-color:#38bdf8;background:rgba(0,155,222,.2)}
@@ -135,6 +170,9 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
         <h4>Affichage</h4>
         <div class="cfg-row"><label>Mode preview</label><select id="s_preview"><option value="off">Off</option><option value="on">Waveshare 800x480</option></select></div>
         <div class="cfg-row"><label>Scale UI</label><select id="s_scale"><option value="1">100%</option><option value="1.1">110%</option><option value="1.2">120%</option></select></div>
+        <div class="cfg-row"><label>Mode écran</label><select id="s_layout"><option value="standard">Standard</option><option value="tvwall">TV wall</option></select></div>
+        <div class="cfg-row"><label>Thème</label><select id="s_theme"><option value="auto">Auto</option><option value="night">Nuit</option><option value="day">Jour</option></select></div>
+        <div class="cfg-row"><label>Anti burn-in</label><select id="s_burnin"><option value="on">On</option><option value="off">Off</option></select></div>
       </div>
       <div class="cfg-box">
         <h4>Données live</h4>
@@ -143,6 +181,8 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
         <div class="cfg-row"><label>Résultats (jours)</label><select id="s_res_days"><option value="2">2</option><option value="3">3</option><option value="5">5</option></select></div>
         <div class="cfg-row"><label>Détails matchs</label><select id="s_details"><option value="full">Complet</option><option value="compact">Compact</option></select></div>
         <div class="cfg-row"><label>Animations</label><select id="s_anim"><option value="on">On</option><option value="off">Off</option></select></div>
+        <div class="cfg-row"><label>Équipe favorite</label><input id="s_favorite" type="text" placeholder="OM, Marseille, France..."></div>
+        <div class="cfg-row"><label>Mode démo</label><select id="s_demo"><option value="off">Off</option><option value="on">On</option></select></div>
       </div>
       <div class="cfg-box">
         <h4>Debug hardware</h4>
@@ -173,6 +213,7 @@ let calLoaded = false, standLoaded = false, liveInterval = null, liveEvents = []
 let activeLeagueFilter = 'all', cachedNextWorld = null;
 let activeCalFilter = 'all', calEvents = [];
 let cachedResults = [], resultsLoaded = false;
+let lastScores = new Map();
 
 async function espn(slug, params = '') {
   const url = slug === 'all' ? `${BASE}/all/scoreboard${params}` : `${BASE}/${slug}/scoreboard${params}`;
@@ -275,6 +316,22 @@ function dateKey(d) {
 
 function isRecent(dateStr) {
   return (Date.now() - new Date(dateStr).getTime()) < 172800000;
+}
+
+function isStartingSoon(dateStr) {
+  const diff = new Date(dateStr).getTime() - Date.now();
+  return diff > 0 && diff <= 30 * 60 * 1000;
+}
+
+function scoreFlashClass(m) {
+  const state = m.status?.type?.state || '';
+  if (state !== 'in' && state !== 'post') return '';
+
+  const key = `${m.homeScore ?? 0}-${m.awayScore ?? 0}`;
+  const old = lastScores.get(m.id);
+  lastScores.set(m.id, key);
+
+  return old && old !== key ? ' score-flash' : '';
 }
 
 function getCompetitors(event) {
@@ -581,9 +638,11 @@ function bookingsBlock(details, homeTeamId, awayTeamId, homeName = '', awayName 
 function renderMatch(m) {
   const state = m.status?.type?.state || '';
   const liveNow = state === 'in';
+  const soonNow = state === 'pre' && isStartingSoon(m.date);
+  const flashClass = scoreFlashClass(m);
   const scoreHtml = (liveNow || state === 'post')
-    ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
-    : `<div class="sct">${lt(m.date)}</div>`;
+    ? `<div class="scb${flashClass}"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
+    : `<div class="sct${soonNow ? ' soon' : ''}">${lt(m.date)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
 
   return `<div class="mc${liveNow ? ' live' : ''}"><div class="mc-top"><span class="mc-comp">${m.leagueName}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${m.homeName}</span></div>${scoreHtml}<div class="ta"><span class="tn">${m.awayName}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
@@ -592,9 +651,11 @@ function renderMatch(m) {
 function renderPriorityMatch(m, title) {
   const state = m.status?.type?.state || '';
   const liveNow = state === 'in';
+  const soonNow = state === 'pre' && isStartingSoon(m.date);
+  const flashClass = scoreFlashClass(m);
   const centerHtml = (liveNow || state === 'post')
-    ? `<div class="scb"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
-    : `<div class="sct">${getMatchTimeLabel(m)}</div>`;
+    ? `<div class="scb${flashClass}"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
+    : `<div class="sct${soonNow ? ' soon' : ''}">${getMatchTimeLabel(m)}</div>`;
   const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
 
   return `<div class="sec" style="color:var(--om)">${title}</div>
@@ -788,7 +849,7 @@ function renderCalPage() {
   for (const [day, ms] of Object.entries(byDay)) {
     h += `<div class="day-sep">${day}</div>`;
     ms.forEach(m => {
-      h += `<div class="cal-card"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
+      h += `<div class="cal-card${isStartingSoon(m.date) ? ' soon' : ''}"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${m.homeName} — ${m.awayName}</div><div class="cal-cn">${m.leagueName}</div></div></div>`;
     });
   }
 
@@ -973,13 +1034,19 @@ function updateUpd() {
 async function manualRefresh() {
   const btn = document.getElementById('rbtn');
   btn.classList.add('spin');
+  document.body.classList.remove('sync-pulse');
+  void document.body.offsetWidth;
+  document.body.classList.add('sync-pulse');
   const idx = [...document.querySelectorAll('.page')].findIndex(p => p.classList.contains('on'));
   if (idx === 0) await loadLive(false);
   if (idx === 1) { calLoaded = false; await loadCal(); }
   if (idx === 2) { resultsLoaded = false; cachedResults = []; await renderResults(); }
   if (idx === 3) { standLoaded = false; await loadOM(); }
   updateUpd();
-  setTimeout(() => btn.classList.remove('spin'), 500);
+  setTimeout(() => {
+    btn.classList.remove('spin');
+    document.body.classList.remove('sync-pulse');
+  }, 500);
 }
 
 async function startLiveLoop() {
@@ -1007,7 +1074,12 @@ let SETTINGS = {
   calDays:3,
   resDays:2,
   details:'full',
-  anim:'on'
+  anim:'on',
+  favorite:'Marseille',
+  layout:'standard',
+  theme:'auto',
+  burnin:'on',
+  demo:'off'
 };
 
 function loadSettings(){ try{ SETTINGS = { ...SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')) }; }catch(e){} }
@@ -1082,6 +1154,7 @@ function applyPreviewMode(){
   document.documentElement.style.fontSize = `${16 * Number(SETTINGS.scale || 1)}px`;
   document.body.classList.toggle('compact-mode', SETTINGS.details === 'compact');
   document.body.classList.toggle('no-anim', SETTINGS.anim === 'off');
+  if (typeof applyPremiumVisuals === 'function') applyPremiumVisuals();
 
   const oldWrap = document.getElementById('previewWrap');
   if (oldWrap) {
@@ -1127,6 +1200,11 @@ function bindConfigUI(){
   const s_res_days = document.getElementById('s_res_days');
   const s_details = document.getElementById('s_details');
   const s_anim = document.getElementById('s_anim');
+  const s_favorite = document.getElementById('s_favorite');
+  const s_layout = document.getElementById('s_layout');
+  const s_theme = document.getElementById('s_theme');
+  const s_burnin = document.getElementById('s_burnin');
+  const s_demo = document.getElementById('s_demo');
 
   s_preview.value = SETTINGS.preview;
   s_scale.value = String(SETTINGS.scale);
@@ -1135,6 +1213,11 @@ function bindConfigUI(){
   s_res_days.value = String(SETTINGS.resDays);
   s_details.value = SETTINGS.details;
   s_anim.value = SETTINGS.anim;
+  s_favorite.value = SETTINGS.favorite;
+  s_layout.value = SETTINGS.layout;
+  s_theme.value = SETTINGS.theme;
+  s_burnin.value = SETTINGS.burnin;
+  s_demo.value = SETTINGS.demo;
 
   cfgOpen.onclick = () => cfgOv.classList.add('open');
   cfgClose.onclick = () => cfgOv.classList.remove('open');
@@ -1148,6 +1231,11 @@ function bindConfigUI(){
     SETTINGS.resDays = Number(s_res_days.value);
     SETTINGS.details = s_details.value;
     SETTINGS.anim = s_anim.value;
+    SETTINGS.favorite = s_favorite.value.trim() || 'Marseille';
+    SETTINGS.layout = s_layout.value;
+    SETTINGS.theme = s_theme.value;
+    SETTINGS.burnin = s_burnin.value;
+    SETTINGS.demo = s_demo.value;
   }
 
   document.getElementById('cfgSave').onclick = () => {
@@ -1172,11 +1260,291 @@ function bindConfigUI(){
   };
 }
 
+/* ===== Premium features ===== */
+let alertScores = new Map();
+let lastGoalAlertAt = 0;
+
+function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function safeId(v){ return String(v ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function favNeedle(){ return String(SETTINGS.favorite || 'Marseille').toLowerCase().trim(); }
+function matchesFavorite(m){
+  const f = favNeedle();
+  if (!f) return false;
+  const names = `${m?.homeName || ''} ${m?.awayName || ''}`.toLowerCase();
+  return names.includes(f) || (f === 'om' && names.includes('marseille')) || (f === 'marseille' && names.includes('om'));
+}
+function sortFavoriteFirst(list){ return [...(list || [])].sort((a,b) => Number(matchesFavorite(b)) - Number(matchesFavorite(a)) || new Date(a.date) - new Date(b.date)); }
+function allKnownMatches(){
+  const map = new Map();
+  [...liveEvents, ...finishedTodayEvents, ...calEvents, ...cachedResults, cachedNextWorld].filter(Boolean).forEach(m => map.set(String(m.id), m));
+  return [...map.values()];
+}
+function latestTimelineItems(details){
+  return (details || []).filter(d => {
+    const txt = String(d?.text || d?.shortText || '').toLowerCase();
+    return d?.scoringPlay || d?.yellowCard || d?.redCard || txt.includes('goal') || txt.includes('but') || txt.includes('yellow') || txt.includes('red');
+  }).map(d => {
+    const icon = d?.redCard ? '🟥' : d?.yellowCard ? '🟨' : '⚽';
+    const name = getEventName(d) || String(d?.text || d?.shortText || '').slice(0,42);
+    const min = getClockDisplay(d.clock, d.text || d.shortText || '');
+    return { icon, name, min, raw: d, order: Number(String(min).replace(/[^0-9]/g,'')) || 0 };
+  }).filter(x => x.name).sort((a,b) => a.order - b.order);
+}
+function timelineBlock(details){
+  if (SETTINGS.details === 'compact') return '';
+  const items = latestTimelineItems(details).slice(-8);
+  if (!items.length) return '';
+  return `<div class="timeline">${items.map(i => `<div class="tl-i"><span>${i.icon}</span>${i.min ? `<span class="tl-min">${safeText(i.min)}</span>` : ''}<span class="tl-name">${safeText(i.name)}</span></div>`).join('')}</div>`;
+}
+
+renderMatch = function(m) {
+  const state = m.status?.type?.state || '';
+  const liveNow = state === 'in';
+  const soonNow = state === 'pre' && isStartingSoon(m.date);
+  const flashClass = scoreFlashClass(m);
+  const favClass = matchesFavorite(m) ? ' fav' : '';
+  const scoreHtml = (liveNow || state === 'post')
+    ? `<div class="scb${flashClass}"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
+    : `<div class="sct${soonNow ? ' soon' : ''}">${lt(m.date)}</div>`;
+  const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
+  return `<div class="mc${liveNow ? ' live' : ''}${favClass}" onclick="openFocusMatch('${safeId(m.id)}')"><div class="mc-top"><span class="mc-comp">${safeText(m.leagueName)}${matchesFavorite(m) ? ' · ★ favori' : ''}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${safeText(m.homeName)}</span></div>${scoreHtml}<div class="ta"><span class="tn">${safeText(m.awayName)}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${timelineBlock(m.details)}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
+};
+
+renderPriorityMatch = function(m, title) {
+  const state = m.status?.type?.state || '';
+  const liveNow = state === 'in';
+  const soonNow = state === 'pre' && isStartingSoon(m.date);
+  const flashClass = scoreFlashClass(m);
+  const centerHtml = (liveNow || state === 'post')
+    ? `<div class="scb${flashClass}"><span class="scn">${m.homeScore ?? 0}</span><span class="scs">–</span><span class="scn">${m.awayScore ?? 0}</span></div>`
+    : `<div class="sct${soonNow ? ' soon' : ''}">${getMatchTimeLabel(m)}</div>`;
+  const minHtml = liveNow ? `<div class="mc-min">${getMatchTimeLabel(m)}</div>` : '';
+  return `<div class="sec" style="color:var(--om)">${safeText(title)}</div><div class="mc${liveNow ? ' live' : ''}${matchesFavorite(m) ? ' fav' : ''}" onclick="openFocusMatch('${safeId(m.id)}')"><div class="mc-top"><span class="mc-comp">${safeText(m.leagueName)}</span>${getLiveLabel(m)}</div><div class="teams"><div class="th">${crest(m.homeLogo,32,'cr')}<span class="tn">${safeText(m.homeName)}</span></div>${centerHtml}<div class="ta"><span class="tn">${safeText(m.awayName)}</span>${crest(m.awayLogo,32,'cr')}</div></div>${minHtml}${timelineBlock(m.details)}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
+};
+
+function renderPremiumStrip(){
+  const liveFav = liveEvents.find(matchesFavorite);
+  if (liveFav) return `<div class="premium-strip"><span class="hot">LIVE</span>${safeText(liveFav.homeName)} ${liveFav.homeScore ?? 0}–${liveFav.awayScore ?? 0} ${safeText(liveFav.awayName)} · ${safeText(getMatchTimeLabel(liveFav))}</div>`;
+  const live = liveEvents[0];
+  if (live) return `<div class="premium-strip"><span class="hot">LIVE</span>${safeText(liveEvents.length)} match${liveEvents.length>1?'s':''} en direct · ${safeText(live.homeName)} vs ${safeText(live.awayName)}</div>`;
+  const next = calEvents.find(matchesFavorite) || cachedNextWorld;
+  if (next) return `<div class="premium-strip"><span class="hot">À VENIR</span>${safeText(next.homeName)} — ${safeText(next.awayName)} · ${safeText(getMatchTimeLabel(next))}</div>`;
+  return '';
+}
+function renderNextPremium(m){
+  if (!m) return '';
+  return `<div class="next-premium"><div class="np-k">Prochain match</div><div class="np-main">${safeText(m.homeName)} — ${safeText(m.awayName)}</div><div class="np-sub">${safeText(dl(m.date))} · ${safeText(lt(m.date))} · ${safeText(m.leagueName)} · ${safeText(getMatchTimeLabel(m))}</div></div>`;
+}
+function renderScreensaver(){
+  const next = calEvents.find(matchesFavorite) || cachedNextWorld;
+  return `<div class="screensaver"><div class="sv-card"><div class="sv-logo">VL</div><div class="sv-title">Veher Live</div><div class="sv-sub">Aucun match en direct pour le moment${next ? `<br>Prochain : ${safeText(next.homeName)} — ${safeText(next.awayName)} · ${safeText(getMatchTimeLabel(next))}` : '<br>Écran veille actif · API en attente'}</div>${renderNextPremium(next)}</div></div>`;
+}
+
+renderLivePage = function() {
+  const p = document.getElementById('p0');
+  if (!liveEvents.length) {
+    p.innerHTML = renderPremiumStrip() + renderScreensaver();
+    updateBreakingLive();
+    return;
+  }
+
+  const orderedLive = sortFavoriteFirst(liveEvents);
+  const presentSlugs = [...new Set(orderedLive.map(m => m.leagueSlug))];
+  const presentLeagues = LEAGUES.filter(lg => presentSlugs.includes(lg.slug));
+  const hasFav = orderedLive.some(matchesFavorite);
+
+  let filterBar = '';
+  if (presentLeagues.length > 1 || hasFav) {
+    if (activeLeagueFilter !== 'all' && activeLeagueFilter !== 'fav' && !presentSlugs.includes(activeLeagueFilter)) activeLeagueFilter = 'all';
+    const favPill = hasFav ? `<div class="lf${activeLeagueFilter === 'fav' ? ' on' : ''}" onclick="setLeagueFilter('fav')">★ Favori</div>` : '';
+    const pills = presentLeagues.map(lg => `<div class="lf${activeLeagueFilter === lg.slug ? ' on' : ''}" onclick="setLeagueFilter('${lg.slug}')">${lg.name}</div>`).join('');
+    filterBar = `<div class="lf-bar"><div class="lf${activeLeagueFilter === 'all' ? ' on' : ''}" onclick="setLeagueFilter('all')">Toutes</div>${favPill}${pills}</div>`;
+  }
+
+  let filtered = orderedLive;
+  if (activeLeagueFilter === 'fav') filtered = orderedLive.filter(matchesFavorite);
+  else if (activeLeagueFilter !== 'all') filtered = orderedLive.filter(m => m.leagueSlug === activeLeagueFilter);
+
+  let h = renderPremiumStrip() + filterBar;
+  if (filtered.length) {
+    h += `<div class="sec">En cours · <b>${filtered.length} match${filtered.length > 1 ? 's' : ''}</b></div>`;
+    if (SETTINGS.layout === 'tvwall') h += `<div class="tv-wall">${filtered.map(renderMatch).join('')}</div>`;
+    else filtered.forEach(m => h += renderMatch(m));
+  } else {
+    h += `<div class="empty"><span class="empty-icon">⚽</span>Aucun match en direct pour ce filtre</div>`;
+  }
+
+  p.innerHTML = h;
+  updateBreakingLive();
+};
+
+function renderTodayPage(){
+  const p = document.getElementById('p4');
+  if (!p) return;
+  const favLive = liveEvents.filter(matchesFavorite);
+  const live = sortFavoriteFirst(liveEvents).slice(0, SETTINGS.layout === 'tvwall' ? 4 : 3);
+  const upcoming = sortFavoriteFirst(calEvents).filter(m => (m.status?.type?.state || '') === 'pre').slice(0,4);
+  const results = sortFavoriteFirst(cachedResults).slice(0,4);
+  let h = renderPremiumStrip();
+  if (favLive.length) h += `<div class="sec">Favori en direct</div>${favLive.map(renderMatch).join('')}`;
+  if (live.length) h += `<div class="sec">Live maintenant</div>${SETTINGS.layout === 'tvwall' ? `<div class="tv-wall">${live.map(renderMatch).join('')}</div>` : live.map(renderMatch).join('')}`;
+  if (!live.length) h += renderScreensaver();
+  if (upcoming.length) h += `<div class="sec">À venir aujourd'hui</div>${upcoming.map(m => `<div class="cal-card${isStartingSoon(m.date) ? ' soon' : ''}" onclick="openFocusMatch('${safeId(m.id)}')"><div class="cal-t">${lt(m.date)}</div><div class="cal-cc">${crest(m.homeLogo,24,'ccr')}${crest(m.awayLogo,24,'ccr')}</div><div class="cal-i"><div class="cal-tn">${safeText(m.homeName)} — ${safeText(m.awayName)}</div><div class="cal-cn">${safeText(m.leagueName)}${matchesFavorite(m) ? ' · ★ favori' : ''}</div></div></div>`).join('')}`;
+  if (results.length) h += `<div class="sec">Résultats récents</div>${results.map(renderMatch).join('')}`;
+  p.innerHTML = h;
+}
+
+const __premiumGoTab = goTab;
+goTab = function(i){
+  __premiumGoTab(i);
+  if (i === 4) {
+    renderTodayPage();
+    if (!calLoaded) loadCal().then(renderTodayPage);
+    if (!resultsLoaded) renderResults().then(renderTodayPage);
+  }
+};
+
+function updateBreakingLive(){
+  const el = document.getElementById('breakingLive');
+  if (!el) return;
+  el.innerHTML = renderPremiumStrip();
+}
+function setApiStatus(txt, ok=true){
+  const el = document.getElementById('apiStatus');
+  if (el) { el.textContent = txt; el.style.color = ok ? 'var(--om2)' : '#fca5a5'; }
+}
+const __premiumEspn = espn;
+espn = async function(slug, params = ''){
+  try{
+    const data = await __premiumEspn(slug, params);
+    setApiStatus('API OK');
+    return data;
+  }catch(e){
+    setApiStatus('API erreur', false);
+    throw e;
+  }
+};
+
+function showGoalAlert(msg){
+  const el = document.getElementById('goalAlert');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  showToast(msg, 2600);
+  playGoalBeep();
+  clearTimeout(el._h);
+  el._h = setTimeout(() => el.classList.remove('show'), 2600);
+}
+function playGoalBeep(){
+  try{
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return;
+    const ctx = window.__goalAudioCtx || (window.__goalAudioCtx = new Ctx());
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = 660; g.gain.value = .025;
+    o.connect(g); g.connect(ctx.destination); o.start();
+    setTimeout(() => { o.frequency.value = 880; }, 90);
+    setTimeout(() => { o.stop(); }, 190);
+  }catch(e){}
+}
+function detectGoalChanges(){
+  liveEvents.forEach(m => {
+    const key = `${m.homeScore ?? 0}-${m.awayScore ?? 0}`;
+    const old = alertScores.get(m.id);
+    alertScores.set(m.id, key);
+    if (old && old !== key && Date.now() - lastGoalAlertAt > 1200) {
+      lastGoalAlertAt = Date.now();
+      showGoalAlert(`BUT · ${m.homeName} ${m.homeScore ?? 0}-${m.awayScore ?? 0} ${m.awayName}`);
+    }
+  });
+}
+function makeDemoData(){
+  const now = new Date();
+  const later = new Date(now.getTime() + 26 * 60000);
+  const y = new Date(now.getTime() - 3 * 3600000);
+  const demoDetails = [
+    {scoringPlay:true,clock:{displayValue:"12'",value:12},team:{id:'om'},athletesInvolved:[{displayName:'Aubameyang'}]},
+    {yellowCard:true,clock:{displayValue:"31'",value:31},team:{id:'psg'},athletesInvolved:[{displayName:'Marquinhos'}]},
+    {scoringPlay:true,clock:{displayValue:"58'",value:58},team:{id:'psg'},athletesInvolved:[{displayName:'Dembélé'}]},
+    {scoringPlay:true,clock:{displayValue:"67'",value:67},team:{id:'om'},athletesInvolved:[{displayName:'Greenwood'}]}
+  ];
+  liveEvents = [{id:'demo-om-psg',leagueName:'Démo Ligue 1',leagueSlug:'fra.1',date:now.toISOString(),homeName:'Marseille',awayName:'Paris SG',homeLogo:'',awayLogo:'',homeScore:2,awayScore:1,status:{type:{state:'in',shortDetail:"67'",detail:"67'"}},details:demoDetails,homeTeamId:'om',awayTeamId:'psg'}];
+  finishedTodayEvents = [];
+  calEvents = [{id:'demo-next',leagueName:'Démo Champions League',leagueSlug:'uefa.champions',date:later.toISOString(),homeName:'Marseille',awayName:'Real Madrid',homeLogo:'',awayLogo:'',homeScore:0,awayScore:0,status:{type:{state:'pre'}},details:[],homeTeamId:'om',awayTeamId:'real'}];
+  cachedResults = [{id:'demo-result',leagueName:'Démo Ligue 1',leagueSlug:'fra.1',date:y.toISOString(),homeName:'Lyon',awayName:'Marseille',homeLogo:'',awayLogo:'',homeScore:0,awayScore:3,status:{type:{state:'post',completed:true}},details:[],homeTeamId:'lyon',awayTeamId:'om'}];
+  cachedNextWorld = calEvents[0];
+  resultsLoaded = true; calLoaded = true;
+  document.getElementById('liveDot').style.display = 'block';
+  setApiStatus('Mode démo');
+}
+const __premiumLoadLive = loadLive;
+loadLive = async function(silent = false){
+  if (SETTINGS.demo === 'on') {
+    makeDemoData();
+    renderLivePage();
+    renderTodayPage();
+    updateBreakingLive();
+    return;
+  }
+  await __premiumLoadLive(silent);
+  detectGoalChanges();
+  updateBreakingLive();
+  renderTodayPage();
+};
+
+function openFocusMatch(id){
+  const m = allKnownMatches().find(x => String(x.id) === String(id));
+  const ov = document.getElementById('focusOv');
+  if (!m || !ov) return;
+  const state = m.status?.type?.state || '';
+  const score = (state === 'pre') ? getMatchTimeLabel(m) : `${m.homeScore ?? 0}–${m.awayScore ?? 0}`;
+  ov.innerHTML = `<div class="focus-card"><button class="focus-x" onclick="closeFocusMatch(event)">Fermer</button><div class="focus-comp">${safeText(m.leagueName)}${matchesFavorite(m) ? ' · ★ favori' : ''}</div><div class="focus-teams"><div class="focus-team">${crest(m.homeLogo,74,'focus-logo')}<div class="focus-name">${safeText(m.homeName)}</div></div><div class="focus-score">${safeText(score)}</div><div class="focus-team">${crest(m.awayLogo,74,'focus-logo')}<div class="focus-name">${safeText(m.awayName)}</div></div></div><div class="focus-min">${safeText(dl(m.date))} · ${safeText(lt(m.date))} · ${safeText(getMatchTimeLabel(m))}</div>${timelineBlock(m.details)}${scorerBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}${bookingsBlock(m.details, m.homeTeamId, m.awayTeamId, m.homeName, m.awayName)}</div>`;
+  ov.classList.add('open');
+}
+function closeFocusMatch(e){ if(e) e.stopPropagation(); document.getElementById('focusOv')?.classList.remove('open'); }
+window.openFocusMatch = openFocusMatch;
+window.closeFocusMatch = closeFocusMatch;
+
+function applyPremiumVisuals(){
+  const mode = SETTINGS.theme === 'auto' ? ((new Date().getHours() >= 8 && new Date().getHours() < 19) ? 'day' : 'night') : SETTINGS.theme;
+  document.body.classList.toggle('theme-day', mode === 'day');
+  document.documentElement.classList.toggle('theme-day', mode === 'day');
+  document.body.classList.toggle('burnin-on', SETTINGS.burnin === 'on');
+}
+function initPremiumDom(){
+  if (!document.getElementById('t4')) {
+    const tab = document.createElement('div');
+    tab.className = 'tab'; tab.id = 't4'; tab.setAttribute('onclick','goTab(4)'); tab.innerHTML = '<span>✨</span>Aujourd’hui';
+    document.querySelector('.tabs-wrap')?.appendChild(tab);
+  }
+  if (!document.getElementById('p4')) {
+    const p = document.createElement('div'); p.className = 'page'; p.id = 'p4'; p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement aujourd’hui...</div>';
+    document.querySelector('.content')?.appendChild(p);
+  }
+  if (!document.getElementById('breakingLive')) {
+    const b = document.createElement('div'); b.id = 'breakingLive';
+    document.querySelector('.hdr')?.insertBefore(b, document.querySelector('.tabs-wrap'));
+  }
+  if (!document.getElementById('goalAlert')) {
+    const g = document.createElement('div'); g.id = 'goalAlert'; g.className = 'goal-alert'; document.body.appendChild(g);
+  }
+  if (!document.getElementById('focusOv')) {
+    const f = document.createElement('div'); f.id = 'focusOv'; f.className = 'focus-ov'; f.onclick = () => closeFocusMatch(); document.body.appendChild(f);
+  }
+  if (!document.getElementById('apiStatus')) {
+    const a = document.createElement('span'); a.id = 'apiStatus'; a.className = 'api-status'; a.textContent = 'API...';
+    document.querySelector('.ftr')?.appendChild(a);
+  }
+}
+
 updateClk();
 setInterval(updateClk, 30000);
 loadSettings();
+initPremiumDom();
 bindConfigUI();
 applyPreviewMode();
+applyPremiumVisuals();
 stampSync();
 startLiveLoop();
 </script>
