@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guition Preview — 272×480</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050810;--bg2:#080d18;--bg3:#0d1428;--om:#009BDE;--om2:#38bdf8;--white:#f0f6ff;--dim:#7a9fc0;--muted:#243650;--b1:rgba(0,155,222,.1);--b2:rgba(0,155,222,.25);--f:'Outfit',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#02060e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:var(--f);gap:14px}
+.outer-label{color:#1a3050;font-size:11px;letter-spacing:2px;text-transform:uppercase;font-family:var(--f)}
+
+/* Device */
+.device{width:272px;height:480px;background:var(--bg);border-radius:10px;border:2px solid #111d2e;box-shadow:0 0 80px rgba(0,155,222,.12),0 0 0 1px #080d18;overflow:hidden;display:flex;flex-direction:column;position:relative;transition:filter .4s}
+.device.night{filter:brightness(.18)}
+
+/* Goal flash overlay */
+.goal-flash{position:absolute;inset:0;background:rgba(0,155,222,.0);pointer-events:none;z-index:50;border-radius:8px;transition:none}
+.goal-flash.flash{animation:gflash .8s ease-out forwards}
+@keyframes gflash{0%{background:rgba(0,155,222,.45);box-shadow:inset 0 0 40px rgba(0,155,222,.6)}60%{background:rgba(0,155,222,.1)}100%{background:rgba(0,155,222,.0)}}
+
+/* Header */
+.hdr{background:var(--bg);padding:8px 10px 0;flex-shrink:0}
+.hdr-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.logo{display:flex;align-items:center;gap:6px}
+.logo-mark{width:26px;height:26px;border-radius:7px;background:var(--om);display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;box-shadow:0 0 10px rgba(0,155,222,.4);letter-spacing:-.5px}
+.logo-text{font-size:14px;font-weight:800;color:var(--white)}.logo-text span{color:var(--om)}
+.hdr-r{display:flex;align-items:center;gap:5px}
+.clk{font-size:11px;color:var(--muted);font-weight:600;font-variant-numeric:tabular-nums}
+.rbtn{background:var(--bg3);border:1px solid var(--b2);color:var(--om);width:26px;height:26px;border-radius:7px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;user-select:none;flex-shrink:0}
+.rbtn.night-btn{font-size:13px}
+.rbtn.night-on{background:rgba(56,189,248,.15);border-color:var(--om2);color:var(--om2)}
+
+/* Tabs */
+.tabs-wrap{display:flex;gap:4px;padding:0 0 8px;overflow-x:auto;scrollbar-width:none}
+.tabs-wrap::-webkit-scrollbar{display:none}
+.tab{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:50px;font-size:10px;font-weight:700;color:var(--dim);background:var(--bg2);border:1px solid var(--muted);cursor:pointer;white-space:nowrap;flex-shrink:0;transition:all .15s;user-select:none}
+.tab.on{background:var(--om);color:#fff;border-color:var(--om);box-shadow:0 0 10px rgba(0,155,222,.3)}
+.tab-dot{width:5px;height:5px;border-radius:50%;background:#fff;animation:blink 1.3s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Filter pills */
+.lf-bar{display:flex;gap:4px;padding:0 0 8px;overflow-x:auto;scrollbar-width:none}
+.lf-bar::-webkit-scrollbar{display:none}
+.lf{padding:4px 10px;border-radius:20px;font-size:10px;font-weight:700;color:var(--dim);background:var(--bg3);border:1px solid var(--muted);cursor:pointer;user-select:none;white-space:nowrap;flex-shrink:0;transition:all .15s}
+.lf.on{background:var(--om);color:#fff;border-color:var(--om)}
+
+/* Content */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;padding:6px 10px 10px;scrollbar-width:thin;scrollbar-color:var(--muted) transparent}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--muted);border-radius:3px}
+.page{display:none}.page.on{display:block}
+
+/* Sections */
+.sec{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1.5px;padding:4px 2px 5px;text-transform:uppercase}
+.sec:first-child{padding-top:0}
+.sec b{color:var(--om2)}
+
+/* Match card */
+.mc{background:var(--bg2);border:1px solid var(--b1);border-radius:13px;padding:9px 10px;margin-bottom:7px;position:relative}
+.mc.live{border-color:var(--b2);background:linear-gradient(150deg,#060c1e,#080d18);box-shadow:0 2px 16px rgba(0,155,222,.08)}
+.mc.fav{border-color:rgba(251,191,36,.35);box-shadow:0 0 12px rgba(251,191,36,.06)}
+.mc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:4px}
+.mc-comp{font-size:9px;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:55%}
+.mc-top-r{display:flex;align-items:center;gap:5px;flex-shrink:0}
+.badge{font-size:8px;font-weight:800;padding:3px 7px;border-radius:20px;white-space:nowrap;letter-spacing:.5px;text-transform:uppercase}
+.b-live{background:rgba(0,155,222,.18);color:var(--om);border:1px solid rgba(0,155,222,.35);animation:blink 1.4s infinite}
+.b-ft{background:rgba(36,54,80,.4);color:var(--muted);border:1px solid var(--muted)}
+.star-btn{background:none;border:none;cursor:pointer;font-size:13px;opacity:.3;transition:all .15s;padding:0;line-height:1;user-select:none;flex-shrink:0}
+.star-btn.on{opacity:1}
+.teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:4px}
+.th{display:flex;align-items:center;gap:6px}
+.ta{display:flex;align-items:center;gap:6px;flex-direction:row-reverse}
+.cr{width:22px;height:22px;object-fit:contain;flex-shrink:0}
+.cr-e{width:22px;height:22px;background:var(--bg3);border-radius:50%;flex-shrink:0;border:1px solid var(--b2)}
+.tn{font-size:12px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--white)}
+.th .tn{text-align:left}.ta .tn{text-align:right}
+/* Score tappable anti-spoiler */
+.scb{display:flex;align-items:center;gap:3px;flex-shrink:0;padding:3px 8px;background:var(--bg3);border-radius:10px;border:1px solid var(--b2);cursor:pointer;user-select:none;transition:all .15s}
+.scb:active{transform:scale(.95)}
+.scn{font-size:20px;font-weight:900;color:var(--white);min-width:14px;text-align:center;line-height:1;transition:all .15s}
+.scn.hidden{color:var(--bg3);background:var(--muted);border-radius:4px;min-width:16px}
+.scs{font-size:11px;color:var(--muted);font-weight:400}
+.sct{font-size:13px;font-weight:800;color:var(--om2);text-align:center;white-space:nowrap;padding:3px 8px;background:rgba(56,189,248,.07);border-radius:8px;border:1px solid rgba(56,189,248,.15)}
+.mc-min{text-align:center;font-size:10px;color:var(--om);margin-top:6px;font-weight:700}
+/* Scorers */
+.scorers{margin-top:8px;background:rgba(0,155,222,.06);border-radius:9px;border:1px solid rgba(0,155,222,.15);overflow:hidden}
+.scorers-hdr{padding:5px 9px 4px;font-size:8px;font-weight:800;color:var(--om);letter-spacing:1.5px;text-transform:uppercase;border-bottom:1px solid rgba(0,155,222,.1)}
+.scorers-grid{display:grid;grid-template-columns:1fr 1fr}
+.goal-left,.goal-right{padding:4px 9px;font-size:10px;font-weight:600;color:var(--white);display:flex;align-items:center;gap:3px;border-top:1px solid rgba(0,155,222,.06);min-width:0;overflow:hidden}
+.goal-left{justify-content:flex-start}.goal-right{justify-content:flex-end}
+.gmin{color:var(--om);font-weight:700;font-size:9px;flex-shrink:0}
+.gname{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bk-line{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);font-weight:500;padding:2px 0}
+
+/* Countdown */
+.countdown-card{background:var(--bg2);border:1px solid var(--b2);border-radius:13px;padding:14px 12px;margin-bottom:8px;text-align:center}
+.cd-label{font-size:9px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+.cd-teams{font-size:14px;font-weight:800;color:var(--white);margin-bottom:8px}
+.cd-time{font-size:34px;font-weight:900;color:var(--om);letter-spacing:-1px;line-height:1;margin-bottom:6px}
+.cd-date{font-size:10px;color:var(--dim);font-weight:500}
+
+/* Simulate goal btn */
+.sim-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(0,155,222,.1);border:1px solid rgba(0,155,222,.25);color:var(--om);padding:7px 14px;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;font-family:var(--f);margin:0 auto 10px;user-select:none;transition:all .15s}
+.sim-btn:active{background:rgba(0,155,222,.2)}
+
+/* Calendar */
+.cal-card{background:var(--bg2);border:1px solid var(--b1);border-radius:11px;padding:8px 10px;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+.cal-t{font-size:13px;font-weight:800;color:var(--om);min-width:38px;flex-shrink:0}
+.cal-cc{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.ccr{width:18px;height:18px;object-fit:contain}
+.ccr-e{width:18px;height:18px;background:var(--bg3);border-radius:50%;border:1px solid var(--b2)}
+.cal-i{flex:1;min-width:0}
+.cal-tn{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;color:var(--white)}
+.cal-cn{font-size:9px;color:var(--dim);font-weight:500}
+.day-sep{font-size:9px;color:var(--om2);font-weight:700;letter-spacing:.5px;padding:8px 2px 4px;border-top:1px solid var(--bg3);margin-top:3px}
+.day-sep:first-child{border-top:none;margin-top:0;padding-top:0}
+
+/* Classement */
+.stand-table{width:100%;border-collapse:collapse;font-size:10px}
+.stand-table th{font-size:8px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase;padding:4px 4px 6px;text-align:center}
+.stand-table th:first-child{text-align:left;padding-left:2px}
+.stand-table td{padding:5px 4px;color:var(--dim);text-align:center;border-top:1px solid rgba(255,255,255,.04)}
+.stand-table td:first-child{color:var(--white);font-weight:700;text-align:left;display:flex;align-items:center;gap:5px}
+.stand-table tr.highlight td{color:var(--om)}
+.stand-table tr.highlight td:first-child{color:var(--om2)}
+.rank{color:var(--muted);font-size:9px;font-weight:600;width:12px;flex-shrink:0}
+.club-crest{width:14px;height:14px;object-fit:contain;flex-shrink:0}
+.club-crest-e{width:14px;height:14px;background:var(--bg3);border-radius:50%;border:1px solid var(--b2);flex-shrink:0}
+
+/* OM */
+.om-hdr{text-align:center;padding:6px 0 5px;font-size:9px;font-weight:700;color:var(--om);letter-spacing:2px;text-transform:uppercase}
+.om-block{background:var(--bg2);border:1px solid var(--b1);border-radius:11px;padding:9px 10px;margin-bottom:7px}
+.om-sec{font-size:8px;font-weight:700;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px}
+
+/* Footer */
+.ftr{padding:3px 10px;display:flex;justify-content:space-between;font-size:9px;color:var(--muted);border-top:1px solid var(--bg3);font-weight:600;flex-shrink:0}
+.ok{color:var(--om)}
+</style>
+</head>
+<body>
+
+<div class="outer-label">Guition · 272×480 · Aperçu features</div>
+
+<div class="device" id="device">
+  <div class="goal-flash" id="goalFlash"></div>
+
+  <!-- HEADER -->
+  <div class="hdr">
+    <div class="hdr-top">
+      <div class="logo">
+        <div class="logo-mark">VL</div>
+        <div class="logo-text">Veher <span>Live</span></div>
+      </div>
+      <div class="hdr-r">
+        <span class="clk" id="clk">--:--</span>
+        <div class="rbtn night-btn" id="nightBtn" onclick="toggleNight()" title="Mode nuit">🌙</div>
+        <div class="rbtn" onclick="manualRefresh()">↻</div>
+      </div>
+    </div>
+    <div class="tabs-wrap">
+      <div class="tab on" id="t0" onclick="goTab(0)"><div class="tab-dot"></div><span>⚽</span>En direct</div>
+      <div class="tab" id="t1" onclick="goTab(1)"><span>📅</span>Calendrier</div>
+      <div class="tab" id="t2" onclick="goTab(2)"><span>🏁</span>Résultats</div>
+      <div class="tab" id="t3" onclick="goTab(3)"><span>🏆</span>Classement</div>
+      <div class="tab" id="t4" onclick="goTab(4)"><span>🔵</span>OM</div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- EN DIRECT -->
+    <div class="page on" id="p0">
+      <!-- Filter pills -->
+      <div class="lf-bar">
+        <div class="lf on" onclick="filterLive('all',this)">Toutes</div>
+        <div class="lf" onclick="filterLive('l1',this)">Ligue 1</div>
+        <div class="lf" onclick="filterLive('pl',this)">Premier League</div>
+        <div class="lf" onclick="filterLive('ucl',this)">Ligue des Champions</div>
+      </div>
+
+      <!-- Countdown (caché par défaut, visible si "Aucun match") -->
+      <div id="countdownSection" style="display:none">
+        <div class="countdown-card">
+          <div class="cd-label">Prochain match</div>
+          <div class="cd-teams">Marseille — Nice</div>
+          <div class="cd-time" id="cdTime">08:27:14</div>
+          <div class="cd-date">Dim. 27 avril · 20:45 · Ligue 1</div>
+        </div>
+      </div>
+
+      <div id="liveMatches">
+        <div class="sec">En cours · <b>2 matchs</b></div>
+
+        <!-- Simuler un but -->
+        <div class="sim-btn" onclick="simulateGoal()">⚽ Simuler un but</div>
+
+        <!-- Match 1 — Ligue 1 -->
+        <div class="mc live" data-league="l1" id="mc1">
+          <div class="mc-top">
+            <span class="mc-comp">Ligue 1</span>
+            <div class="mc-top-r">
+              <span class="badge b-live">⬤ 67'</span>
+              <button class="star-btn" onclick="toggleFav(this,'mc1')" title="Favori">⭐</button>
+            </div>
+          </div>
+          <div class="teams">
+            <div class="th">
+              <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/160.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+              <span class="tn">Paris S-G</span>
+            </div>
+            <div class="scb" onclick="toggleSpoiler(this)" title="Tap pour anti-spoiler">
+              <span class="scn" id="s1h">2</span><span class="scs">–</span><span class="scn" id="s1a">1</span>
+            </div>
+            <div class="ta">
+              <span class="tn">Lyon</span>
+              <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/5009.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+            </div>
+          </div>
+          <div class="mc-min">67'</div>
+          <div class="scorers">
+            <div class="scorers-hdr">Buteurs</div>
+            <div class="scorers-grid">
+              <div class="goal-left"><span class="gname">Mbappé</span>⚽<span class="gmin">23'</span></div>
+              <div class="goal-right"><span class="gmin">45'</span>⚽<span class="gname">Lacazette</span></div>
+              <div class="goal-left"><span class="gname">Dembélé</span>⚽<span class="gmin">61'</span></div>
+              <div class="goal-right"></div>
+            </div>
+          </div>
+          <div class="scorers" style="margin-top:5px">
+            <div class="scorers-hdr" style="color:#FBBF24">Cartons</div>
+            <div style="padding:4px 9px"><div class="bk-line">🟨 <span>Marquinhos 34'</span></div></div>
+          </div>
+        </div>
+
+        <!-- Match 2 — Premier League -->
+        <div class="mc live" data-league="pl" id="mc2">
+          <div class="mc-top">
+            <span class="mc-comp">Premier League</span>
+            <div class="mc-top-r">
+              <span class="badge b-live">⬤ 34'</span>
+              <button class="star-btn" onclick="toggleFav(this,'mc2')" title="Favori">⭐</button>
+            </div>
+          </div>
+          <div class="teams">
+            <div class="th">
+              <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/364.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+              <span class="tn">Man City</span>
+            </div>
+            <div class="scb" onclick="toggleSpoiler(this)" title="Tap pour anti-spoiler">
+              <span class="scn">1</span><span class="scs">–</span><span class="scn">0</span>
+            </div>
+            <div class="ta">
+              <span class="tn">Arsenal</span>
+              <img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/359.png" onerror="this.outerHTML='<div class=cr-e></div>'">
+            </div>
+          </div>
+          <div class="mc-min">34'</div>
+          <div class="scorers">
+            <div class="scorers-hdr">Buteurs</div>
+            <div class="scorers-grid">
+              <div class="goal-left"><span class="gname">Haaland</span>⚽<span class="gmin">18'</span></div>
+              <div class="goal-right"></div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /liveMatches -->
+    </div>
+
+    <!-- CALENDRIER -->
+    <div class="page" id="p1">
+      <div class="lf-bar">
+        <div class="lf on" onclick="setActiveLf(this)">Toutes</div>
+        <div class="lf" onclick="setActiveLf(this)">Ligue 1</div>
+        <div class="lf" onclick="setActiveLf(this)">Serie A</div>
+        <div class="lf" onclick="setActiveLf(this)">La Liga</div>
+      </div>
+      <div class="day-sep">Aujourd'hui — 20 avril</div>
+      <div class="cal-card">
+        <div class="cal-t">20:45</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i"><div class="cal-tn">Marseille — Nice</div><div class="cal-cn">Ligue 1</div></div>
+      </div>
+      <div class="cal-card">
+        <div class="cal-t">21:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i"><div class="cal-tn">Espanyol — Real Madrid</div><div class="cal-cn">La Liga</div></div>
+      </div>
+      <div class="day-sep">Lundi 21 avril</div>
+      <div class="cal-card">
+        <div class="cal-t">16:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i"><div class="cal-tn">Chelsea — Nottm Forest</div><div class="cal-cn">Premier League</div></div>
+      </div>
+      <div class="cal-card">
+        <div class="cal-t">18:30</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i"><div class="cal-tn">Cremonese — Lazio</div><div class="cal-cn">Serie A</div></div>
+      </div>
+      <div class="cal-card">
+        <div class="cal-t">21:00</div>
+        <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+        <div class="cal-i"><div class="cal-tn">Inter Milan — Parma</div><div class="cal-cn">Serie A</div></div>
+      </div>
+    </div>
+
+    <!-- RÉSULTATS -->
+    <div class="page" id="p2">
+      <div class="lf-bar">
+        <div class="lf on" onclick="setActiveLf(this)">Toutes</div>
+        <div class="lf" onclick="setActiveLf(this)">Bundesliga</div>
+        <div class="lf" onclick="setActiveLf(this)">Ligue 1</div>
+      </div>
+      <div class="sec">Terminés · <b>3 matchs</b></div>
+      <div class="mc">
+        <div class="mc-top"><span class="mc-comp">Bundesliga</span><div class="mc-top-r"><span class="badge b-ft">Terminé</span></div></div>
+        <div class="teams">
+          <div class="th"><img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/132.png" onerror="this.outerHTML='<div class=cr-e></div>'"><span class="tn">Bayern</span></div>
+          <div class="scb" onclick="toggleSpoiler(this)"><span class="scn">4</span><span class="scs">–</span><span class="scn">2</span></div>
+          <div class="ta"><span class="tn">Stuttgart</span><img class="cr" src="https://a.espncdn.com/i/teamlogos/soccer/500/157.png" onerror="this.outerHTML='<div class=cr-e></div>'"></div>
+        </div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Guerreiro</span>⚽</div>
+            <div class="goal-right">⚽<span class="gname">Führich</span></div>
+            <div class="goal-left"><span class="gname">Kane</span>⚽⚽</div>
+            <div class="goal-right">⚽<span class="gname">Andres</span></div>
+            <div class="goal-left"><span class="gname">Davies</span>⚽</div>
+            <div class="goal-right"></div>
+          </div>
+        </div>
+      </div>
+      <div class="mc">
+        <div class="mc-top"><span class="mc-comp">Ligue 1</span><div class="mc-top-r"><span class="badge b-ft">Terminé</span></div></div>
+        <div class="teams">
+          <div class="th"><div class="cr-e"></div><span class="tn">Lorient</span></div>
+          <div class="scb" onclick="toggleSpoiler(this)"><span class="scn">2</span><span class="scs">–</span><span class="scn">0</span></div>
+          <div class="ta"><span class="tn">Marseille</span><div class="cr-e"></div></div>
+        </div>
+        <div class="scorers">
+          <div class="scorers-hdr">Buteurs</div>
+          <div class="scorers-grid">
+            <div class="goal-left"><span class="gname">Katseris</span>⚽</div>
+            <div class="goal-right"></div>
+            <div class="goal-left"><span class="gname">B. Dieng</span>⚽</div>
+            <div class="goal-right"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CLASSEMENT -->
+    <div class="page" id="p3">
+      <div class="lf-bar">
+        <div class="lf on" onclick="setActiveLf(this)">Ligue 1</div>
+        <div class="lf" onclick="setActiveLf(this)">Premier League</div>
+        <div class="lf" onclick="setActiveLf(this)">La Liga</div>
+        <div class="lf" onclick="setActiveLf(this)">Bundesliga</div>
+        <div class="lf" onclick="setActiveLf(this)">Serie A</div>
+      </div>
+      <table class="stand-table">
+        <thead>
+          <tr>
+            <th>#</th><th>Pts</th><th>J</th><th>G</th><th>N</th><th>P</th><th>Diff</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="rank">1</span><div class="club-crest-e"></div>PSG</td><td>74</td><td>30</td><td>23</td><td>5</td><td>2</td><td>+48</td></tr>
+          <tr><td><span class="rank">2</span><div class="club-crest-e"></div>Monaco</td><td>67</td><td>30</td><td>20</td><td>7</td><td>3</td><td>+36</td></tr>
+          <tr class="highlight"><td><span class="rank">3</span><div class="club-crest-e"></div>Marseille</td><td>63</td><td>30</td><td>19</td><td>6</td><td>5</td><td>+22</td></tr>
+          <tr><td><span class="rank">4</span><div class="club-crest-e"></div>Lille</td><td>58</td><td>30</td><td>17</td><td>7</td><td>6</td><td>+18</td></tr>
+          <tr><td><span class="rank">5</span><div class="club-crest-e"></div>Lyon</td><td>55</td><td>30</td><td>16</td><td>7</td><td>7</td><td>+12</td></tr>
+          <tr><td><span class="rank">6</span><div class="club-crest-e"></div>Nice</td><td>52</td><td>30</td><td>15</td><td>7</td><td>8</td><td>+9</td></tr>
+          <tr><td><span class="rank">7</span><div class="club-crest-e"></div>Lens</td><td>48</td><td>30</td><td>13</td><td>9</td><td>8</td><td>+5</td></tr>
+          <tr><td><span class="rank">8</span><div class="club-crest-e"></div>Rennes</td><td>45</td><td>30</td><td>13</td><td>6</td><td>11</td><td>+2</td></tr>
+          <tr><td><span class="rank">9</span><div class="club-crest-e"></div>Strasbourg</td><td>42</td><td>30</td><td>12</td><td>6</td><td>12</td><td>-1</td></tr>
+          <tr><td><span class="rank">10</span><div class="club-crest-e"></div>Reims</td><td>40</td><td>30</td><td>11</td><td>7</td><td>12</td><td>-3</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- OM -->
+    <div class="page" id="p4">
+      <div class="om-hdr">Allez l'OM 💙</div>
+      <div class="om-block">
+        <div class="om-sec">Prochain match</div>
+        <div class="cal-card" style="background:transparent;border:none;padding:4px 0 0;margin:0">
+          <div class="cal-t">20:45</div>
+          <div class="cal-cc"><div class="ccr-e"></div><div class="ccr-e"></div></div>
+          <div class="cal-i">
+            <div class="cal-tn">Marseille — Nice</div>
+            <div class="cal-cn">Dim. 27 avril · Ligue 1</div>
+          </div>
+        </div>
+      </div>
+      <div class="om-block">
+        <div class="om-sec">Dernier résultat</div>
+        <div class="teams" style="margin-top:2px">
+          <div class="th"><div class="cr-e"></div><span class="tn">Lorient</span></div>
+          <div class="scb" onclick="toggleSpoiler(this)"><span class="scn">2</span><span class="scs">–</span><span class="scn">0</span></div>
+          <div class="ta"><span class="tn">Marseille</span><div class="cr-e"></div></div>
+        </div>
+      </div>
+      <div class="om-block">
+        <div class="om-sec">Classement · Ligue 1</div>
+        <table class="stand-table">
+          <thead><tr><th>#</th><th>Pts</th><th>J</th><th>Diff</th></tr></thead>
+          <tbody>
+            <tr><td><span class="rank">1</span><div class="club-crest-e"></div>PSG</td><td>74</td><td>30</td><td>+48</td></tr>
+            <tr><td><span class="rank">2</span><div class="club-crest-e"></div>Monaco</td><td>67</td><td>30</td><td>+36</td></tr>
+            <tr class="highlight"><td><span class="rank">3</span><div class="club-crest-e"></div>Marseille</td><td>63</td><td>30</td><td>+22</td></tr>
+            <tr><td><span class="rank">4</span><div class="club-crest-e"></div>Lille</td><td>58</td><td>30</td><td>+18</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ftr">
+    <span>MàJ <span id="upd">--:--</span></span>
+    <span class="ok">● connecté</span>
+  </div>
+</div>
+
+<div class="outer-label" id="featureHint">tap score = anti-spoiler · ⭐ = favori · 🌙 = mode nuit</div>
+
+<script>
+let nightMode = false;
+let spoilerMode = {};
+
+/* ── Tabs ── */
+function goTab(i) {
+  const total = 5;
+  for (let j = 0; j < total; j++) {
+    document.getElementById('t'+j).classList.toggle('on', j===i);
+    document.getElementById('p'+j).classList.toggle('on', j===i);
+  }
+  document.querySelector('.content').scrollTop = 0;
+}
+
+/* ── Filter pills (cosmetic) ── */
+function setActiveLf(el) {
+  el.closest('.lf-bar').querySelectorAll('.lf').forEach(l => l.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function filterLive(league, el) {
+  setActiveLf(el);
+  document.querySelectorAll('#liveMatches .mc').forEach(mc => {
+    mc.style.display = (league === 'all' || mc.dataset.league === league) ? '' : 'none';
+  });
+}
+
+/* ── Night mode ── */
+function toggleNight() {
+  nightMode = !nightMode;
+  document.getElementById('device').classList.toggle('night', nightMode);
+  document.getElementById('nightBtn').classList.toggle('night-on', nightMode);
+  document.getElementById('featureHint').textContent = nightMode
+    ? '🌙 Mode nuit activé — recliquez 🌙 pour désactiver'
+    : 'tap score = anti-spoiler · ⭐ = favori · 🌙 = mode nuit';
+}
+
+/* ── Anti-spoiler ── */
+function toggleSpoiler(scb) {
+  const scores = scb.querySelectorAll('.scn');
+  const hidden = scores[0].classList.contains('hidden');
+  scores.forEach(s => s.classList.toggle('hidden', !hidden));
+}
+
+/* ── Favoris ── */
+function toggleFav(btn, mcId) {
+  btn.classList.toggle('on');
+  const mc = document.getElementById(mcId);
+  mc.classList.toggle('fav', btn.classList.contains('on'));
+  if (btn.classList.contains('on')) {
+    const container = mc.parentNode;
+    container.insertBefore(mc, container.querySelector('.mc'));
+  }
+}
+
+/* ── Flash de but ── */
+function simulateGoal() {
+  const flash = document.getElementById('goalFlash');
+  flash.classList.remove('flash');
+  void flash.offsetWidth;
+  flash.classList.add('flash');
+  // Update score
+  const s = document.getElementById('s1h');
+  if (s) { s.textContent = parseInt(s.textContent) + 1; }
+}
+
+function manualRefresh() {
+  const btn = document.querySelector('.rbtn:last-child');
+  btn.style.transform = 'rotate(360deg)';
+  btn.style.transition = 'transform .5s';
+  setTimeout(() => { btn.style.transform = ''; btn.style.transition = ''; }, 500);
+}
+
+/* ── Clock & countdown ── */
+function updateClk() {
+  const n = new Date();
+  const t = String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+  document.getElementById('clk').textContent = t;
+  document.getElementById('upd').textContent = t;
+}
+
+function updateCountdown() {
+  const target = new Date();
+  target.setHours(20, 45, 0, 0);
+  if (target < new Date()) target.setDate(target.getDate() + 1);
+  const diff = target - new Date();
+  const h = String(Math.floor(diff/3600000)).padStart(2,'0');
+  const m = String(Math.floor((diff%3600000)/60000)).padStart(2,'0');
+  const s = String(Math.floor((diff%60000)/1000)).padStart(2,'0');
+  const el = document.getElementById('cdTime');
+  if (el) el.textContent = `${h}:${m}:${s}`;
+}
+
+updateClk(); setInterval(updateClk, 10000);
+updateCountdown(); setInterval(updateCountdown, 1000);
+</script>
+</body>
+</html>
