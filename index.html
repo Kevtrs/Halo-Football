@@ -433,6 +433,61 @@
       .notes { order: 2; }
       .cfg-grid { grid-template-columns: 1fr; }
     }
+/* ===== Waveshare Preview + Config ===== */
+.preview-wrap{max-width:860px;margin:0 auto;padding:10px}
+.preview-frame{
+  border:1px solid rgba(0,155,222,.35);
+  border-radius:14px;
+  padding:10px;
+  background:linear-gradient(150deg,#111a2b,#0a111e);
+  box-shadow:0 18px 45px rgba(0,0,0,.45);
+}
+.preview-screen{
+  aspect-ratio:800/480;
+  overflow:auto;
+  border-radius:10px;
+  border:1px solid rgba(0,155,222,.18);
+  background:var(--bg);
+}
+.ghost-cfg{
+  position:fixed;right:10px;bottom:10px;z-index:9999;
+  width:24px;height:24px;border-radius:50%;
+  background:rgba(0,155,222,.08);color:rgba(0,155,222,.35);
+  border:1px solid rgba(0,155,222,.2);font-size:11px;cursor:pointer;
+}
+.ghost-cfg:hover{color:#7dd3fc;border-color:#38bdf8;background:rgba(0,155,222,.2)}
+.cfg-ov{
+  position:fixed;inset:0;display:none;z-index:10000;
+  background:rgba(0,0,0,.6);padding:20px;overflow:auto;
+}
+.cfg-ov.open{display:block}
+.cfg-card{
+  max-width:920px;margin:20px auto;background:#081025;
+  border:1px solid rgba(0,155,222,.3);border-radius:14px;padding:14px;
+}
+.cfg-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.cfg-h h3{font-size:14px;color:#38bdf8}
+.cfg-x{
+  border:1px solid rgba(0,155,222,.25);background:#0d1428;color:#7dd3fc;
+  border-radius:8px;padding:6px 10px;cursor:pointer
+}
+.cfg-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cfg-box{border:1px solid rgba(0,155,222,.18);border-radius:10px;padding:10px;background:#0b1428}
+.cfg-box h4{font-size:11px;letter-spacing:1px;color:#38bdf8;margin-bottom:8px;text-transform:uppercase}
+.cfg-row{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:8px}
+.cfg-row label{font-size:12px;color:#9cc0de}
+.cfg-row input,.cfg-row select{
+  background:#060d1b;color:#f0f6ff;border:1px solid rgba(0,155,222,.25);
+  border-radius:8px;padding:6px 8px;font-size:12px;min-width:120px
+}
+.cfg-actions{display:flex;gap:8px;margin-top:10px}
+.cfg-btn{
+  border:1px solid rgba(0,155,222,.3);background:#0d1428;color:#7dd3fc;
+  border-radius:8px;padding:8px 12px;cursor:pointer;font-size:12px;font-weight:700
+}
+.cfg-note{font-size:11px;color:#7a9fc0;line-height:1.5}
+@media(max-width:900px){.cfg-grid{grid-template-columns:1fr}}
+    
   </style>
 </head>
 <body>
@@ -580,6 +635,277 @@
     cfgOverlay.addEventListener('click', (e) => {
       if (e.target === cfgOverlay) cfgOverlay.classList.remove('open');
     });
+
+/* ===== Settings / Preview layer ===== */
+const SETTINGS_KEY = 'veher_live_settings_v1';
+let SETTINGS = {
+  preview: 'off',
+  scale: 1,
+  refreshSec: 15,
+  calDays: 3,
+  resDays: 2
+};
+
+function loadSettings() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    SETTINGS = { ...SETTINGS, ...saved };
+  } catch(e){}
+}
+function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }
+
+function stampSync() {
+  const el = document.getElementById('dbg_last_sync');
+  if (el) el.textContent = new Date().toLocaleTimeString('fr-FR');
+}
+
+function applyPreviewMode() {
+  document.documentElement.style.fontSize = `${16 * Number(SETTINGS.scale || 1)}px`;
+
+  const existing = document.getElementById('previewWrap');
+  if (existing) {
+    while (existing.firstChild) document.body.insertBefore(existing.firstChild, document.getElementById('cfgOpen'));
+    existing.remove();
+  }
+
+  if (SETTINGS.preview !== 'on') return;
+
+  const wrap = document.createElement('div');
+  wrap.id = 'previewWrap';
+  wrap.className = 'preview-wrap';
+
+  const frame = document.createElement('div');
+  frame.className = 'preview-frame';
+
+  const screen = document.createElement('div');
+  screen.className = 'preview-screen';
+
+  const locked = new Set(['cfgOpen','cfgOv','toastEl']);
+  const nodes = Array.from(document.body.children).filter(n => !locked.has(n.id));
+
+  nodes.forEach(n => screen.appendChild(n));
+  frame.appendChild(screen);
+  wrap.appendChild(frame);
+  document.body.insertBefore(wrap, document.getElementById('cfgOpen'));
+}
+
+/* patch refresh delay */
+const __oldScheduleNextPoll = scheduleNextPoll;
+scheduleNextPoll = function() {
+  clearTimeout(liveInterval);
+  const base = Number(SETTINGS.refreshSec || 15) * 1000;
+  const delay = liveEvents.length > 0 ? base : Math.max(base, 30000);
+  liveInterval = setTimeout(async () => {
+    await loadLive(true);
+    updateUpd();
+    scheduleNextPoll();
+  }, delay);
+};
+
+/* patch calendar days */
+const __oldLoadCal = loadCal;
+loadCal = async function() {
+  const p = document.getElementById('p1');
+  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement du calendrier...</div>';
+  try {
+    const today = new Date();
+    const end = new Date();
+    end.setDate(today.getDate() + Number(SETTINGS.calDays || 3));
+    const range = `?dates=${dateKey(today)}-${dateKey(end)}`;
+    const results = await Promise.allSettled(LEAGUES.map(lg => espn(lg.slug, range).then(data => ({ lg, data }))));
+    const seen = new Map();
+    for (const r of results) {
+      if (r.status !== 'fulfilled') continue;
+      const { lg, data } = r.value;
+      for (const ev of (data.events || [])) {
+        const state = ev?.status?.type?.state || '';
+        if (state !== 'pre') continue;
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, lg.name, lg.slug));
+      }
+    }
+    calEvents = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
+    renderCalPage();
+    calLoaded = true;
+  } catch(e) {
+    p.innerHTML = `<div class="err">Erreur calendrier<br><small>${e.message}</small></div>`;
+  }
+};
+
+/* patch results days */
+const __oldRenderResults = renderResults;
+renderResults = async function() {
+  const p = document.getElementById('p2');
+  if (resultsLoaded) { renderResultsHtml(); return; }
+  p.innerHTML = '<div class="loading"><div class="sr"></div>Chargement des résultats...</div>';
+
+  try {
+    const now = new Date();
+    const days = Number(SETTINGS.resDays || 2);
+    const dates = Array.from({length: days}, (_,i) => {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      return dateKey(d);
+    });
+
+    const fetches = dates.flatMap(d => LEAGUES.map(lg =>
+      espn(lg.slug, `?dates=${d}`).then(data => ({ lg, data })).catch(() => null)
+    ));
+
+    const results = await Promise.all(fetches);
+    const seen = new Map();
+
+    for (const r of results) {
+      if (!r) continue;
+      for (const ev of (r.data.events || [])) {
+        if (!seen.has(ev.id)) seen.set(ev.id, normalize(ev, r.lg.name, r.lg.slug));
+      }
+    }
+
+    cachedResults = [...seen.values()]
+      .filter(m => isDone({status: m.status}))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    resultsLoaded = true;
+  } catch(e) {}
+
+  renderResultsHtml();
+};
+
+function bindConfigUI() {
+  const cfgOpen = document.getElementById('cfgOpen');
+  const cfgClose = document.getElementById('cfgClose');
+  const cfgOv = document.getElementById('cfgOv');
+
+  const s_preview = document.getElementById('s_preview');
+  const s_scale = document.getElementById('s_scale');
+  const s_refresh = document.getElementById('s_refresh');
+  const s_cal_days = document.getElementById('s_cal_days');
+  const s_res_days = document.getElementById('s_res_days');
+
+  s_preview.value = SETTINGS.preview;
+  s_scale.value = String(SETTINGS.scale);
+  s_refresh.value = String(SETTINGS.refreshSec);
+  s_cal_days.value = String(SETTINGS.calDays);
+  s_res_days.value = String(SETTINGS.resDays);
+
+  cfgOpen.onclick = () => cfgOv.classList.add('open');
+  cfgClose.onclick = () => cfgOv.classList.remove('open');
+  cfgOv.onclick = (e) => { if (e.target === cfgOv) cfgOv.classList.remove('open'); };
+
+  function readUI() {
+    SETTINGS.preview = s_preview.value;
+    SETTINGS.scale = Number(s_scale.value);
+    SETTINGS.refreshSec = Number(s_refresh.value);
+    SETTINGS.calDays = Number(s_cal_days.value);
+    SETTINGS.resDays = Number(s_res_days.value);
+  }
+
+  document.getElementById('cfgSave').onclick = () => {
+    readUI();
+    saveSettings();
+    applyPreviewMode();
+    stampSync();
+    scheduleNextPoll();
+    cfgOv.classList.remove('open');
+  };
+
+  document.getElementById('cfgApply').onclick = async () => {
+    readUI();
+    applyPreviewMode();
+    stampSync();
+    await loadLive(false);
+    resultsLoaded = false;
+    calLoaded = false;
+    if (document.getElementById('p1').classList.contains('on')) await loadCal();
+    if (document.getElementById('p2').classList.contains('on')) await renderResults();
+    scheduleNextPoll();
+  };
+}
+
+loadSettings();
+bindConfigUI();
+applyPreviewMode();
+stampSync();
+    
   </script>
+  <button class="ghost-cfg" id="cfgOpen">⚙</button>
+
+<div class="cfg-ov" id="cfgOv">
+  <div class="cfg-card">
+    <div class="cfg-h">
+      <h3>Config / Debug Waveshare (preview réel)</h3>
+      <button class="cfg-x" id="cfgClose">Fermer</button>
+    </div>
+
+    <div class="cfg-grid">
+      <div class="cfg-box">
+        <h4>Affichage</h4>
+        <div class="cfg-row">
+          <label>Mode preview</label>
+          <select id="s_preview">
+            <option value="off">Off</option>
+            <option value="on">Waveshare 800x480</option>
+          </select>
+        </div>
+        <div class="cfg-row">
+          <label>Scale UI</label>
+          <select id="s_scale">
+            <option value="1">100%</option>
+            <option value="1.1">110%</option>
+            <option value="1.2">120%</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cfg-box">
+        <h4>Données live</h4>
+        <div class="cfg-row">
+          <label>Refresh live</label>
+          <select id="s_refresh">
+            <option value="5">5s</option>
+            <option value="10">10s</option>
+            <option value="15">15s</option>
+            <option value="30">30s</option>
+          </select>
+        </div>
+        <div class="cfg-row">
+          <label>Calendrier (jours)</label>
+          <select id="s_cal_days">
+            <option value="3">3</option>
+            <option value="7">7</option>
+            <option value="14">14</option>
+          </select>
+        </div>
+        <div class="cfg-row">
+          <label>Résultats (jours)</label>
+          <select id="s_res_days">
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="cfg-box">
+        <h4>Debug hardware</h4>
+        <div class="cfg-note">
+          Écran: Waveshare 7" 800×480<br>
+          Board: ESP32-S3<br>
+          Source: ESPN API<br>
+          Touch: mapping à finaliser firmware<br>
+          Dernier sync: <span id="dbg_last_sync">--:--:--</span>
+        </div>
+      </div>
+
+      <div class="cfg-box">
+        <h4>Actions</h4>
+        <div class="cfg-actions">
+          <button class="cfg-btn" id="cfgSave">Sauver</button>
+          <button class="cfg-btn" id="cfgApply">Appliquer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 </body>
 </html>
