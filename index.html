@@ -1265,7 +1265,7 @@ let alertScores = new Map();
 let lastGoalAlertAt = 0;
 
 function safeText(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-function safeId(v){ return String(v ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'"); }
+function safeId(v){ return String(v ?? '').replace(/\/g,'\\').replace(/'/g,"\'"); }
 function favNeedle(){ return String(SETTINGS.favorite || 'Marseille').toLowerCase().trim(); }
 function matchesFavorite(m){
   const f = favNeedle();
