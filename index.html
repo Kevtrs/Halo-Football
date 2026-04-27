@@ -73,6 +73,12 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
 .demo-btn{background:rgba(0,155,222,.12);border:1px solid rgba(0,155,222,.25);color:var(--om);padding:11px 22px;border-radius:22px;font-size:13px;font-weight:700;cursor:pointer;font-family:var(--f);margin-top:14px;display:inline-block}
 .toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%);background:var(--bg3);border:1px solid var(--b2);color:var(--white);padding:10px 20px;border-radius:20px;font-size:13px;font-weight:700;z-index:9999;transition:opacity .4s;white-space:nowrap;pointer-events:none;font-family:var(--f)}
 /* ===== Config / Preview additions ===== */
+.preview-wrap{max-width:860px;margin:8px auto;padding:8px}
+.preview-frame{border:1px solid rgba(0,155,222,.35);border-radius:14px;padding:10px;background:linear-gradient(150deg,#111a2b,#0a111e);box-shadow:0 18px 45px rgba(0,0,0,.45)}
+.preview-screen{aspect-ratio:800/480;overflow:auto;border-radius:10px;border:1px solid rgba(0,155,222,.18);background:var(--bg)}
+.compact-mode .mc{padding:10px 11px;margin-bottom:8px}
+.compact-mode .scn{font-size:22px}
+.no-anim *{animation:none !important;transition:none !important}
 .ghost-cfg{position:fixed;right:10px;bottom:10px;z-index:9999;width:24px;height:24px;border-radius:50%;background:rgba(0,155,222,.08);color:rgba(0,155,222,.35);border:1px solid rgba(0,155,222,.2);font-size:11px;cursor:pointer}
 .ghost-cfg:hover{color:#7dd3fc;border-color:#38bdf8;background:rgba(0,155,222,.2)}
 .cfg-ov{position:fixed;inset:0;display:none;z-index:10000;background:rgba(0,0,0,.6);padding:20px;overflow:auto}
@@ -135,6 +141,8 @@ html,body{background:var(--bg);color:var(--white);font-family:var(--f);min-heigh
         <div class="cfg-row"><label>Refresh live</label><select id="s_refresh"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option><option value="30">30s</option></select></div>
         <div class="cfg-row"><label>Calendrier (jours)</label><select id="s_cal_days"><option value="3">3</option><option value="7">7</option><option value="14">14</option></select></div>
         <div class="cfg-row"><label>Résultats (jours)</label><select id="s_res_days"><option value="2">2</option><option value="3">3</option><option value="5">5</option></select></div>
+        <div class="cfg-row"><label>Détails matchs</label><select id="s_details"><option value="full">Complet</option><option value="compact">Compact</option></select></div>
+        <div class="cfg-row"><label>Animations</label><select id="s_anim"><option value="on">On</option><option value="off">Off</option></select></div>
       </div>
       <div class="cfg-box">
         <h4>Debug hardware</h4>
@@ -442,6 +450,8 @@ function normalize(event, leagueName, leagueSlug) {
 }
 
 function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
+  if (SETTINGS.details === 'compact') return '';
+
   const goals = (details || []).filter(d => {
     const txt = String(d?.text || d?.shortText || '').toLowerCase().trim();
     if (txt.includes('overturned') || txt.includes('annulé')) return false;
@@ -510,6 +520,8 @@ function scorerBlock(details, homeId, awayId, homeName = '', awayName = '') {
 }
 
 function bookingsBlock(details, homeTeamId, awayTeamId, homeName = '', awayName = '') {
+  if (SETTINGS.details === 'compact') return '';
+
   const cards = (details || []).filter(d => d.yellowCard || d.redCard);
   if (!cards.length) return '';
 
@@ -988,7 +1000,16 @@ function scheduleNextPoll() {
 
 /* ===== Settings / Preview layer ===== */
 const SETTINGS_KEY = 'veher_live_settings_v1';
-let SETTINGS = { preview:'off', scale:1, refreshSec:15, calDays:3, resDays:2 };
+let SETTINGS = {
+  preview:'off',
+  scale:1,
+  refreshSec:15,
+  calDays:3,
+  resDays:2,
+  details:'full',
+  anim:'on'
+};
+
 function loadSettings(){ try{ SETTINGS = { ...SETTINGS, ...(JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')) }; }catch(e){} }
 function saveSettings(){ localStorage.setItem(SETTINGS_KEY, JSON.stringify(SETTINGS)); }
 function stampSync(){ const el = document.getElementById('dbg_last_sync'); if(el) el.textContent = new Date().toLocaleTimeString('fr-FR'); }
@@ -1059,6 +1080,40 @@ renderResults = async function(){
 
 function applyPreviewMode(){
   document.documentElement.style.fontSize = `${16 * Number(SETTINGS.scale || 1)}px`;
+  document.body.classList.toggle('compact-mode', SETTINGS.details === 'compact');
+  document.body.classList.toggle('no-anim', SETTINGS.anim === 'off');
+
+  const oldWrap = document.getElementById('previewWrap');
+  if (oldWrap) {
+    const screen = oldWrap.querySelector('.preview-screen');
+    if (screen) {
+      while (screen.firstChild) {
+        document.body.insertBefore(screen.firstChild, document.getElementById('cfgOpen'));
+      }
+    }
+    oldWrap.remove();
+  }
+
+  if (SETTINGS.preview !== 'on') return;
+
+  const lockIds = new Set(['cfgOpen','cfgOv']);
+  const nodes = Array.from(document.body.children).filter(n => !lockIds.has(n.id));
+
+  const wrap = document.createElement('div');
+  wrap.id = 'previewWrap';
+  wrap.className = 'preview-wrap';
+
+  const frame = document.createElement('div');
+  frame.className = 'preview-frame';
+
+  const screen = document.createElement('div');
+  screen.className = 'preview-screen';
+
+  nodes.forEach(n => screen.appendChild(n));
+  frame.appendChild(screen);
+  wrap.appendChild(frame);
+
+  document.body.insertBefore(wrap, document.getElementById('cfgOpen'));
 }
 
 function bindConfigUI(){
@@ -1070,12 +1125,16 @@ function bindConfigUI(){
   const s_refresh = document.getElementById('s_refresh');
   const s_cal_days = document.getElementById('s_cal_days');
   const s_res_days = document.getElementById('s_res_days');
+  const s_details = document.getElementById('s_details');
+  const s_anim = document.getElementById('s_anim');
 
   s_preview.value = SETTINGS.preview;
   s_scale.value = String(SETTINGS.scale);
   s_refresh.value = String(SETTINGS.refreshSec);
   s_cal_days.value = String(SETTINGS.calDays);
   s_res_days.value = String(SETTINGS.resDays);
+  s_details.value = SETTINGS.details;
+  s_anim.value = SETTINGS.anim;
 
   cfgOpen.onclick = () => cfgOv.classList.add('open');
   cfgClose.onclick = () => cfgOv.classList.remove('open');
@@ -1087,6 +1146,8 @@ function bindConfigUI(){
     SETTINGS.refreshSec = Number(s_refresh.value);
     SETTINGS.calDays = Number(s_cal_days.value);
     SETTINGS.resDays = Number(s_res_days.value);
+    SETTINGS.details = s_details.value;
+    SETTINGS.anim = s_anim.value;
   }
 
   document.getElementById('cfgSave').onclick = () => {
