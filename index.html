@@ -924,13 +924,90 @@ async function loadResults(){
 }
 
 async function loadOm(){
-  if (SETTINGS.demo === 'on') makeDemoData('live');
+  const page = $('page3');
+  page.innerHTML = `<div class="loading"><div class="spinner"></div>Chargement OM...</div>`;
 
-  if (!calendarLoaded && SETTINGS.demo !== 'on') await loadCalendar();
-  if (!resultsLoaded && SETTINGS.demo !== 'on') await loadResults();
+  const isOmName = (name = '') => {
+    const value = String(name).toLowerCase();
+    return value.includes('marseille') || value === 'om' || value.includes('olympique de marseille');
+  };
 
-  omLoaded = true;
-  renderOmPage();
+  const isOmMatch = match => isOmName(match.homeName) || isOmName(match.awayName);
+
+  if (SETTINGS.demo === 'on') {
+    makeDemoData('live');
+    omLoaded = true;
+    renderOmPage();
+    return;
+  }
+
+  try{
+    const start = new Date();
+    start.setDate(start.getDate() - 14);
+
+    const end = new Date();
+    end.setDate(end.getDate() + 45);
+
+    const params = `?dates=${dateKey(start)}-${dateKey(end)}`;
+
+    const responses = await Promise.allSettled(
+      LEAGUES.map(league => fetchEspn(league.slug, params).then(data => ({ league, data })))
+    );
+
+    const seen = new Map();
+
+    responses.forEach(response => {
+      if (response.status !== 'fulfilled') return;
+      const { league, data } = response.value;
+
+      (data.events || []).forEach(event => {
+        const { home, away } = getCompetitors(event);
+        const homeName = home.team?.displayName || home.team?.shortDisplayName || home.team?.name || '';
+        const awayName = away.team?.displayName || away.team?.shortDisplayName || away.team?.name || '';
+
+        if (!isOmName(homeName) && !isOmName(awayName)) return;
+        if (!seen.has(event.id)) seen.set(event.id, normalizeEvent(event, league.name, league.slug));
+      });
+    });
+
+    const omMatches = [...seen.values()].sort((a,b) => new Date(a.date) - new Date(b.date));
+
+    const liveOm = liveEvents.find(isOmMatch) || omMatches.find(match => isLiveStatus(match.status));
+    const nextOm = omMatches.filter(match => match.status?.type?.state === 'pre').sort((a,b) => new Date(a.date) - new Date(b.date))[0] || null;
+    let lastOm = omMatches.filter(match => isDoneStatus(match.status)).sort((a,b) => new Date(b.date) - new Date(a.date))[0] || null;
+
+    if (lastOm) {
+      const summary = await fetchSummary(lastOm.leagueSlug, lastOm.id);
+      if (summary) {
+        const event = summary.header || summary.event || {};
+        const { home, away } = getCompetitors(event);
+        lastOm = {
+          ...lastOm,
+          homeScore: home.score ?? lastOm.homeScore,
+          awayScore: away.score ?? lastOm.awayScore,
+          homeTeamId: home.team?.id || lastOm.homeTeamId,
+          awayTeamId: away.team?.id || lastOm.awayTeamId,
+          status: event.status || lastOm.status,
+          details: extractDetailList(summary)
+        };
+      }
+    }
+
+    let html = `<div class="section-title">Allez l'OM 💙</div>`;
+
+    if (liveOm) html += `<div class="section-title">En direct</div>${renderMatch(liveOm)}`;
+    if (nextOm) html += `<div class="section-title">Prochain match</div>${renderCalendarCard(nextOm)}`;
+    if (lastOm) html += `<div class="section-title">Dernier résultat</div>${renderMatch(lastOm)}`;
+
+    if (!liveOm && !nextOm && !lastOm) {
+      html += `<div class="empty-state"><div class="empty-card"><div class="empty-logo">OM</div><div class="empty-title">Aucun match OM trouvé</div><div class="empty-text">ESPN ne renvoie aucun match de Marseille sur la période recherchée.</div></div></div>`;
+    }
+
+    page.innerHTML = html;
+    omLoaded = true;
+  }catch(error){
+    page.innerHTML = `<div class="error">Erreur OM<br><small>${escapeHtml(error.message)}</small></div>`;
+  }
 }
 
 function detectGoalChange(){
