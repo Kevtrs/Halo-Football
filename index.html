@@ -752,11 +752,23 @@ function renderOmPage(){
 }
 
 async function loadLive(silent = false){
-  if (SETTINGS.demo === 'on') {
-    makeDemoData('live');
-    renderLivePage();
-    return;
-  }
+if (SETTINGS.demo === 'on') {
+  makeDemoData('live');
+
+  const liveOm = liveEvents.find(match => isOmMatch(match));
+  const nextOm = calendarEvents.find(match => isOmMatch(match));
+  const lastOm = resultEvents.find(match => isOmMatch(match));
+
+  let html = `<div class="section-title">Allez l'OM 💙</div>`;
+
+  if (liveOm) html += `<div class="section-title">En direct</div>${renderMatch(liveOm)}`;
+  if (nextOm) html += `<div class="section-title">Prochain match</div>${renderCalendarCard(nextOm)}`;
+  if (lastOm) html += `<div class="section-title">Dernier résultat</div>${renderMatch(lastOm)}`;
+
+  page.innerHTML = html;
+  omLoaded = true;
+  return;
+}
 
   if (!silent) $('page0').innerHTML = `<div class="loading"><div class="spinner"></div>Chargement...</div>`;
 
