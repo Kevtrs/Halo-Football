@@ -56,16 +56,16 @@
 
     /* Cards */
     .match-card{background:var(--panel);border:1px solid rgba(0,155,222,.12);border-radius:18px;padding:14px 15px;margin-bottom:10px;cursor:pointer;animation:cardIn .22s ease both}.match-card.live{border-color:var(--line-strong);background:linear-gradient(150deg,#060c1e,#080d18);animation:cardIn .22s ease both,liveGlow 2.8s ease-in-out infinite}.match-card.favorite{box-shadow:0 0 0 1px rgba(56,189,248,.16),0 10px 28px rgba(0,155,222,.11);border-color:rgba(56,189,248,.5)}@keyframes cardIn{from{opacity:0;transform:translateY(8px) scale(.985)}to{opacity:1;transform:none}}@keyframes liveGlow{50%{box-shadow:0 0 34px rgba(0,155,222,.18);border-color:rgba(0,155,222,.48)}}
-    .match-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.competition{min-width:0;max-width:70%;font-size:11px;font-weight:800;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{flex-shrink:0;border-radius:999px;padding:4px 10px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}.badge-live{background:rgba(0,155,222,.2);border:1px solid var(--line-strong);color:var(--blue);animation:badgePulse 1.6s ease-in-out infinite}.badge-pre{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:var(--blue-2)}.badge-done{background:rgba(36,54,80,.55);border:1px solid rgba(100,125,153,.4);color:var(--muted)}@keyframes badgePulse{50%{transform:scale(1.045);box-shadow:0 0 16px rgba(0,155,222,.24)}}
+    .match-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.match-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}.pin-btn{width:28px;height:28px;border-radius:999px;border:1px solid rgba(0,155,222,.22);background:rgba(13,20,40,.78);color:#7a9fc0;font-size:15px;font-weight:900;cursor:pointer;display:grid;place-items:center;line-height:1}.pin-btn.active{color:#ffd166;border-color:rgba(255,209,102,.55);background:rgba(255,209,102,.11);box-shadow:0 0 14px rgba(255,209,102,.18)}.pin-btn:hover{color:#ffd166}.competition{min-width:0;max-width:70%;font-size:11px;font-weight:800;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge{flex-shrink:0;border-radius:999px;padding:4px 10px;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.4px}.badge-live{background:rgba(0,155,222,.2);border:1px solid var(--line-strong);color:var(--blue);animation:badgePulse 1.6s ease-in-out infinite}.badge-pre{background:rgba(56,189,248,.12);border:1px solid rgba(56,189,248,.25);color:var(--blue-2)}.badge-done{background:rgba(36,54,80,.55);border:1px solid rgba(100,125,153,.4);color:var(--muted)}@keyframes badgePulse{50%{transform:scale(1.045);box-shadow:0 0 16px rgba(0,155,222,.24)}}
     .teams{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px}.team{display:flex;align-items:center;gap:9px;min-width:0}.team.away{flex-direction:row-reverse;text-align:right}.crest,.crest-empty{width:32px;height:32px;flex:0 0 32px}.crest{object-fit:contain}.crest-empty{border:1px solid var(--line);border-radius:50%;background:var(--panel-2)}.team-name{font-size:14px;font-weight:900;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.score-box{display:flex;align-items:center;gap:5px;border:1px solid var(--line-strong);border-radius:14px;background:var(--panel-2);padding:5px 12px}.score-num{min-width:20px;text-align:center;font-size:28px;font-weight:900;line-height:1}.score-sep{font-size:15px;color:var(--muted)}.kickoff{border:1px solid rgba(56,189,248,.18);border-radius:12px;background:rgba(56,189,248,.07);padding:5px 12px;font-size:19px;font-weight:900;color:var(--blue-2);white-space:nowrap}.kickoff.soon{animation:soonPulse 1.8s ease-in-out infinite;box-shadow:0 0 22px rgba(56,189,248,.18)}@keyframes soonPulse{50%{filter:brightness(1.18)}}.minute{text-align:center;margin-top:9px;font-size:12px;font-weight:900;color:var(--blue)}
     .score-box.flash{animation:scorePop .95s ease}@keyframes scorePop{20%{transform:scale(1.12);box-shadow:0 0 24px rgba(56,189,248,.45)}}
 
     /* Scorers: always left/right by team */
     .events-box{margin-top:12px;border:1px solid rgba(0,155,222,.15);border-radius:13px;background:rgba(0,155,222,.055);overflow:hidden}.events-title{padding:8px 12px 6px;border-bottom:1px solid rgba(0,155,222,.1);font-size:9px;font-weight:900;color:var(--blue);letter-spacing:1.7px;text-transform:uppercase}.scorers-grid{display:grid;grid-template-columns:1fr 1fr}.event-left,.event-right{min-width:0;display:flex;align-items:center;gap:5px;padding:6px 12px;border-top:1px solid rgba(0,155,222,.06);font-size:12px;font-weight:700}.event-right{justify-content:flex-end}.event-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.event-min{flex-shrink:0;color:var(--blue);font-size:11px;font-weight:900}.red-card-line{padding:7px 12px;font-size:12px;font-weight:800;color:var(--text)}
 
-    .calendar-card{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid rgba(0,155,222,.12);border-radius:14px;padding:12px 14px;margin-bottom:7px;cursor:pointer;animation:cardIn .22s ease both}.calendar-card.soon{box-shadow:0 0 22px rgba(56,189,248,.18)}.calendar-time{min-width:46px;font-size:17px;font-weight:900;color:var(--blue)}.calendar-crests{display:flex;gap:4px}.calendar-info{min-width:0;flex:1}.calendar-title{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.calendar-sub{margin-top:3px;font-size:11px;font-weight:600;color:var(--soft)}.day-title{padding:14px 2px 6px;border-top:1px solid var(--panel-2);font-size:11px;font-weight:900;color:var(--blue-2)}.day-title:first-child{border-top:0;padding-top:2px}
+    .calendar-card{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid rgba(0,155,222,.12);border-radius:14px;padding:12px 14px;margin-bottom:7px;cursor:pointer;animation:cardIn .22s ease both}.calendar-card.soon{box-shadow:0 0 22px rgba(56,189,248,.18)}.calendar-time{min-width:46px;font-size:17px;font-weight:900;color:var(--blue)}.calendar-crests{display:flex;gap:4px}.calendar-info{min-width:0;flex:1}.calendar-card .pin-btn{flex:0 0 28px}.calendar-title{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.calendar-sub{margin-top:3px;font-size:11px;font-weight:600;color:var(--soft)}.day-title{padding:14px 2px 6px;border-top:1px solid var(--panel-2);font-size:11px;font-weight:900;color:var(--blue-2)}.day-title:first-child{border-top:0;padding-top:2px}
 
-    .empty-state{min-height:300px;display:flex;align-items:center;justify-content:center;text-align:center;padding:26px 12px}.empty-card{width:100%;border:1px solid rgba(0,155,222,.22);border-radius:24px;padding:28px 16px;background:radial-gradient(circle at center,rgba(0,155,222,.17),rgba(5,8,16,.9) 64%)}.empty-logo{width:76px;height:76px;border-radius:24px;margin:0 auto 14px;background:var(--blue);display:grid;place-items:center;font-size:28px;font-weight:900;box-shadow:0 0 34px rgba(0,155,222,.42)}.empty-title{font-size:24px;font-weight:900}.empty-text{margin-top:8px;color:var(--soft);font-size:13px;font-weight:700;line-height:1.5}
+    .empty-state{min-height:300px;display:flex;align-items:center;justify-content:center;text-align:center;padding:26px 12px}.empty-card{position:relative;overflow:hidden;width:100%;border:1px solid rgba(0,155,222,.24);border-radius:24px;padding:30px 16px;background:radial-gradient(circle at 50% 35%,rgba(0,155,222,.22),rgba(5,8,16,.92) 62%);box-shadow:inset 0 0 46px rgba(0,155,222,.07)}.empty-card:before{content:'';position:absolute;inset:-40%;background:conic-gradient(from 180deg,transparent,rgba(0,155,222,.16),transparent 34%,rgba(56,189,248,.12),transparent 68%);animation:screenSpin 9s linear infinite}.empty-card:after{content:'';position:absolute;left:0;right:0;top:-40%;height:45%;background:linear-gradient(180deg,transparent,rgba(56,189,248,.08),transparent);animation:screenScan 4.8s ease-in-out infinite}.empty-inner{position:relative;z-index:1}.empty-logo{position:relative;width:78px;height:78px;border-radius:24px;margin:0 auto 14px;background:var(--blue);display:grid;place-items:center;font-size:28px;font-weight:900;box-shadow:0 0 34px rgba(0,155,222,.46);animation:logoFloat 2.8s ease-in-out infinite}.empty-logo:before,.empty-logo:after{content:'';position:absolute;inset:-16px;border:1px solid rgba(56,189,248,.18);border-radius:30px;animation:logoRing 2.8s ease-out infinite}.empty-logo:after{animation-delay:1.4s}.orbit{position:absolute;left:50%;top:50%;width:150px;height:150px;margin:-75px 0 0 -75px;border:1px solid rgba(56,189,248,.08);border-radius:999px;animation:orbitSpin 7s linear infinite}.orbit:before,.orbit:after{content:'';position:absolute;width:8px;height:8px;border-radius:50%;background:var(--blue-2);box-shadow:0 0 14px rgba(56,189,248,.75)}.orbit:before{left:50%;top:-4px}.orbit:after{right:8px;bottom:18px;background:#fff}.empty-title{font-size:24px;font-weight:900}.empty-text{margin-top:8px;color:var(--soft);font-size:13px;font-weight:700;line-height:1.5}@keyframes screenSpin{to{transform:rotate(360deg)}}@keyframes screenScan{0%,100%{transform:translateY(0);opacity:.18}50%{transform:translateY(210%);opacity:.75}}@keyframes logoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}@keyframes logoRing{0%{transform:scale(.75);opacity:.65}100%{transform:scale(1.35);opacity:0}}@keyframes orbitSpin{to{transform:rotate(360deg)}}
 
     .footer{padding-top:8px;padding-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-top:1px solid var(--panel-2);font-size:11px;font-weight:700;color:var(--muted)}.connected{color:var(--blue)}.api-status{font-size:10px;font-weight:900;color:var(--blue-2)}
 
@@ -80,7 +80,7 @@
 
     /* Preview Waveshare 800x480 */
     .preview-wrap{max-width:860px;margin:8px auto;padding:8px}.preview-frame{border:1px solid var(--line-strong);border-radius:14px;padding:10px;background:linear-gradient(150deg,#111a2b,#0a111e);box-shadow:0 18px 45px rgba(0,0,0,.45)}.preview-screen{aspect-ratio:800/480;overflow-x:hidden;overflow-y:auto;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
-    body.preview-active .app-shell{max-width:none;width:100%;padding-left:10px;padding-right:10px}body.preview-active .header{padding-top:10px}body.preview-active .header-top{margin-bottom:9px}body.preview-active .brand-mark{width:30px;height:30px;border-radius:9px;font-size:12px}body.preview-active .brand-name{font-size:17px}body.preview-active .clock{font-size:11px}body.preview-active .refresh-btn{width:30px;height:30px;font-size:15px}body.preview-active .live-strip{margin-bottom:8px;padding:7px 9px;font-size:10px}body.preview-active .tabs{gap:5px;padding-bottom:8px}body.preview-active .tab{padding:7px 10px;font-size:11px}body.preview-active .content{padding-top:0;padding-bottom:8px}body.preview-active .section-title{font-size:9px;padding:8px 2px 5px}body.preview-active .filter-row{padding:3px 0 7px;gap:5px}body.preview-active .filter-pill{padding:5px 9px;font-size:10px}body.preview-active .match-card{padding:9px 10px;margin-bottom:7px;border-radius:14px}body.preview-active .match-top{margin-bottom:7px}body.preview-active .competition{font-size:9px}body.preview-active .badge{font-size:7px;padding:3px 7px}body.preview-active .crest,body.preview-active .crest-empty{width:24px;height:24px;flex-basis:24px}body.preview-active .team-name{font-size:11px}body.preview-active .score-box{padding:4px 9px}body.preview-active .score-num{font-size:21px}body.preview-active .score-sep{font-size:12px}body.preview-active .kickoff{font-size:14px;padding:4px 9px}body.preview-active .minute{font-size:10px;margin-top:6px}body.preview-active .events-title{font-size:8px;padding:6px 9px 5px}body.preview-active .event-left,body.preview-active .event-right{font-size:10px;padding:5px 9px}body.preview-active .event-min{font-size:9px}body.preview-active .calendar-card{padding:9px 10px;margin-bottom:6px}body.preview-active .calendar-time{font-size:14px;min-width:38px}body.preview-active .calendar-title{font-size:11px}body.preview-active .calendar-sub{font-size:9px}body.preview-active .day-title{font-size:9px;padding:8px 2px 4px}body.preview-active .footer{font-size:9px;padding-top:5px;padding-bottom:4px}
+    body.preview-active .app-shell{max-width:none;width:100%;padding-left:10px;padding-right:10px}body.preview-active .header{padding-top:10px}body.preview-active .header-top{margin-bottom:9px}body.preview-active .brand-mark{width:30px;height:30px;border-radius:9px;font-size:12px}body.preview-active .brand-name{font-size:17px}body.preview-active .clock{font-size:11px}body.preview-active .refresh-btn{width:30px;height:30px;font-size:15px}body.preview-active .live-strip{margin-bottom:8px;padding:7px 9px;font-size:10px}body.preview-active .tabs{gap:5px;padding-bottom:8px}body.preview-active .tab{padding:7px 10px;font-size:11px}body.preview-active .content{padding-top:0;padding-bottom:8px}body.preview-active .section-title{font-size:9px;padding:8px 2px 5px}body.preview-active .filter-row{padding:3px 0 7px;gap:5px}body.preview-active .filter-pill{padding:5px 9px;font-size:10px}body.preview-active .match-card{padding:9px 10px;margin-bottom:7px;border-radius:14px}body.preview-active .match-top{margin-bottom:7px}body.preview-active .competition{font-size:9px}body.preview-active .badge{font-size:7px;padding:3px 7px}body.preview-active .crest,body.preview-active .crest-empty{width:24px;height:24px;flex-basis:24px}body.preview-active .team-name{font-size:11px}body.preview-active .score-box{padding:4px 9px}body.preview-active .score-num{font-size:21px}body.preview-active .score-sep{font-size:12px}body.preview-active .kickoff{font-size:14px;padding:4px 9px}body.preview-active .minute{font-size:10px;margin-top:6px}body.preview-active .events-title{font-size:8px;padding:6px 9px 5px}body.preview-active .event-left,body.preview-active .event-right{font-size:10px;padding:5px 9px}body.preview-active .event-min{font-size:9px}body.preview-active .calendar-card{padding:9px 10px;margin-bottom:6px}body.preview-active .calendar-time{font-size:14px;min-width:38px}body.preview-active .calendar-title{font-size:11px}body.preview-active .calendar-sub{font-size:9px}body.preview-active .day-title{font-size:9px;padding:8px 2px 4px}body.preview-active .footer{font-size:9px;padding-top:5px;padding-bottom:4px}body.preview-active .pin-btn{width:24px;height:24px;font-size:13px}body.preview-active .match-actions{gap:4px}body.preview-active .empty-state{min-height:220px;padding:18px 8px}body.preview-active .empty-card{padding:22px 12px}body.preview-active .empty-logo{width:62px;height:62px;border-radius:19px;font-size:22px}body.preview-active .orbit{width:120px;height:120px;margin:-60px 0 0 -60px}body.preview-active .empty-title{font-size:20px}body.preview-active .empty-text{font-size:11px}
 
     .compact-mode .match-card{padding:10px 11px;margin-bottom:8px}.compact-mode .score-num{font-size:22px}.compact-mode .events-box:not(.red-only){display:block}.no-anim *{animation:none!important;transition:none!important}.burnin-on #previewWrap .preview-screen{animation:burnIn 240s steps(12,end) infinite}@keyframes burnIn{20%{transform:translate(2px,1px)}40%{transform:translate(-2px,2px)}60%{transform:translate(1px,-2px)}80%{transform:translate(-1px,-1px)}}
 
@@ -186,6 +186,7 @@
 
 const BASE_URL = 'https://site.api.espn.com/apis/site/v2/sports/soccer';
 const SETTINGS_KEY = 'veher_live_settings_pro_v1';
+const PINNED_KEY = 'veher_live_pinned_matches_v1';
 
 const LEAGUES = [
   { slug:'fra.1', name:'Ligue 1' },
@@ -227,6 +228,7 @@ let pollTimer = null;
 let scoreMemory = new Map();
 let alertScoreMemory = new Map();
 let lastGoalAlertTime = 0;
+let pinnedMatchIds = new Set();
 
 const $ = (id) => document.getElementById(id);
 
@@ -459,8 +461,57 @@ function isFavoriteMatch(match){
   return false;
 }
 
+function isPinnedMatch(match){
+  return pinnedMatchIds.has(String(match?.id));
+}
+
 function sortFavoriteFirst(list){
-  return [...(list || [])].sort((a,b) => Number(isFavoriteMatch(b)) - Number(isFavoriteMatch(a)) || new Date(a.date) - new Date(b.date));
+  return [...(list || [])].sort((a,b) => {
+    const pinned = Number(isPinnedMatch(b)) - Number(isPinnedMatch(a));
+    if (pinned) return pinned;
+
+    const favorite = Number(isFavoriteMatch(b)) - Number(isFavoriteMatch(a));
+    if (favorite) return favorite;
+
+    return new Date(a.date) - new Date(b.date);
+  });
+}
+
+function loadPinnedMatches(){
+  try{
+    pinnedMatchIds = new Set(JSON.parse(localStorage.getItem(PINNED_KEY) || '[]').map(String));
+  }catch(error){
+    pinnedMatchIds = new Set();
+  }
+}
+
+function savePinnedMatches(){
+  localStorage.setItem(PINNED_KEY, JSON.stringify([...pinnedMatchIds]));
+}
+
+function toggleMatchPin(matchId, event){
+  if (event) event.stopPropagation();
+  const id = String(matchId);
+
+  if (pinnedMatchIds.has(id)) pinnedMatchIds.delete(id);
+  else pinnedMatchIds.add(id);
+
+  savePinnedMatches();
+  renderCurrentPage();
+  renderLiveStrip();
+}
+
+function renderCurrentPage(){
+  if ($('page0').classList.contains('active')) renderLivePage();
+  if ($('page1').classList.contains('active')) renderCalendarPage();
+  if ($('page2').classList.contains('active')) renderResultsPage();
+  if ($('page3').classList.contains('active')) renderOmPage();
+}
+
+function pinButtonHtml(match){
+  const active = isPinnedMatch(match);
+  const label = active ? 'Ne plus suivre ce match' : 'Suivre ce match';
+  return `<button class="pin-btn${active ? ' active' : ''}" title="${label}" aria-label="${label}" onclick="toggleMatchPin('${escapeJsString(match.id)}', event)">${active ? '★' : '☆'}</button>`;
 }
 
 function crestHtml(src, size, className){
@@ -580,8 +631,8 @@ function renderMatch(match){
   return `
     <article class="match-card${live ? ' live' : ''}${isFavoriteMatch(match) ? ' favorite' : ''}" onclick="openFocusMatch('${escapeJsString(match.id)}')">
       <div class="match-top">
-        <div class="competition">${escapeHtml(match.leagueName)}${isFavoriteMatch(match) ? ' · ★ favori' : ''}</div>
-        ${statusBadge(match)}
+        <div class="competition">${escapeHtml(match.leagueName)}${isPinnedMatch(match) ? ' · ★ suivi' : isFavoriteMatch(match) ? ' · ★ favori' : ''}</div>
+        <div class="match-actions">${pinButtonHtml(match)}${statusBadge(match)}</div>
       </div>
       <div class="teams">
         <div class="team home">${crestHtml(match.homeLogo,32,'crest')}<span class="team-name">${escapeHtml(match.homeName)}</span></div>
@@ -602,8 +653,9 @@ function renderCalendarCard(match){
       <div class="calendar-crests">${crestHtml(match.homeLogo,24,'crest')}${crestHtml(match.awayLogo,24,'crest')}</div>
       <div class="calendar-info">
         <div class="calendar-title">${escapeHtml(match.homeName)} — ${escapeHtml(match.awayName)}</div>
-        <div class="calendar-sub">${escapeHtml(match.leagueName)}${isFavoriteMatch(match) ? ' · ★ favori' : ''}</div>
+        <div class="calendar-sub">${escapeHtml(match.leagueName)}${isPinnedMatch(match) ? ' · ★ suivi' : isFavoriteMatch(match) ? ' · ★ favori' : ''}</div>
       </div>
+      ${pinButtonHtml(match)}
     </article>
   `;
 }
@@ -613,11 +665,14 @@ function renderEmptyState(){
   return `
     <div class="empty-state">
       <div class="empty-card">
-        <div class="empty-logo">VL</div>
-        <div class="empty-title">Veher Live</div>
-        <div class="empty-text">
-          Aucun match en direct pour le moment
-          ${next ? `<br>Prochain : ${escapeHtml(next.homeName)} — ${escapeHtml(next.awayName)} · ${escapeHtml(matchTimeLabel(next))}` : '<br>Écran veille actif'}
+        <div class="empty-inner">
+          <div class="orbit"></div>
+          <div class="empty-logo">VL</div>
+          <div class="empty-title">Veher Live</div>
+          <div class="empty-text">
+            Aucun match en direct pour le moment
+            ${next ? `<br>Prochain : ${escapeHtml(next.homeName)} — ${escapeHtml(next.awayName)} · ${escapeHtml(matchTimeLabel(next))}` : '<br>En attente du prochain coup d’envoi'}
+          </div>
         </div>
       </div>
     </div>
@@ -628,8 +683,11 @@ function renderLiveStrip(){
   const strip = $('liveStrip');
   let html = '';
 
+  const pinnedLive = liveEvents.find(isPinnedMatch);
   const favoriteLive = liveEvents.find(isFavoriteMatch);
-  if (favoriteLive) {
+  if (pinnedLive) {
+    html = `<b>SUIVI</b>${escapeHtml(pinnedLive.homeName)} ${pinnedLive.homeScore ?? 0}–${pinnedLive.awayScore ?? 0} ${escapeHtml(pinnedLive.awayName)} · ${escapeHtml(matchTimeLabel(pinnedLive))}`;
+  } else if (favoriteLive) {
     html = `<b>LIVE</b>${escapeHtml(favoriteLive.homeName)} ${favoriteLive.homeScore ?? 0}–${favoriteLive.awayScore ?? 0} ${escapeHtml(favoriteLive.awayName)} · ${escapeHtml(matchTimeLabel(favoriteLive))}`;
   } else if (liveEvents[0]) {
     html = `<b>LIVE</b>${liveEvents.length} match${liveEvents.length > 1 ? 's' : ''} en direct · ${escapeHtml(liveEvents[0].homeName)} vs ${escapeHtml(liveEvents[0].awayName)}`;
@@ -752,23 +810,11 @@ function renderOmPage(){
 }
 
 async function loadLive(silent = false){
-if (SETTINGS.demo === 'on') {
-  makeDemoData('live');
-
-  const liveOm = liveEvents.find(match => isOmMatch(match));
-  const nextOm = calendarEvents.find(match => isOmMatch(match));
-  const lastOm = resultEvents.find(match => isOmMatch(match));
-
-  let html = `<div class="section-title">Allez l'OM 💙</div>`;
-
-  if (liveOm) html += `<div class="section-title">En direct</div>${renderMatch(liveOm)}`;
-  if (nextOm) html += `<div class="section-title">Prochain match</div>${renderCalendarCard(nextOm)}`;
-  if (lastOm) html += `<div class="section-title">Dernier résultat</div>${renderMatch(lastOm)}`;
-
-  page.innerHTML = html;
-  omLoaded = true;
-  return;
-}
+  if (SETTINGS.demo === 'on') {
+    makeDemoData('live');
+    renderLivePage();
+    return;
+  }
 
   if (!silent) $('page0').innerHTML = `<div class="loading"><div class="spinner"></div>Chargement...</div>`;
 
@@ -1323,10 +1369,12 @@ window.setLiveFilter = setLiveFilter;
 window.setCalendarFilter = setCalendarFilter;
 window.openFocusMatch = openFocusMatch;
 window.closeFocusMatch = closeFocusMatch;
+window.toggleMatchPin = toggleMatchPin;
 
 updateClock();
 setInterval(updateClock, 30000);
 loadSettings();
+loadPinnedMatches();
 syncSettingsForm();
 bindConfig();
 applyVisualSettings();
