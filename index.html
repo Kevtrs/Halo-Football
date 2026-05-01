@@ -103,7 +103,7 @@ body.preview-active .next-day,body.preview-active .next-league{font-size:9px;mar
 <script>
 'use strict';
 const BASE_URL='https://site.api.espn.com/apis/site/v2/sports/soccer',SETTINGS_KEY='veher_live_settings_pro_v1',PINNED_KEY='veher_live_pinned_matches_v1';
-const LEAGUES=[{slug:'fra.1',name:'Ligue 1'},{slug:'eng.1',name:'Premier League'},{slug:'esp.1',name:'La Liga'},{slug:'ger.1',name:'Bundesliga'},{slug:'ita.1',name:'Serie A'},{slug:'uefa.champions',name:'Champions League'},{slug:'uefa.europa',name:'Europa League'},{slug:'fra.cup',name:'Coupe de France'},{slug:'fifa.world',name:'Coupe du Monde'}];
+const LEAGUES=[{slug:'fra.1',name:'Ligue 1'},{slug:'eng.1',name:'Premier League'},{slug:'esp.1',name:'La Liga'},{slug:'ger.1',name:'Bundesliga'},{slug:'ita.1',name:'Serie A'},{slug:'uefa.champions',name:'Champions League'},{slug:'uefa.europa',name:'Europa League'},{slug:'fifa.world',name:'Coupe du Monde'}];
 let SETTINGS={preview:'off',scale:1,refreshSec:15,calDays:3,resDays:2,details:'full',anim:'on',favorite:'Marseille',layout:'standard',burnin:'on',demo:'off'};
 let liveEvents=[],finishedEvents=[],calendarEvents=[],resultEvents=[],nextMatch=null,activeLiveFilter='all',activeCalFilter='all',calendarLoaded=false,resultsLoaded=false,omLoaded=false,pollTimer=null,scoreMemory=new Map(),alertScoreMemory=new Map(),lastGoalAlertTime=0,pinnedMatchIds=new Set();
 let retryCount=0,countdownTimer=null,refreshBarTimer=null,isOnline=navigator.onLine;
@@ -317,12 +317,12 @@ function renderStandingsTable(data,slug){
     </tr>`;
   });
 
-  const hasZones=(z.cl||[]).length||(z.el||[]).length||(z.bar||[]).length||(z.rel||[]).length;
+  const hasZones=(z.cl?.length)||(z.el?.length)||(z.bar?.length)||(z.rel?.length);
   const legend=hasZones?`<div class="std-legend">
-    ${z.cl.length?`<span><i class="lcl"></i>${isCup?'8es directement':'Ligue des Champions'}</span>`:''}
-    ${z.el.length?'<span><i class="lel"></i>Ligue Europa</span>':''}
-    ${z.bar.length?`<span><i class="lbar"></i>${isCup?'Barrage':'Barrage relégation'}</span>`:''}
-    ${z.rel.length?`<span><i class="lrel"></i>${isCup?'Éliminé':'Relégation'}</span>`:''}
+    ${z.cl?.length?`<span><i class="lcl"></i>${isCup?'8es directement':'Ligue des Champions'}</span>`:''}
+    ${z.el?.length?'<span><i class="lel"></i>Ligue Europa</span>':''}
+    ${z.bar?.length?`<span><i class="lbar"></i>${isCup?'Barrage':'Barrage relégation'}</span>`:''}
+    ${z.rel?.length?`<span><i class="lrel"></i>${isCup?'Éliminé':'Relégation'}</span>`:''}
   </div>`:'';
 
   return`<table class="std-table">
