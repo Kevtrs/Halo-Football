@@ -212,35 +212,30 @@ function scheduleRetry(){
 // ── CLASSEMENTS ──────────────────────────────────────────
 let standingsCache=new Map(),standingsLoaded=false,activeStandingSlug='';
 
+// TheSportsDB IDs pour classements soccer
+const TSDB_IDS={'fra.1':'4334','eng.1':'4328','esp.1':'4335','ger.1':'4331','ita.1':'4332','uefa.champions':'4480','uefa.europa':'4481'};
+
 async function fetchStandings(slug){
   const cached=standingsCache.get(slug);
   if(cached&&Date.now()-cached.ts<300000)return cached.data;
-  // Saison dynamique : en Europe la saison 2025-26 = season=2026 (année de fin)
-  // Avant juillet = saison en cours, après juillet = nouvelle saison
+  const lid=TSDB_IDS[slug];
+  if(!lid)return null;
   const now=new Date();
-  const season=now.getMonth()>=6?now.getFullYear()+1:now.getFullYear();
-  const url=`https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?season=${season}`;
+  const y1=now.getMonth()>=6?now.getFullYear():now.getFullYear()-1;
+  const season=`${y1}-${y1+1}`;
+  const url=`https://www.thesportsdb.com/api/v1/json/3/lookuptable.php?l=${lid}&s=${encodeURIComponent(season)}`;
   try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
     if(!r.ok)return null;
     const data=await r.json();
+    if(!data?.table?.length)return null;
     standingsCache.set(slug,{data,ts:Date.now()});
     return data;
   }catch(e){return null;}
 }
 
 function extractEntries(data){
-  if(!data)return[];
-  // Structure 1 : data.standings[0].entries
-  if(data.standings?.[0]?.entries?.length)return data.standings[0].entries;
-  // Structure 2 : data.children[0].standings.entries
-  if(data.children?.[0]?.standings?.entries?.length)return data.children[0].standings.entries;
-  // Structure 3 : data.children[0].children[0].standings.entries (Champions League groups)
-  if(data.children?.[0]?.children?.[0]?.standings?.entries?.length)return data.children[0].children[0].standings.entries;
-  // Structure 4 : data.entries directement
-  if(data.entries?.length)return data.entries;
-  // Structure 5 : data.groups[0].standings.entries
-  if(data.groups?.[0]?.standings?.entries?.length)return data.groups[0].standings.entries;
+  if(data?.table?.length)return data.table;
   return[];
 }
 
@@ -270,17 +265,17 @@ function renderStandingsTable(data,slug){
 
   let rows='';
   entries.forEach((e,i)=>{
-    const rank=e.stats?.find(s=>s.name==='rank')?.value||(i+1);
-    const team=e.team||{};
-    const name=team.shortDisplayName||team.displayName||team.name||'?';
-    const logo=team.logos?.[0]?.href||'';
-    const pts=e.stats?.find(s=>s.name==='points')?.value??'—';
-    const played=e.stats?.find(s=>s.name==='gamesPlayed')?.value??'—';
-    const wins=e.stats?.find(s=>s.name==='wins')?.value??'—';
-    const draws=e.stats?.find(s=>s.name==='ties')?.value??'—';
-    const losses=e.stats?.find(s=>s.name==='losses')?.value??'—';
-    const diff=e.stats?.find(s=>s.name==='pointDifferential'||s.name==='goalDifference')?.value??'—';
-    const form=(e.stats?.find(s=>s.name==='form')?.value||'').split('').slice(-5);
+    // TheSportsDB fields
+    const rank=Number(e.intRank)||(i+1);
+    const name=e.strTeam||'?';
+    const logo=e.strTeamBadge||'';
+    const pts=e.intPoints??'—';
+    const played=e.intPlayed??'—';
+    const wins=e.intWin??'—';
+    const draws=e.intDraw??'—';
+    const losses=e.intLoss??'—';
+    const diff=(Number(e.intGoalsFor||0))-(Number(e.intGoalsAgainst||0));
+    const form=(e.strForm||'').split('').slice(-5);
 
     const isFav=favNeedle_&&name.toLowerCase().includes(favNeedle_);
     const isOmRow=/marseille|om/i.test(name);
@@ -292,7 +287,7 @@ function renderStandingsTable(data,slug){
       :`<span class="std-crest-e"></span>`;
 
     const formHtml=form.length
-      ?`<div class="std-form">${form.map(f=>`<span class="${f}">${f}</span>`).join('')}</div>`
+      ?`<div class="std-form">${form.map(f=>{const c=f==='W'?'W':f==='D'?'D':'L';return`<span class="${c}">${f}</span>`}).join('')}</div>`
       :`<span style="color:var(--muted)">—</span>`;
 
     rows+=`<tr class="std-row ${zoneClass} ${hlClass}">
