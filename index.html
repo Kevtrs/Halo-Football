@@ -48,6 +48,7 @@
 .std-row.highlight .std-team-name{color:#fff;font-weight:900}
 .std-row.zone-cl{border-left:2px solid #38bdf8}
 .std-row.zone-el{border-left:2px solid #4ade80}
+.std-row.zone-bar{border-left:2px solid #ffd166}
 .std-row.zone-rel{border-left:2px solid #f87171}
 .std-rank{width:24px;color:var(--muted);font-size:11px}
 .std-crest{width:20px;height:20px;object-fit:contain;vertical-align:middle}
@@ -64,6 +65,7 @@
 .std-legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
 .std-legend .lcl{background:#38bdf8}
 .std-legend .lel{background:#4ade80}
+.std-legend .lbar{background:#ffd166}
 .std-legend .lrel{background:#f87171}
 
 .refresh-bar{position:fixed;top:0;left:0;right:0;height:2px;z-index:999;background:linear-gradient(90deg,var(--blue),var(--blue2));transform-origin:left;transition:transform .3s linear;opacity:.7}
@@ -252,13 +254,9 @@ function extractEntries(data){
 }
 
 function getStandingsSlugs(){
-  // Ligues qui ont des matchs live ou récents
-  const liveSlugs=new Set([...liveEvents,...finishedEvents].map(m=>m.leagueSlug));
-  // Toujours inclure Ligue 1 + Champions si vides
-  if(!liveSlugs.size){liveSlugs.add('fra.1');liveSlugs.add('uefa.champions');}
-  // Filtrer uniquement celles qui ont un classement ESPN (pas de Coupe/Monde)
+  // Toujours toutes les ligues qui ont un classement ESPN (pas Coupe/Monde)
   const withStandings=['fra.1','eng.1','esp.1','ger.1','ita.1','uefa.champions','uefa.europa'];
-  return LEAGUES.filter(l=>liveSlugs.has(l.slug)&&withStandings.includes(l.slug));
+  return LEAGUES.filter(l=>withStandings.includes(l.slug));
 }
 
 function renderStandingsTable(data,slug){
@@ -295,7 +293,7 @@ function renderStandingsTable(data,slug){
 
     const isFav=favNeedle_&&name.toLowerCase().includes(favNeedle_);
     const isOmRow=/marseille|om/i.test(name);
-    const zoneClass=z.cl.includes(rank)?'zone-cl':z.el.includes(rank)?'zone-el':z.rel.includes(rank)?'zone-rel':'';
+    const zoneClass=z.cl.includes(rank)?'zone-cl':z.el.includes(rank)?'zone-el':z.bar.includes(rank)?'zone-bar':z.rel.includes(rank)?'zone-rel':'';
     const hlClass=isFav||isOmRow?'highlight':'';
 
     const logoHtml=logo
@@ -319,11 +317,12 @@ function renderStandingsTable(data,slug){
     </tr>`;
   });
 
-  const hasZones=z.cl.length||z.el.length||z.rel.length;
+  const hasZones=z.cl.length||z.el.length||z.bar.length||z.rel.length;
   const legend=hasZones?`<div class="std-legend">
-    ${z.cl.length?'<span><i class="lcl"></i>Ligue des Champions</span>':''}
+    ${z.cl.length?`<span><i class="lcl"></i>${isCup?'8es directement':'Ligue des Champions'}</span>`:''}
     ${z.el.length?'<span><i class="lel"></i>Ligue Europa</span>':''}
-    ${z.rel.length?'<span><i class="lrel"></i>Relégation</span>':''}
+    ${z.bar.length?`<span><i class="lbar"></i>${isCup?'Barrage':'Barrage relégation'}</span>`:''}
+    ${z.rel.length?`<span><i class="lrel"></i>${isCup?'Éliminé':'Relégation'}</span>`:''}
   </div>`:'';
 
   return`<table class="std-table">
