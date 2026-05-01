@@ -292,7 +292,7 @@ function renderStandingsTable(data,slug){
 
     const isFav=favNeedle_&&name.toLowerCase().includes(favNeedle_);
     const isOmRow=/marseille|om/i.test(name);
-    const zoneClass=z.cl.includes(rank)?'zone-cl':z.el.includes(rank)?'zone-el':z.bar.includes(rank)?'zone-bar':z.rel.includes(rank)?'zone-rel':'';
+    const zoneClass=(z.cl||[]).includes(rank)?'zone-cl':(z.el||[]).includes(rank)?'zone-el':(z.bar||[]).includes(rank)?'zone-bar':(z.rel||[]).includes(rank)?'zone-rel':'';
     const hlClass=isFav||isOmRow?'highlight':'';
 
     const logoHtml=logo
@@ -316,7 +316,7 @@ function renderStandingsTable(data,slug){
     </tr>`;
   });
 
-  const hasZones=z.cl.length||z.el.length||z.bar.length||z.rel.length;
+  const hasZones=(z.cl||[]).length||(z.el||[]).length||(z.bar||[]).length||(z.rel||[]).length;
   const legend=hasZones?`<div class="std-legend">
     ${z.cl.length?`<span><i class="lcl"></i>${isCup?'8es directement':'Ligue des Champions'}</span>`:''}
     ${z.el.length?'<span><i class="lel"></i>Ligue Europa</span>':''}
