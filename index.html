@@ -215,27 +215,18 @@ let standingsCache=new Map(),standingsLoaded=false,activeStandingSlug='';
 async function fetchStandings(slug){
   const cached=standingsCache.get(slug);
   if(cached&&Date.now()-cached.ts<300000)return cached.data;
-  // Essayer plusieurs endpoints ESPN soccer standings
-  const urls=[
-    `https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?region=fr&lang=fr&season=2025`,
-    `https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?season=2025`,
-    `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/standings`,
-    `https://sports.core.api.espn.com/v2/sports/soccer/leagues/${slug}/seasons/2025/types/2/groups/1/standings/0`,
-  ];
-  for(const url of urls){
-    try{
-      const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
-      if(!r.ok)continue;
-      const data=await r.json();
-      // Vérifier qu'on a des données exploitables
-      const entries=extractEntries(data);
-      if(entries&&entries.length>0){
-        standingsCache.set(slug,{data,ts:Date.now()});
-        return data;
-      }
-    }catch(e){continue;}
-  }
-  return null;
+  // Saison dynamique : en Europe la saison 2025-26 = season=2026 (année de fin)
+  // Avant juillet = saison en cours, après juillet = nouvelle saison
+  const now=new Date();
+  const season=now.getMonth()>=6?now.getFullYear()+1:now.getFullYear();
+  const url=`https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?season=${season}`;
+  try{
+    const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+    if(!r.ok)return null;
+    const data=await r.json();
+    standingsCache.set(slug,{data,ts:Date.now()});
+    return data;
+  }catch(e){return null;}
 }
 
 function extractEntries(data){
