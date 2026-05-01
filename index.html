@@ -255,6 +255,7 @@ function getStandingsSlugs(){
 
 function renderStandingsTable(data,slug){
   if(!data)return`<div class="err">Classement indisponible pour le moment</div>`;
+  const isCup=['uefa.champions','uefa.europa','uefa.conference'].includes(String(slug||''));
   const entries=extractEntries(data);
   if(!entries.length)return`<div class="empty">Aucune donnée de classement</div>`;
 
