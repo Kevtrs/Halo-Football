@@ -212,14 +212,43 @@ let standingsCache=new Map(),standingsLoaded=false,activeStandingSlug='';
 
 async function fetchStandings(slug){
   const cached=standingsCache.get(slug);
-  if(cached&&Date.now()-cached.ts<300000)return cached.data; // cache 5min
-  try{
-    const r=await fetch(`${BASE_URL}/${slug}/standings`,{signal:AbortSignal.timeout(5000)});
-    if(!r.ok)return null;
-    const data=await r.json();
-    standingsCache.set(slug,{data,ts:Date.now()});
-    return data;
-  }catch(e){return null;}
+  if(cached&&Date.now()-cached.ts<300000)return cached.data;
+  // Essayer plusieurs endpoints ESPN soccer standings
+  const urls=[
+    `https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?region=fr&lang=fr&season=2025`,
+    `https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?season=2025`,
+    `https://site.api.espn.com/apis/site/v2/sports/soccer/${slug}/standings`,
+    `https://sports.core.api.espn.com/v2/sports/soccer/leagues/${slug}/seasons/2025/types/2/groups/1/standings/0`,
+  ];
+  for(const url of urls){
+    try{
+      const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
+      if(!r.ok)continue;
+      const data=await r.json();
+      // Vérifier qu'on a des données exploitables
+      const entries=extractEntries(data);
+      if(entries&&entries.length>0){
+        standingsCache.set(slug,{data,ts:Date.now()});
+        return data;
+      }
+    }catch(e){continue;}
+  }
+  return null;
+}
+
+function extractEntries(data){
+  if(!data)return[];
+  // Structure 1 : data.standings[0].entries
+  if(data.standings?.[0]?.entries?.length)return data.standings[0].entries;
+  // Structure 2 : data.children[0].standings.entries
+  if(data.children?.[0]?.standings?.entries?.length)return data.children[0].standings.entries;
+  // Structure 3 : data.children[0].children[0].standings.entries (Champions League groups)
+  if(data.children?.[0]?.children?.[0]?.standings?.entries?.length)return data.children[0].children[0].standings.entries;
+  // Structure 4 : data.entries directement
+  if(data.entries?.length)return data.entries;
+  // Structure 5 : data.groups[0].standings.entries
+  if(data.groups?.[0]?.standings?.entries?.length)return data.groups[0].standings.entries;
+  return[];
 }
 
 function getStandingsSlugs(){
@@ -233,8 +262,8 @@ function getStandingsSlugs(){
 }
 
 function renderStandingsTable(data,slug){
-  if(!data)return`<div class="err">Classement indisponible</div>`;
-  const entries=data.standings?.[0]?.entries||data.children?.[0]?.standings?.entries||[];
+  if(!data)return`<div class="err">Classement indisponible pour le moment</div>`;
+  const entries=extractEntries(data);
   if(!entries.length)return`<div class="empty">Aucune donnée de classement</div>`;
 
   const favNeedle_=favNeedle();
