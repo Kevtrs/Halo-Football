@@ -212,30 +212,38 @@ function scheduleRetry(){
 // ── CLASSEMENTS ──────────────────────────────────────────
 let standingsCache=new Map(),standingsLoaded=false,activeStandingSlug='';
 
-// TheSportsDB IDs pour classements soccer
-const TSDB_IDS={'fra.1':'4334','eng.1':'4328','esp.1':'4335','ger.1':'4331','ita.1':'4332','uefa.champions':'4480','uefa.europa':'4481'};
-
 async function fetchStandings(slug){
   const cached=standingsCache.get(slug);
   if(cached&&Date.now()-cached.ts<300000)return cached.data;
-  const lid=TSDB_IDS[slug];
-  if(!lid)return null;
+  // Saison dynamique : avant juillet = saison N-1/N, après juillet = saison N/N+1
   const now=new Date();
-  const y1=now.getMonth()>=6?now.getFullYear():now.getFullYear()-1;
-  const season=`${y1}-${y1+1}`;
-  const url=`https://www.thesportsdb.com/api/v1/json/3/lookuptable.php?l=${lid}&s=${encodeURIComponent(season)}`;
-  try{
-    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
-    if(!r.ok)return null;
-    const data=await r.json();
-    if(!data?.table?.length)return null;
-    standingsCache.set(slug,{data,ts:Date.now()});
-    return data;
-  }catch(e){return null;}
+  const y=now.getMonth()>=6?now.getFullYear()+1:now.getFullYear();
+  // Essayer saison en cours puis saison précédente
+  for(const season of [y, y-1]){
+    try{
+      const url=`https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?season=${season}`;
+      const r=await fetch(url,{signal:AbortSignal.timeout(10000)});
+      if(!r.ok)continue;
+      const data=await r.json();
+      const entries=extractEntries(data);
+      if(entries.length>0){
+        standingsCache.set(slug,{data,ts:Date.now()});
+        return data;
+      }
+    }catch(e){continue;}
+  }
+  return null;
 }
 
 function extractEntries(data){
-  if(data?.table?.length)return data.table;
+  if(!data)return[];
+  // TheSportsDB
+  if(data.table?.length)return data.table;
+  // ESPN structures
+  if(data.standings?.[0]?.entries?.length)return data.standings[0].entries;
+  if(data.children?.[0]?.standings?.entries?.length)return data.children[0].standings.entries;
+  if(data.children?.[0]?.children?.[0]?.standings?.entries?.length)return data.children[0].children[0].standings.entries;
+  if(data.entries?.length)return data.entries;
   return[];
 }
 
@@ -265,17 +273,22 @@ function renderStandingsTable(data,slug){
 
   let rows='';
   entries.forEach((e,i)=>{
-    // TheSportsDB fields
-    const rank=Number(e.intRank)||(i+1);
-    const name=e.strTeam||'?';
-    const logo=e.strTeamBadge||'';
-    const pts=e.intPoints??'—';
-    const played=e.intPlayed??'—';
-    const wins=e.intWin??'—';
-    const draws=e.intDraw??'—';
-    const losses=e.intLoss??'—';
-    const diff=(Number(e.intGoalsFor||0))-(Number(e.intGoalsAgainst||0));
-    const form=(e.strForm||'').split('').slice(-5);
+    // Format ESPN ou TheSportsDB
+    const isTSDB=!!e.strTeam;
+    const rank=isTSDB?Number(e.intRank)||(i+1):e.stats?.find(s=>s.name==='rank')?.value||(i+1);
+    const team=e.team||{};
+    const name=isTSDB?(e.strTeam||'?'):(team.shortDisplayName||team.displayName||team.name||'?');
+    const logo=isTSDB?(e.strTeamBadge||''):(team.logos?.[0]?.href||'');
+    const pts=isTSDB?(e.intPoints??'—'):(e.stats?.find(s=>s.name==='points')?.value??'—');
+    const played=isTSDB?(e.intPlayed??'—'):(e.stats?.find(s=>s.name==='gamesPlayed')?.value??'—');
+    const wins=isTSDB?(e.intWin??'—'):(e.stats?.find(s=>s.name==='wins')?.value??'—');
+    const draws=isTSDB?(e.intDraw??'—'):(e.stats?.find(s=>s.name==='ties')?.value??'—');
+    const losses=isTSDB?(e.intLoss??'—'):(e.stats?.find(s=>s.name==='losses')?.value??'—');
+    const gfn=isTSDB?Number(e.intGoalsFor||0):0;
+    const gan=isTSDB?Number(e.intGoalsAgainst||0):0;
+    const diffRaw=isTSDB?(gfn-gan):(e.stats?.find(s=>s.name==='pointDifferential'||s.name==='goalDifference')?.value??0);
+    const diff=Number(diffRaw)||0;
+    const form=isTSDB?(e.strForm||'').split('').slice(-5):(e.stats?.find(s=>s.name==='form')?.value||'').split('').slice(-5);
 
     const isFav=favNeedle_&&name.toLowerCase().includes(favNeedle_);
     const isOmRow=/marseille|om/i.test(name);
