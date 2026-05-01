@@ -33,6 +33,34 @@
     body.preview-active .mini-text{font-size:11px}
 
     @media(max-width:900px){.shell{padding-left:16px;padding-right:16px}.cfg-grid{grid-template-columns:1fr}}
+.om-trophy{margin:14px 0 6px;padding:14px 16px;border:1px solid rgba(255,209,102,.25);border-radius:16px;background:linear-gradient(135deg,rgba(255,209,102,.06),rgba(13,20,40,.9));text-align:center}
+.om-trophy-title{font-size:10px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;color:var(--gold);margin-bottom:6px}
+.om-trophy-timer{font-size:22px;font-weight:900;color:var(--text);line-height:1.2}
+.om-trophy-sub{font-size:11px;font-weight:700;color:var(--muted);margin-top:4px}
+.om-trophy-troll{font-size:11px;font-weight:800;color:rgba(255,209,102,.6);margin-top:6px;font-style:italic}
+
+.focus-stats{margin-top:14px;display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center}
+.focus-stat-row{display:contents}
+.stat-home,.stat-away{font-size:13px;font-weight:900;text-align:center}
+.stat-label{font-size:10px;font-weight:700;color:var(--muted);text-align:center;letter-spacing:.8px;text-transform:uppercase}
+.stat-bar-wrap{display:flex;align-items:center;gap:4px;margin:2px 0}
+.stat-bar-h,.stat-bar-a{height:4px;border-radius:2px;background:var(--blue);opacity:.7;transition:width .4s}
+.stat-bar-a{background:var(--soft)}
+
+.veille{min-height:calc(100dvh - 140px);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:20px}
+.veille-clock{font-size:72px;font-weight:900;letter-spacing:-2px;color:var(--text);line-height:1;text-shadow:0 0 40px rgba(0,155,222,.3)}
+.veille-date{font-size:14px;font-weight:700;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.veille-matches{width:100%;max-width:560px;display:flex;flex-direction:column;gap:8px}
+.veille-match{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;border:1px solid rgba(0,155,222,.15);border-radius:14px;padding:10px 14px;background:var(--panel)}
+.veille-team{display:flex;align-items:center;gap:7px;min-width:0}
+.veille-team.away{flex-direction:row-reverse;justify-content:flex-start}
+.veille-logo{width:28px;height:28px;object-fit:contain;flex-shrink:0}
+.veille-logo-e{width:28px;height:28px;border-radius:50%;background:var(--panel2);flex-shrink:0}
+.veille-name{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.veille-mid{text-align:center;font-size:15px;font-weight:900;color:var(--blue2)}
+.veille-league{font-size:10px;font-weight:700;color:var(--muted);text-align:center;margin-top:2px}
+.veille-label{font-size:10px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);text-align:center}
+
 .standings-wrap{padding-bottom:8px}
 .standings-league-sel{display:flex;gap:6px;padding:6px 0 12px;overflow-x:auto;scrollbar-width:none}
 .standings-league-sel::-webkit-scrollbar{display:none}
@@ -129,7 +157,8 @@ function favNeedle(){return String(SETTINGS.favorite||'Marseille').toLowerCase()
 function crest(src,size,cls){if(!src)return`<div class="${cls}-e" style="width:${size}px;height:${size}px"></div>`;return`<img src="${esc(src)}" class="${cls}" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none'" />`}function badge(m){const st=m?.status?.type?.state||'',l=timeMatch(m);if(st==='in')return`<span class="badge b-live">● ${esc(l)}</span>`;if(st==='pre')return`<span class="badge b-pre">⏳ ${esc(l)}</span>`;if(st==='post')return`<span class="badge b-done">Terminé</span>`;return''}function flash(m){const st=m.status?.type?.state||'';if(st!=='in'&&st!=='post')return'';const k=`${m.homeScore??0}-${m.awayScore??0}`,old=scoreMemory.get(m.id);scoreMemory.set(m.id,k);return old&&old!==k?' flash':''}
 function side(d,m){const tid=String(d?.team?.id||''),team=String(d?.team?.displayName||d?.team?.name||d?.team?.shortDisplayName||'').toLowerCase(),txt=String(d?.text||d?.shortText||'').toLowerCase(),home=String(m.homeName||'').toLowerCase(),away=String(m.awayName||'').toLowerCase();if(tid&&String(m.homeTeamId)===tid)return'home';if(tid&&String(m.awayTeamId)===tid)return'away';if(team&&(home.includes(team)||team.includes(home)))return'home';if(team&&(away.includes(team)||team.includes(away)))return'away';const textTeam=txt.includes('(')?txt.split('(').pop().split(')')[0].toLowerCase():'',ht=home.split(/\s+/).filter(w=>w.length>3),at=away.split(/\s+/).filter(w=>w.length>3);if(textTeam&&(away.includes(textTeam)||textTeam.includes(away)||at.some(w=>textTeam.includes(w))))return'away';if(textTeam&&(home.includes(textTeam)||textTeam.includes(home)||ht.some(w=>textTeam.includes(w))))return'home';if(away&&txt.includes(away))return'away';if(home&&txt.includes(home))return'home';if(at.some(w=>txt.includes(w)))return'away';if(ht.some(w=>txt.includes(w)))return'home';return'home'}function scorers(m){const goals=(m.details||[]).filter(d=>{const t=String(d?.text||d?.shortText||'').toLowerCase();if(t.includes('overturned')||t.includes('annulé'))return false;return d?.scoringPlay===true||t.includes('goal')||t.includes('but')});if(!goals.length)return'';const map=new Map();goals.forEach(g=>{const name=playerName(g);if(!name||/overturned|annulé|var/i.test(name))return;const s=side(g,m),mi=minute(g),k=`${s}|${name}`;if(!map.has(k))map.set(k,{side:s,name,mins:[]});map.get(k).mins.push(mi)});const h=[],a=[];map.forEach(it=>{const min=it.mins.filter(Boolean).join(' '),minHtml=min?`<span class="ev-min">${esc(min)}</span>`:'',balls='⚽'.repeat(it.mins.length);if(it.side==='home')h.push(`<div class="ev-left"><span class="ev-name">${esc(it.name)}</span>${balls}${minHtml}</div>`);else a.push(`<div class="ev-right">${minHtml}${balls}<span class="ev-name">${esc(it.name)}</span></div>`)});if(!h.length&&!a.length)return'';const max=Math.max(h.length,a.length);let rows='';for(let i=0;i<max;i++)rows+=`${h[i]||'<div class="ev-left"></div>'}${a[i]||'<div class="ev-right"></div>'}`;return`<div class="events"><div class="events-title">Buteurs</div><div class="scorers">${rows}</div></div>`}function reds(m){const r=(m.details||[]).filter(d=>d?.redCard===true);if(!r.length)return'';return`<div class="events red-only"><div class="events-title">Rouge</div>${r.slice(0,3).map(x=>`<div class="red-line">🟥 ${esc(playerName(x)||'Carton rouge')}${minute(x)?` <span class="ev-min">${esc(minute(x))}</span>`:''}</div>`).join('')}</div>`}
 function renderMatch(m){const st=m.status?.type?.state||'',live=st==='in',done=st==='post',soon=st==='pre'&&isSoon(m.date),p=isPinned(m);const center=(live||done)?`<div class="score${flash(m)}"><span class="num">${m.homeScore??0}</span><span class="sep">–</span><span class="num">${m.awayScore??0}</span></div>`:`<div class="kick${soon?' soon':''}">${esc(timeLabel(m.date))}</div>`;return`<article class="card${live?' live':''}${p?' pin':isFavoriteMatch(m)?' fav':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="card-top"><div class="comp">${esc(m.leagueName)}${p?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="card-actions">${pinBtn(m)}${badge(m)}</div></div><div class="teams"><div class="team home">${crest(m.homeLogo,32,'crest')}<span class="tn">${esc(m.homeName)}</span></div>${center}<div class="team away"><span class="tn">${esc(m.awayName)}</span>${crest(m.awayLogo,32,'crest')}</div></div>${live?`<div class="minute">${esc(timeMatch(m))}</div>`:''}${scorers(m)}${reds(m)}</article>`}function renderCal(m){return`<article class="cal-card${isSoon(m.date)?' soon':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="cal-time">${esc(timeLabel(m.date))}</div><div class="cal-crests">${crest(m.homeLogo,24,'crest')}${crest(m.awayLogo,24,'crest')}</div><div class="cal-info"><div class="cal-title">${esc(m.homeName)} — ${esc(m.awayName)}</div><div class="cal-sub">${esc(m.leagueName)}${isFavoriteMatch(m)?' · ★ favori':''}</div></div></article>`}
-function emptyState(){
+function emptyState(){return emptyStateVeille();}
+function emptyStateOld(){
   const n=calendarEvents.find(isFavoriteMatch)||nextMatch;
   const nextBlock=n
     ? `<div class="next-wrap"><div class="next-label">Prochain match</div><div class="next-row"><div class="next-team">${crest(n.homeLogo,46,'next-logo')}<div class="next-team-name">${esc(n.homeName)}</div></div><div class="next-mid"><div class="next-time">${esc(timeLabel(n.date))}</div><div class="next-day">${esc(dayLabel(n.date))}</div><div class="next-league">${esc(n.leagueName)}</div></div><div class="next-team">${crest(n.awayLogo,46,'next-logo')}<div class="next-team-name">${esc(n.awayName)}</div></div></div></div>`
@@ -137,14 +166,41 @@ function emptyState(){
   return `<div class="empty-state"><div class="empty-card"><div class="empty-inner"><div class="pitch"><div class="box left"></div><div class="box right"></div><div class="goal left"></div><div class="goal right"></div><div class="player cyan" style="left:13%;top:45%;animation-delay:.1s"></div><div class="player blue" style="left:24%;top:23%;animation-delay:.4s"></div><div class="player blue" style="left:24%;top:67%;animation-delay:.8s"></div><div class="player cyan hot" style="left:38%;top:48%;animation-delay:.2s"></div><div class="player blue" style="left:50%;top:29%;animation-delay:.7s"></div><div class="player cyan hot" style="left:58%;top:48%;animation-delay:1s"></div><div class="player blue" style="left:70%;top:24%;animation-delay:.3s"></div><div class="player cyan" style="left:79%;top:64%;animation-delay:.9s"></div><div class="ball"></div></div><div class="mini-title">Veher Live</div>${nextBlock}<div class="mini-text">Aucun match en direct pour le moment</div></div></div></div>`;
 }
 function renderStrip(){const s=$('liveStrip');let html='';const p=liveEvents.find(isPinned),f=liveEvents.find(isFavoriteMatch);if(p)html=`<b>SUIVI</b>${esc(p.homeName)} ${p.homeScore??0}–${p.awayScore??0} ${esc(p.awayName)} · ${esc(timeMatch(p))}`;else if(f)html=`<b>LIVE</b>${esc(f.homeName)} ${f.homeScore??0}–${f.awayScore??0} ${esc(f.awayName)} · ${esc(timeMatch(f))}`;else if(liveEvents[0])html=`<b>LIVE</b>${liveEvents.length} match${liveEvents.length>1?'s':''} en direct · ${esc(liveEvents[0].homeName)} vs ${esc(liveEvents[0].awayName)}`;else if(nextMatch)html=`<b>À VENIR</b>${esc(nextMatch.homeName)} — ${esc(nextMatch.awayName)} · ${esc(timeMatch(nextMatch))}`;s.innerHTML=html;s.classList.toggle('on',!!html)}function filters(items,active,cb,includeFav){const sl=[...new Set(items.map(x=>x.leagueSlug))],lgs=LEAGUES.filter(l=>sl.includes(l.slug)),hasFav=includeFav&&items.some(isFavoriteMatch);if(lgs.length<=1&&!hasFav)return'';const fav=hasFav?`<button class="pill${active==='favorite'?' on':''}" onclick="${cb}('favorite')">★ Favori</button>`:'';return`<div class="filters"><button class="pill${active==='all'?' on':''}" onclick="${cb}('all')">Toutes</button>${fav}${lgs.map(l=>`<button class="pill${active===l.slug?' on':''}" onclick="${cb}('${l.slug}')">${esc(l.name)}</button>`).join('')}</div>`}function setLiveFilter(f){activeLiveFilter=f;renderLivePage()}function setCalendarFilter(f){activeCalFilter=f;renderCalPage()}
-function renderLivePage(){const p=$('page0');renderStrip();if(!liveEvents.length){p.innerHTML=emptyState();return}const order=sortMatches(liveEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeLiveFilter!=='all'&&activeLiveFilter!=='favorite'&&!sl.has(activeLiveFilter))activeLiveFilter='all';let ms=order;if(activeLiveFilter==='favorite')ms=order.filter(isFavoriteMatch);else if(activeLiveFilter!=='all')ms=order.filter(x=>x.leagueSlug===activeLiveFilter);p.innerHTML=filters(order,activeLiveFilter,'setLiveFilter',true)+(ms.length?`<div class="section">En cours · <span>${ms.length} match${ms.length>1?'s':''}</span></div>`+ms.map(renderMatch).join(''):`<div class="empty">⚽ Aucun match en direct pour ce filtre</div>`);
+function renderLivePage(){const p=$('page0');renderStrip();if(!liveEvents.length){p.innerHTML=emptyState();startVeilleClock();return}const order=sortMatches(liveEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeLiveFilter!=='all'&&activeLiveFilter!=='favorite'&&!sl.has(activeLiveFilter))activeLiveFilter='all';let ms=order;if(activeLiveFilter==='favorite')ms=order.filter(isFavoriteMatch);else if(activeLiveFilter!=='all')ms=order.filter(x=>x.leagueSlug===activeLiveFilter);p.innerHTML=filters(order,activeLiveFilter,'setLiveFilter',true)+(ms.length?`<div class="section">En cours · <span>${ms.length} match${ms.length>1?'s':''}</span></div>`+ms.map(renderMatch).join(''):`<div class="empty">⚽ Aucun match en direct pour ce filtre</div>`);
   // Scroll auto vers match favori
-  if(activeLiveFilter==='all'){setTimeout(()=>{const fav=ms.find(isFavoriteMatch);if(fav){const el=p.querySelector('.card.fav,.card.pin');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})}},120);}}function renderCalPage(){const p=$('page1');if(!calendarEvents.length){p.innerHTML=`<div class="empty">📅 Aucun match prévu</div>`;return}const order=sortMatches(calendarEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeCalFilter!=='all'&&!sl.has(activeCalFilter))activeCalFilter='all';const filtered=activeCalFilter==='all'?order:order.filter(x=>x.leagueSlug===activeCalFilter),groups={};filtered.forEach(m=>{const d=dayLabel(m.date);(groups[d]||(groups[d]=[])).push(m)});let html=filters(order,activeCalFilter,'setCalendarFilter',false);Object.entries(groups).forEach(([d,ms])=>{html+=`<div class="day">${esc(d)}</div>`+ms.map(renderCal).join('')});p.innerHTML=html}function renderResultsPage(){const p=$('page2');if(!resultEvents.length){p.innerHTML=`<div class="empty">📰 Aucun résultat récent</div>`;return}const o=sortMatches(resultEvents);p.innerHTML=`<div class="section">Résultats récents · <span>${o.length} match${o.length>1?'s':''}</span></div>`+o.map(renderMatch).join('')}function renderOmPage(){const p=$('page4'),live=liveEvents.find(isOmMatch),next=calendarEvents.find(isOmMatch),last=resultEvents.find(isOmMatch);let h=`<div class="section">Allez l'OM 💙</div>`;if(live)h+=`<div class="section">En direct</div>${renderMatch(live)}`;if(next)h+=`<div class="section">Prochain match</div>${renderCal(next)}`;if(last)h+=`<div class="section">Dernier résultat</div>${renderMatch(last)}`;if(!live&&!next&&!last)h+=`<div class="empty">💙 Aucun match OM trouvé</div>`;p.innerHTML=h}
+  if(activeLiveFilter==='all'){setTimeout(()=>{const fav=ms.find(isFavoriteMatch);if(fav){const el=p.querySelector('.card.fav,.card.pin');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})}},120);}}function renderCalPage(){const p=$('page1');if(!calendarEvents.length){p.innerHTML=`<div class="empty">📅 Aucun match prévu</div>`;return}const order=sortMatches(calendarEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeCalFilter!=='all'&&!sl.has(activeCalFilter))activeCalFilter='all';const filtered=activeCalFilter==='all'?order:order.filter(x=>x.leagueSlug===activeCalFilter),groups={};filtered.forEach(m=>{const d=dayLabel(m.date);(groups[d]||(groups[d]=[])).push(m)});let html=filters(order,activeCalFilter,'setCalendarFilter',false);Object.entries(groups).forEach(([d,ms])=>{html+=`<div class="day">${esc(d)}</div>`+ms.map(renderCal).join('')});p.innerHTML=html}function renderResultsPage(){const p=$('page2');if(!resultEvents.length){p.innerHTML=`<div class="empty">📰 Aucun résultat récent</div>`;return}const o=sortMatches(resultEvents);p.innerHTML=`<div class="section">Résultats récents · <span>${o.length} match${o.length>1?'s':''}</span></div>`+o.map(renderMatch).join('')}function renderOmPage(){const p=$('page4'),live=liveEvents.find(isOmMatch),next=calendarEvents.find(isOmMatch),last=resultEvents.find(isOmMatch);let h=`<div class="section">Allez l'OM 💙</div>${omTrophyHtml()}`;if(live)h+=`<div class="section">En direct</div>${renderMatch(live)}`;if(next)h+=`<div class="section">Prochain match</div>${renderCal(next)}`;if(last)h+=`<div class="section">Dernier résultat</div>${renderMatch(last)}`;if(!live&&!next&&!last)h+=`<div class="empty">💙 Aucun match OM trouvé</div>`;p.innerHTML=h;startTrophyTimer();}
 async function loadLive(silent=false){if(SETTINGS.demo==='on'){demo('live');renderLivePage();return}if(!silent)$('page0').innerHTML=`<div class="loading"><div class="spinner"></div>Chargement...</div>`;try{const res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});let matches=[...seen.values()],det=matches.filter(m=>isLiveStatus(m.status)).slice(0,12);const sums=await Promise.allSettled(det.map(m=>fetchSummary(m.leagueSlug,m.id)));sums.forEach((r,i)=>{if(r.status!=='fulfilled'||!r.value)return;const s=r.value,ev=s.header||s.event||{},c=comps(ev),idx=matches.findIndex(m=>m.id===det[i].id);if(idx<0)return;matches[idx]={...matches[idx],homeScore:c.home.score??matches[idx].homeScore,awayScore:c.away.score??matches[idx].awayScore,homeTeamId:c.home.team?.id||matches[idx].homeTeamId,awayTeamId:c.away.team?.id||matches[idx].awayTeamId,status:ev.status||matches[idx].status,details:detailsFromSummary(s)}});liveEvents=matches.filter(m=>isLiveStatus(m.status));finishedEvents=matches.filter(m=>isDoneStatus(m.status)&&isRecent(m.date));$('liveDot').classList.toggle('hide',liveEvents.length===0);if(!liveEvents.length)nextMatch=await getNextMatch();detectGoal();renderLivePage();startLiveCountdowns();retryCount=0;}catch(e){if(!silent)$('page0').innerHTML=`<div class="err">Erreur chargement<br><small>${esc(e.message)}</small></div>`;scheduleRetry();}doneRefreshBar();renderStrip();}async function getNextMatch(){try{const s=new Date(),e=new Date();e.setDate(s.getDate()+7);const q=`?dates=${dateKey(s)}-${dateKey(e)}`,res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug,q).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});return[...seen.values()].filter(m=>m.status?.type?.state==='pre').sort((a,b)=>new Date(a.date)-new Date(b.date))[0]||null}catch(e){return null}}
 async function loadCalendar(){if(SETTINGS.demo==='on'){demo('live');renderCalPage();return}$('page1').innerHTML=`<div class="loading"><div class="spinner"></div>Chargement du calendrier...</div>`;try{const s=new Date(),e=new Date();e.setDate(s.getDate()+Number(SETTINGS.calDays||3));const q=`?dates=${dateKey(s)}-${dateKey(e)}`,res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug,q).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(ev?.status?.type?.state!=='pre')return;if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});calendarEvents=[...seen.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));calendarLoaded=true;renderCalPage()}catch(e){$('page1').innerHTML=`<div class="err">Erreur calendrier<br><small>${esc(e.message)}</small></div>`}}async function loadResults(){if(SETTINGS.demo==='on'){demo('live');renderResultsPage();return}if(resultsLoaded){renderResultsPage();return}$('page2').innerHTML=`<div class="loading"><div class="spinner"></div>Chargement des résultats...</div>`;try{const now=new Date(),dates=Array.from({length:Number(SETTINGS.resDays||2)},(_,i)=>{const d=new Date(now);d.setDate(now.getDate()-i);return dateKey(d)}),req=dates.flatMap(d=>LEAGUES.map(l=>fetchEspn(l.slug,`?dates=${d}`).then(data=>({l,data})).catch(()=>null))),res=await Promise.all(req),seen=new Map();res.forEach(r=>{if(!r)return;(r.data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,r.l.name,r.l.slug))})});resultEvents=[...seen.values()].filter(m=>isDoneStatus(m.status)).sort((a,b)=>new Date(b.date)-new Date(a.date));resultsLoaded=true;renderResultsPage()}catch(e){$('page2').innerHTML=`<div class="err">Erreur résultats<br><small>${esc(e.message)}</small></div>`}}
 async function loadOm(){const p=$('page4');p.innerHTML=`<div class="loading"><div class="spinner"></div>Chargement OM...</div>`;const isOmName=(n='')=>{const v=String(n).toLowerCase();return v.includes('marseille')||v==='om'||v.includes('olympique de marseille')};if(SETTINGS.demo==='on'){demo('live');omLoaded=true;renderOmPage();return}try{const s=new Date();s.setDate(s.getDate()-14);const e=new Date();e.setDate(e.getDate()+45);const q=`?dates=${dateKey(s)}-${dateKey(e)}`,res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug,q).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{const c=comps(ev),hn=c.home.team?.displayName||c.home.team?.shortDisplayName||c.home.team?.name||'',an=c.away.team?.displayName||c.away.team?.shortDisplayName||c.away.team?.name||'';if(!isOmName(hn)&&!isOmName(an))return;if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});const oms=[...seen.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));const liveOm=liveEvents.find(isOmMatch)||oms.find(m=>isLiveStatus(m.status));const nextOm=oms.filter(m=>m.status?.type?.state==='pre').sort((a,b)=>new Date(a.date)-new Date(b.date))[0]||null;let lastOm=oms.filter(m=>isDoneStatus(m.status)).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]||null;if(lastOm){const s=await fetchSummary(lastOm.leagueSlug,lastOm.id);if(s){const ev=s.header||s.event||{},c=comps(ev);lastOm={...lastOm,homeScore:c.home.score??lastOm.homeScore,awayScore:c.away.score??lastOm.awayScore,homeTeamId:c.home.team?.id||lastOm.homeTeamId,awayTeamId:c.away.team?.id||lastOm.awayTeamId,status:ev.status||lastOm.status,details:detailsFromSummary(s)}}}let h=`<div class="section">Allez l'OM 💙</div>`;if(liveOm)h+=`<div class="section">En direct</div>${renderMatch(liveOm)}`;if(nextOm)h+=`<div class="section">Prochain match</div>${renderCal(nextOm)}`;if(lastOm)h+=`<div class="section">Dernier résultat</div>${renderMatch(lastOm)}`;if(!liveOm&&!nextOm&&!lastOm)h+=`<div class="empty-state"><div class="empty-card"><div class="empty-inner"><div class="mini-title">Aucun match OM trouvé</div><div class="mini-text">ESPN ne renvoie aucun match de Marseille sur la période recherchée.</div></div></div></div>`;p.innerHTML=h;omLoaded=true}catch(e){p.innerHTML=`<div class="err">Erreur OM<br><small>${esc(e.message)}</small></div>`}}
 function detectGoal(){liveEvents.forEach(m=>{const k=`${m.homeScore??0}-${m.awayScore??0}`,old=alertScoreMemory.get(m.id);alertScoreMemory.set(m.id,k);if(old&&old!==k&&Date.now()-lastGoalAlertTime>1200){lastGoalAlertTime=Date.now();const omGoal=isOmMatch(m);playGoalSound(omGoal);goalAlert(`BUT${omGoal?' 💙':''} · ${m.homeName} ${m.homeScore??0}-${m.awayScore??0} ${m.awayName}`)}})}function goTab(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('on',i===j));if(i===1&&!calendarLoaded)loadCalendar();if(i===2)loadResults();if(i===3)loadStandings();if(i===4&&!omLoaded)loadOm()}async function manualRefresh(){const b=$('refreshBtn');b.classList.add('spin');const i=[...document.querySelectorAll('.page')].findIndex(p=>p.classList.contains('on'));if(i===0)await loadLive(false);if(i===1){calendarLoaded=false;await loadCalendar()}if(i===2){resultsLoaded=false;resultEvents=[];await loadResults()}if(i===3){standingsLoaded=false;standingsCache.clear();await loadStandings()}if(i===4){omLoaded=false;await loadOm()}updated();setTimeout(()=>b.classList.remove('spin'),500)}function clock(){const n=new Date();$('clock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}function updated(){const n=new Date();$('updatedAt').innerHTML=`<span style="color:var(--blue2)">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}function poll(){clearTimeout(pollTimer);const base=Number(SETTINGS.refreshSec||15)*1000;const h=new Date().getHours();const isNight=h>=0&&h<7;let delay;if(liveEvents.length){delay=base;}else if(isNight){delay=120000;}else{delay=Math.max(base,60000);}pollTimer=setTimeout(async()=>{startRefreshBar(delay);await loadLive(true);updated();poll()},delay)}
-function openFocusMatch(id){const m=[...liveEvents,...calendarEvents,...resultEvents,...finishedEvents,nextMatch].filter(Boolean).find(x=>String(x.id)===String(id)),ov=$('focusOverlay');if(!m||!ov)return;const st=m.status?.type?.state||'',sc=st==='pre'?timeMatch(m):`${m.homeScore??0}–${m.awayScore??0}`;ov.innerHTML=`<div class="focus-card" onclick="event.stopPropagation()"><button class="focus-close" onclick="closeFocusMatch(event)">Fermer</button><div class="focus-comp">${esc(m.leagueName)}${isPinned(m)?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="focus-teams"><div class="focus-team">${crest(m.homeLogo,74,'focus-logo')}<div class="focus-name">${esc(m.homeName)}</div></div><div class="focus-score">${esc(sc)}</div><div class="focus-team">${crest(m.awayLogo,74,'focus-logo')}<div class="focus-name">${esc(m.awayName)}</div></div></div><div class="focus-min">${esc(dayLabel(m.date))} · ${esc(timeLabel(m.date))} · ${esc(timeMatch(m))}</div>${scorers(m)}${reds(m)}</div>`;ov.classList.add('open')}function closeFocusMatch(e){if(e)e.stopPropagation();$('focusOverlay').classList.remove('open')}function toast(msg,d=2400){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),d)}function goalAlert(msg){const a=$('goalAlert');a.textContent=msg;a.classList.add('show');toast(msg,2600);clearTimeout(a._timer);a._timer=setTimeout(()=>a.classList.remove('show'),2600)}function loadSettings(){try{SETTINGS={...SETTINGS,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')}}catch(e){}}function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(SETTINGS))}
+async function openFocusMatch(id){
+  const m=[...liveEvents,...calendarEvents,...resultEvents,...finishedEvents,nextMatch].filter(Boolean).find(x=>String(x.id)===String(id)),ov=$('focusOverlay');
+  if(!m||!ov)return;
+  const st=m.status?.type?.state||'',sc=st==='pre'?timeMatch(m):`${m.homeScore??0}–${m.awayScore??0}`;
+  const baseHtml=`<div class="focus-card" onclick="event.stopPropagation()">
+    <button class="focus-close" onclick="closeFocusMatch(event)">Fermer</button>
+    <div class="focus-comp">${esc(m.leagueName)}${isPinned(m)?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div>
+    <div class="focus-teams">
+      <div class="focus-team">${crest(m.homeLogo,74,'focus-logo')}<div class="focus-name">${esc(m.homeName)}</div></div>
+      <div class="focus-score">${esc(sc)}</div>
+      <div class="focus-team">${crest(m.awayLogo,74,'focus-logo')}<div class="focus-name">${esc(m.awayName)}</div></div>
+    </div>
+    <div class="focus-min">${esc(dayLabel(m.date))} · ${esc(timeLabel(m.date))} · ${esc(timeMatch(m))}</div>
+    ${scorers(m)}${reds(m)}
+    <div id="focusStats"><div style="text-align:center;padding:12px;color:var(--muted);font-size:12px">Chargement des stats...</div></div>
+  </div>`;
+  ov.innerHTML=baseHtml;
+  ov.classList.add('open');
+  // Charger les stats en async
+  if(st==='in'||st==='post'){
+    const stats=await fetchMatchStats(m);
+    const statsEl=$('focusStats');
+    if(statsEl)statsEl.innerHTML=renderStats(stats);
+  } else {
+    const statsEl=$('focusStats');
+    if(statsEl)statsEl.innerHTML='';
+  }
+}function closeFocusMatch(e){if(e)e.stopPropagation();$('focusOverlay').classList.remove('open')}function toast(msg,d=2400){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),d)}function goalAlert(msg){const a=$('goalAlert');a.textContent=msg;a.classList.add('show');toast(msg,2600);clearTimeout(a._timer);a._timer=setTimeout(()=>a.classList.remove('show'),2600)}function loadSettings(){try{SETTINGS={...SETTINGS,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')}}catch(e){}}function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(SETTINGS))}
 function applyVisual(){const prev=SETTINGS.preview==='on';document.documentElement.style.fontSize=`${16*Number(SETTINGS.scale||1)}px`;document.body.classList.toggle('preview-active',prev);document.body.classList.toggle('compact-mode',SETTINGS.details==='compact');document.body.classList.toggle('no-anim',SETTINGS.anim==='off');document.body.classList.toggle('burnin-on',SETTINGS.burnin==='on'&&prev);const old=$('previewWrap');if(old){const screen=old.querySelector('.preview-screen');if(screen){while(screen.firstChild)document.body.insertBefore(screen.firstChild,$('configOpen'))}old.remove()}if(!prev)return;const lock=new Set(['configOpen','configOverlay','goalAlert','focusOverlay','toast']),nodes=[...document.body.children].filter(n=>!lock.has(n.id)),w=document.createElement('div'),f=document.createElement('div'),s=document.createElement('div');w.id='previewWrap';w.className='preview-wrap';f.className='preview-frame';s.className='preview-screen';nodes.forEach(n=>s.appendChild(n));f.appendChild(s);w.appendChild(f);document.body.insertBefore(w,$('configOpen'))}function syncForm(){$('settingPreview').value=SETTINGS.preview;$('settingScale').value=String(SETTINGS.scale);$('settingLayout').value=SETTINGS.layout;$('settingBurnin').value=SETTINGS.burnin;$('settingRefresh').value=String(SETTINGS.refreshSec);$('settingCalDays').value=String(SETTINGS.calDays);$('settingResDays').value=String(SETTINGS.resDays);$('settingDetails').value=SETTINGS.details;$('settingAnim').value=SETTINGS.anim;$('settingFavorite').value=SETTINGS.favorite;$('settingDemo').value=SETTINGS.demo}function readForm(){SETTINGS.preview=$('settingPreview').value;SETTINGS.scale=Number($('settingScale').value);SETTINGS.layout=$('settingLayout').value;SETTINGS.burnin=$('settingBurnin').value;SETTINGS.refreshSec=Number($('settingRefresh').value);SETTINGS.calDays=Number($('settingCalDays').value);SETTINGS.resDays=Number($('settingResDays').value);SETTINGS.details=$('settingDetails').value;SETTINGS.anim=$('settingAnim').value;SETTINGS.favorite=$('settingFavorite').value.trim()||'Marseille';SETTINGS.demo=$('settingDemo').value}function bindConfig(){$('configOpen').onclick=()=>$('configOverlay').classList.add('open');$('configClose').onclick=()=>$('configOverlay').classList.remove('open');$('configOverlay').onclick=e=>{if(e.target===$('configOverlay'))$('configOverlay').classList.remove('open')};$('saveConfig').onclick=()=>{readForm();saveSettings();applyVisual();stamp();poll();$('configOverlay').classList.remove('open')};$('applyConfig').onclick=async()=>{readForm();applyVisual();stamp();calendarLoaded=false;resultsLoaded=false;omLoaded=false;standingsLoaded=false;standingsCache=new Map();await loadLive(false);poll()};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>runDemo(b.dataset.demo))}function stamp(){const e=$('lastSync');if(e)e.textContent=new Date().toLocaleTimeString('fr-FR')}
 function demo(type='live'){const now=new Date(),soon=new Date(now.getTime()+8*60000),later=new Date(now.getTime()+26*60000),past=new Date(now.getTime()-3*3600000),details=[{scoringPlay:true,clock:{displayValue:"12'"},team:{id:'om'},athletesInvolved:[{displayName:'Aubameyang'}]},{scoringPlay:true,clock:{displayValue:"58'"},team:{id:'psg'},athletesInvolved:[{displayName:'Dembélé'}]},{scoringPlay:true,clock:{displayValue:"67'"},team:{id:'om'},athletesInvolved:[{displayName:'Greenwood'}]}],main={id:'demo-om-psg',leagueName:'Démo Ligue 1',leagueSlug:'fra.1',date:now.toISOString(),homeName:'Marseille',awayName:'Paris SG',homeLogo:'',awayLogo:'',homeScore:2,awayScore:1,homeTeamId:'om',awayTeamId:'psg',status:{type:{state:'in',shortDetail:"67'",detail:"67'"}},details};liveEvents=[main,{id:'demo-mu-bre',leagueName:'Démo Premier League',leagueSlug:'eng.1',date:now.toISOString(),homeName:'Man United',awayName:'Brentford',homeLogo:'',awayLogo:'',homeScore:1,awayScore:1,homeTeamId:'mu',awayTeamId:'bre',status:{type:{state:'in',shortDetail:"72'"}},details:[]}];calendarEvents=[{id:'demo-next',leagueName:'Démo Champions League',leagueSlug:'uefa.champions',date:later.toISOString(),homeName:'Marseille',awayName:'Real Madrid',homeLogo:'',awayLogo:'',homeScore:0,awayScore:0,homeTeamId:'om',awayTeamId:'real',status:{type:{state:'pre'}},details:[]}];resultEvents=[{id:'demo-result',leagueName:'Démo Ligue 1',leagueSlug:'fra.1',date:past.toISOString(),homeName:'Lyon',awayName:'Marseille',homeLogo:'',awayLogo:'',homeScore:0,awayScore:3,homeTeamId:'lyon',awayTeamId:'om',status:{type:{state:'post',completed:true}},details:[]}];nextMatch=calendarEvents[0];calendarLoaded=true;resultsLoaded=true;if(type==='goal'){liveEvents[0]={...main,homeScore:3,status:{type:{state:'in',shortDetail:"89'"}},details:[...details,{scoringPlay:true,clock:{displayValue:"89'"},team:{id:'om'},athletesInvolved:[{displayName:'Harit'}]}]};goalAlert('BUT · Marseille 3-1 Paris SG')}if(type==='red'){liveEvents[0]={...main,details:[...details,{redCard:true,clock:{displayValue:"76'"},team:{id:'psg'},athletesInvolved:[{displayName:'Hakimi'}]}]};toast('Test carton rouge 🟥')}if(type==='soon'){liveEvents=[];calendarEvents=[{...calendarEvents[0],date:soon.toISOString()}];nextMatch=calendarEvents[0];toast('Test match dans 8 minutes')}if(type==='empty'){liveEvents=[];calendarEvents=[];resultEvents=[];nextMatch=null;toast('Test écran veille')}$('liveDot').classList.toggle('hide',liveEvents.length===0);api('Mode démo')}function runDemo(type){SETTINGS.demo='on';$('settingDemo').value='on';demo(type);renderLivePage();if($('page1').classList.contains('on'))renderCalPage();if($('page2').classList.contains('on'))renderResultsPage();if($('page3').classList.contains('on'))renderOmPage();if(type==='focus')setTimeout(()=>openFocusMatch('demo-om-psg'),80)}
 
@@ -357,6 +413,142 @@ async function loadStandings(forceSlug){
   const pills2=slugs.map(l=>`<button class="pill${l.slug===slug?' on':''}" onclick="loadStandings('${l.slug}')">${esc(l.name)}</button>`).join('');
   p.innerHTML=`<div class="standings-league-sel">${pills2}</div><div class="standings-wrap">${table}</div>`;
   standingsLoaded=true;
+}
+
+// ── TIMER TROPHÉE OM ─────────────────────────────────
+const OM_LAST_TROPHY = new Date('2010-05-26T00:00:00');
+function omTrophyTimer(){
+  const now=new Date();
+  const diff=now-OM_LAST_TROPHY;
+  const days=Math.floor(diff/86400000);
+  const years=Math.floor(days/365.25);
+  const months=Math.floor((days%365.25)/30.44);
+  const d=Math.floor(days%30.44);
+  const h=Math.floor((diff%86400000)/3600000);
+  const min=Math.floor((diff%3600000)/60000);
+  const sec=Math.floor((diff%60000)/1000);
+  return {years,months,days:d,h,min,sec,totalDays:days};
+}
+function omTrophyHtml(){
+  const t=omTrophyTimer();
+  const trolls=['😅','💀','⏳','🫠','🕰️','😬'];
+  const troll=trolls[Math.floor(Date.now()/10000)%trolls.length];
+  return `<div class="om-trophy">
+    <div class="om-trophy-title">🏆 Dernier trophée OM</div>
+    <div class="om-trophy-timer" id="trophyTimer">${t.years} ans, ${t.months} mois, ${t.days} jours</div>
+    <div class="om-trophy-sub">${t.h}h ${t.min}m ${t.sec}s · Ligue 1 2009-10</div>
+    <div class="om-trophy-troll">${troll} Ça fait long... même les supporters commencent à oublier</div>
+  </div>`;
+}
+let trophyInterval=null;
+function startTrophyTimer(){
+  if(trophyInterval)clearInterval(trophyInterval);
+  trophyInterval=setInterval(()=>{
+    const el=$('trophyTimer');
+    const sub=el?.nextElementSibling;
+    if(!el)return;
+    const t=omTrophyTimer();
+    el.textContent=`${t.years} ans, ${t.months} mois, ${t.days} jours`;
+    if(sub)sub.textContent=`${t.h}h ${t.min}m ${t.sec}s · Ligue 1 2009-10`;
+  },1000);
+}
+
+// ── STATS FOCUS MATCH ────────────────────────────────
+async function fetchMatchStats(m){
+  try{
+    const s=await fetchSummary(m.leagueSlug,m.id);
+    if(!s)return null;
+    const boxscore=s.boxscore||s.header?.competitions?.[0];
+    const stats=boxscore?.teams||[];
+    if(!stats.length)return null;
+    const home=stats.find(t=>String(t.team?.id)===String(m.homeTeamId))||stats[0];
+    const away=stats.find(t=>String(t.team?.id)===String(m.awayTeamId))||stats[1];
+    const getStat=(team,name)=>{
+      const st=team?.statistics||team?.stats||[];
+      return st.find(s=>s.name===name||s.abbreviation===name)?.displayValue||null;
+    };
+    return{
+      possession:[getStat(home,'possessionPct')||getStat(home,'possession'),getStat(away,'possessionPct')||getStat(away,'possession')],
+      shots:[getStat(home,'shots')||getStat(home,'totalShots'),getStat(away,'shots')||getStat(away,'totalShots')],
+      shotsOn:[getStat(home,'shotsOnTarget'),getStat(away,'shotsOnTarget')],
+      corners:[getStat(home,'cornerKicks')||getStat(home,'corners'),getStat(away,'cornerKicks')||getStat(away,'corners')],
+      fouls:[getStat(home,'fouls'),getStat(away,'fouls')],
+      yellow:[getStat(home,'yellowCards'),getStat(away,'yellowCards')],
+    };
+  }catch(e){return null;}
+}
+function renderStats(stats){
+  if(!stats)return'';
+  const rows=[
+    ['Possession','possession',stats.possession,'%'],
+    ['Tirs','shots',stats.shots,''],
+    ['Cadrés','shotsOn',stats.shotsOn,''],
+    ['Corners','corners',stats.corners,''],
+    ['Fautes','fouls',stats.fouls,''],
+    ['Jaunes','yellow',stats.yellow,'🟨'],
+  ];
+  let html='<div class="events" style="margin-top:14px"><div class="events-title">Statistiques</div><div style="padding:8px 12px">';
+  rows.forEach(([label,,vals])=>{
+    if(!vals||(!vals[0]&&!vals[1]))return;
+    const h=parseFloat(vals[0])||0,a=parseFloat(vals[1])||0,tot=h+a||1;
+    const pw=Math.round(h/tot*100),aw=100-pw;
+    html+=`<div style="margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;font-weight:900;margin-bottom:3px">
+        <span style="color:var(--blue2)">${vals[0]||'—'}</span>
+        <span style="color:var(--muted);font-size:10px">${label}</span>
+        <span style="color:var(--soft)">${vals[1]||'—'}</span>
+      </div>
+      <div style="display:flex;gap:2px;height:4px;border-radius:2px;overflow:hidden">
+        <div style="width:${pw}%;background:var(--blue);border-radius:2px"></div>
+        <div style="width:${aw}%;background:var(--soft);border-radius:2px;opacity:.6"></div>
+      </div>
+    </div>`;
+  });
+  html+='</div></div>';
+  return html;
+}
+
+// ── MODE VEILLE ──────────────────────────────────────
+function veilleClockStr(){
+  const n=new Date();
+  return`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;
+}
+function veilleDateStr(){
+  return new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+}
+function veilleMatchCard(m){
+  const st=m.status?.type?.state||'';
+  const isLv=st==='in';
+  const logo=(src,side)=>src?`<img src="${esc(src)}" class="veille-logo" loading="lazy" onerror="this.style.display='none'">`:`<div class="veille-logo-e"></div>`;
+  const mid=isLv
+    ?`<div class="veille-mid">${m.homeScore??0} – ${m.awayScore??0}<div class="veille-league" style="color:var(--blue)">● LIVE ${esc(timeMatch(m))}</div></div>`
+    :`<div class="veille-mid">${esc(timeLabel(m.date))}<div class="veille-league">${esc(m.leagueName)}</div></div>`;
+  return`<div class="veille-match">
+    <div class="veille-team">${logo(m.homeLogo,'home')}<span class="veille-name">${esc(m.homeName)}</span></div>
+    ${mid}
+    <div class="veille-team away"><span class="veille-name">${esc(m.awayName)}</span>${logo(m.awayLogo,'away')}</div>
+  </div>`;
+}
+function emptyStateVeille(){
+  const matches=[...liveEvents,...calendarEvents.slice(0,4)].slice(0,6);
+  const matchesHtml=matches.length
+    ?`<div class="veille-label" style="margin-bottom:4px">${liveEvents.length?'En direct':'À venir'}</div><div class="veille-matches">${matches.map(veilleMatchCard).join('')}</div>`
+    :`<div style="color:var(--muted);font-size:14px;font-weight:700">Aucun match en cours</div>`;
+  return`<div class="veille">
+    <div>
+      <div class="veille-clock" id="veilleClock">${veilleClockStr()}</div>
+      <div class="veille-date" id="veilleDate">${veilleDateStr()}</div>
+    </div>
+    ${matchesHtml}
+  </div>`;
+}
+let veilleClockTimer=null;
+function startVeilleClock(){
+  if(veilleClockTimer)clearInterval(veilleClockTimer);
+  veilleClockTimer=setInterval(()=>{
+    const el=$('veilleClock');
+    if(el)el.textContent=veilleClockStr();
+  },1000);
 }
 window.goTab=goTab;window.manualRefresh=manualRefresh;window.setLiveFilter=setLiveFilter;window.setCalendarFilter=setCalendarFilter;window.openFocusMatch=openFocusMatch;window.closeFocusMatch=closeFocusMatch;window.toggleMatchPin=toggleMatchPin;clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();applyVisual();stamp();
 setOnline(navigator.onLine);loadLive(false).then(()=>{updated();poll()});
