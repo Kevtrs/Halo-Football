@@ -308,7 +308,7 @@ function detectGoal(){liveEvents.forEach(m=>{const k=`${m.homeScore??0}-${m.away
     // Match live : ultra-réactif
     // Si match en cours depuis moins de 90min → 8s
     // Sinon 10s (prolongations etc)
-    delay=8000;
+    delay=5000;
   } else if(isNight){
     delay=120000; // Nuit sans live → 2min
   } else {
