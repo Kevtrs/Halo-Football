@@ -720,27 +720,14 @@ function startVeilleClock(){
   },1000);
 }
 
-// ── SMART UPDATE — pas de flash ──────────────────────
+// ── SMART UPDATE — zéro flash ──────────────────────
 function smartUpdate(el, newHtml){
   if(!el)return;
-  if(el.innerHTML===newHtml)return; // rien à faire
-  // Mettre à jour seulement les éléments qui ont changé
-  const tmp=document.createElement('div');
-  tmp.innerHTML=newHtml;
-  // Si même nombre d'enfants directs, mettre à jour un par un
-  if(el.children.length===tmp.children.length&&el.children.length>0){
-    let changed=false;
-    Array.from(tmp.children).forEach((newChild,i)=>{
-      const oldChild=el.children[i];
-      if(oldChild.outerHTML!==newChild.outerHTML){
-        oldChild.replaceWith(newChild.cloneNode(true));
-        changed=true;
-      }
-    });
-    if(!changed)return;
-  } else {
+  if(el.innerHTML===newHtml)return;
+  // Mise à jour atomique dans requestAnimationFrame pour éviter le flash
+  requestAnimationFrame(()=>{
     el.innerHTML=newHtml;
-  }
+  });
 }
 window.goTab=goTab;window.manualRefresh=manualRefresh;window.setLiveFilter=setLiveFilter;window.setCalendarFilter=setCalendarFilter;window.openFocusMatch=openFocusMatch;window.closeFocusMatch=closeFocusMatch;window.toggleMatchPin=toggleMatchPin;clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();applyVisual();stamp();
 setOnline(navigator.onLine);loadLive(false).then(()=>{updated();poll()});
