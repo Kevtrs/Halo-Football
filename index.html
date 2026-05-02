@@ -276,7 +276,7 @@ function side(d,m){
   return`<div class="events"><div class="events-title">Buteurs</div><div class="scorers">${rows}</div></div>`;
 }
 function reds(m){const r=(m.details||[]).filter(d=>d?.redCard===true);if(!r.length)return'';return`<div class="events red-only"><div class="events-title">Rouge</div>${r.slice(0,3).map(x=>`<div class="red-line">🟥 ${esc(playerName(x)||'Carton rouge')}${minute(x)?` <span class="ev-min">${esc(minute(x))}</span>`:''}</div>`).join('')}</div>`}
-function renderMatch(m){const st=m.status?.type?.state||'',live=st==='in',done=st==='post',soon=st==='pre'&&isSoon(m.date),p=isPinned(m);const center=(live||done)?`<div class="score${flash(m)}"><span class="num">${m.homeScore??0}</span><span class="sep">–</span><span class="num">${m.awayScore??0}</span></div>`:`<div class="kick${soon?' soon':''}">${esc(timeLabel(m.date))}</div>`;return`<article class="card${live?' live':''}${p?' pin':isFavoriteMatch(m)?' fav':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="card-top"><div class="comp">${esc(m.leagueName)}${p?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="card-actions">${pinBtn(m)}${badge(m)}</div></div><div class="teams"><div class="team home">${crest(m.homeLogo,32,'crest')}<span class="tn">${esc(m.homeName)}</span></div>${center}<div class="team away"><span class="tn">${esc(m.awayName)}</span>${crest(m.awayLogo,32,'crest')}</div></div>${live?`<div class="minute">${esc(timeMatch(m))}</div>`:''}${scorers(m)}${reds(m)}</article>`}function renderCal(m){return`<article class="cal-card${isSoon(m.date)?' soon':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="cal-time">${esc(timeLabel(m.date))}</div><div class="cal-crests">${crest(m.homeLogo,24,'crest')}${crest(m.awayLogo,24,'crest')}</div><div class="cal-info"><div class="cal-title">${esc(m.homeName)} — ${esc(m.awayName)}</div><div class="cal-sub">${esc(m.leagueName)}${isFavoriteMatch(m)?' · ★ favori':''}</div></div></article>`}
+function renderMatch(m){const st=m.status?.type?.state||'',live=st==='in',done=st==='post',soon=st==='pre'&&isSoon(m.date),p=isPinned(m);const center=(live||done)?`<div class="score${flash(m)}"><span class="num">${m.homeScore??0}</span><span class="sep">–</span><span class="num">${m.awayScore??0}</span></div>`:`<div class="kick${soon?' soon':''}">${esc(timeLabel(m.date))}</div>`;return`<article class="card${live?' live':''}${p?' pin':isFavoriteMatch(m)?' fav':''}" data-match-id="${esc(m.id)}" data-score="${m.homeScore??0}-${m.awayScore??0}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="card-top"><div class="comp">${esc(m.leagueName)}${p?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="card-actions">${pinBtn(m)}${badge(m)}</div></div><div class="teams"><div class="team home">${crest(m.homeLogo,32,'crest')}<span class="tn">${esc(m.homeName)}</span></div>${center}<div class="team away"><span class="tn">${esc(m.awayName)}</span>${crest(m.awayLogo,32,'crest')}</div></div>${live?`<div class="minute">${esc(timeMatch(m))}</div>`:''}${scorers(m)}${reds(m)}</article>`}function renderCal(m){return`<article class="cal-card${isSoon(m.date)?' soon':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="cal-time">${esc(timeLabel(m.date))}</div><div class="cal-crests">${crest(m.homeLogo,24,'crest')}${crest(m.awayLogo,24,'crest')}</div><div class="cal-info"><div class="cal-title">${esc(m.homeName)} — ${esc(m.awayName)}</div><div class="cal-sub">${esc(m.leagueName)}${isFavoriteMatch(m)?' · ★ favori':''}</div></div></article>`}
 function emptyState(){return emptyStateVeille();}
 function emptyStateOld(){
   const n=calendarEvents.find(isFavoriteMatch)||nextMatch;
@@ -724,10 +724,50 @@ function startVeilleClock(){
 function smartUpdate(el, newHtml){
   if(!el)return;
   if(el.innerHTML===newHtml)return;
-  // Mise à jour atomique dans requestAnimationFrame pour éviter le flash
-  requestAnimationFrame(()=>{
-    el.innerHTML=newHtml;
-  });
+
+  const tmp=document.createElement('div');
+  tmp.innerHTML=newHtml;
+
+  // Essayer un patch chirurgical card par card
+  const newCards=tmp.querySelectorAll('[data-match-id]');
+  const oldCards=el.querySelectorAll('[data-match-id]');
+
+  // Si même structure (même nombre de cards dans le même ordre)
+  if(newCards.length===oldCards.length&&newCards.length>0){
+    let fullRebuild=false;
+    newCards.forEach((nc,i)=>{
+      const oc=oldCards[i];
+      // Si même match ET même score → ne rien toucher du tout
+      if(oc.dataset.matchId===nc.dataset.matchId&&oc.dataset.score===nc.dataset.score){
+        return; // rien à faire, zéro flash
+      }
+      // Match différent ou score changé → remplacer cette card seulement
+      if(oc.dataset.matchId===nc.dataset.matchId){
+        // Même match, score changé → remplacer juste les chiffres
+        oc.dataset.score=nc.dataset.score;
+        const oldNums=oc.querySelectorAll('.num');
+        const newNums=nc.querySelectorAll('.num');
+        oldNums.forEach((n,j)=>{if(newNums[j]&&n.textContent!==newNums[j].textContent)n.textContent=newNums[j].textContent});
+        // Mettre à jour la minute
+        const oldMin=oc.querySelector('.minute');
+        const newMin=nc.querySelector('.minute');
+        if(oldMin&&newMin&&oldMin.textContent!==newMin.textContent)oldMin.textContent=newMin.textContent;
+        // Mettre à jour les buteurs si changés
+        const oldScorers=oc.querySelector('.scorers');
+        const newScorers=nc.querySelector('.scorers');
+        if(newScorers&&(!oldScorers||oldScorers.innerHTML!==newScorers.innerHTML)){
+          if(oldScorers)oldScorers.innerHTML=newScorers.innerHTML;
+          else{const ev=oc.querySelector('.events');if(ev)ev.innerHTML=nc.querySelector('.events')?.innerHTML||ev.innerHTML}
+        }
+      } else {
+        fullRebuild=true;
+      }
+    });
+    if(!fullRebuild)return;
+  }
+
+  // Fallback : rebuild complet
+  el.innerHTML=newHtml;
 }
 window.goTab=goTab;window.manualRefresh=manualRefresh;window.setLiveFilter=setLiveFilter;window.setCalendarFilter=setCalendarFilter;window.openFocusMatch=openFocusMatch;window.closeFocusMatch=closeFocusMatch;window.toggleMatchPin=toggleMatchPin;clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();applyVisual();stamp();
 setOnline(navigator.onLine);loadLive(false).then(()=>{updated();poll()});
