@@ -91,11 +91,51 @@ body.preview-active .next-mid{min-width:74px}
 body.preview-active .next-time{font-size:17px}
 body.preview-active .next-day,body.preview-active .next-league{font-size:9px;margin-top:4px}
 
+
+/* ── COUPE DU MONDE ────────────────────────────────────── */
+.wc-tabs{display:flex;gap:6px;padding:6px 0 12px;overflow-x:auto;scrollbar-width:none}
+.wc-tabs::-webkit-scrollbar{display:none}
+
+/* Groupes */
+.wc-groups{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px;padding-bottom:16px}
+.wc-group-card{border:1px solid rgba(0,155,222,.15);border-radius:16px;background:var(--panel);overflow:hidden}
+.wc-group-title{padding:8px 12px;background:rgba(0,155,222,.12);font-size:10px;font-weight:900;letter-spacing:1.8px;color:var(--blue2);text-transform:uppercase}
+.wc-group-table{width:100%;border-collapse:collapse;font-size:12px}
+.wc-group-table th{padding:4px 6px;color:var(--muted);font-size:9px;font-weight:900;letter-spacing:1px;text-transform:uppercase;text-align:center;border-bottom:1px solid rgba(0,155,222,.1)}
+.wc-group-table th.left{text-align:left}
+.wc-group-table td{padding:5px 6px;border-bottom:1px solid rgba(255,255,255,.03);text-align:center;font-weight:700;font-size:11px}
+.wc-group-table td.left{text-align:left}
+.wc-group-row:last-child td{border-bottom:0}
+.wc-group-row.q{border-left:2px solid var(--blue)}
+.wc-group-row.q td{color:var(--blue2)}
+.wc-group-row.q .wc-team-name{color:#fff;font-weight:900}
+.wc-team-name{padding-left:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:110px}
+.wc-sep{grid-column:1/-1;border:0;border-top:2px dashed rgba(0,155,222,.2);margin:4px 0}
+
+/* Tableau KO */
+.ko-wrap{overflow-x:auto;padding-bottom:16px}
+.ko-bracket{display:flex;gap:0;min-width:900px}
+.ko-round{display:flex;flex-direction:column;justify-content:space-around;flex:1;padding:0 4px}
+.ko-round-title{text-align:center;font-size:9px;font-weight:900;letter-spacing:1.5px;color:var(--blue2);text-transform:uppercase;padding:6px 0 10px}
+.ko-matches{display:flex;flex-direction:column;justify-content:space-around;flex:1;gap:8px}
+.ko-match{border:1px solid rgba(0,155,222,.18);border-radius:10px;background:var(--panel);overflow:hidden;cursor:default}
+.ko-match.live{border-color:var(--line2);animation:liveGlow 2.8s ease-in-out infinite}
+.ko-team{display:flex;align-items:center;gap:6px;padding:5px 8px;font-size:11px;font-weight:800;min-width:0}
+.ko-team:first-child{border-bottom:1px solid rgba(0,155,222,.1)}
+.ko-team.winner{background:rgba(0,155,222,.1);color:#fff}
+.ko-team img,.ko-team .ko-flag-e{width:16px;height:16px;flex-shrink:0;object-fit:contain}
+.ko-team .ko-flag-e{border-radius:2px;background:var(--panel2)}
+.ko-team-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ko-score{font-size:13px;font-weight:900;color:var(--blue);margin-left:auto;flex-shrink:0}
+.ko-tbd{color:var(--muted);font-style:italic}
+.wc-mode-btns{display:flex;gap:6px;padding:6px 0 12px}
+.wc-mode-btn{border:1px solid rgba(100,125,153,.5);border-radius:999px;background:var(--panel2);color:var(--soft);padding:7px 16px;font-size:12px;font-weight:900;cursor:pointer;white-space:nowrap}
+.wc-mode-btn.on{background:var(--blue);border-color:var(--blue);color:#fff}
 </style>
 </head>
 <body>
-<div class="shell hdr"><div class="top"><div class="brand"><div class="mark">VL</div><div class="name">Veher <span>Live</span></div></div><div class="actions"><span class="clock" id="clock">--:--</span><button class="refresh" id="refreshBtn" onclick="manualRefresh()">↻</button></div></div><div class="strip" id="liveStrip"></div><div class="tabs"><button class="tab on" id="tab0" onclick="goTab(0)"><span class="dot hide" id="liveDot"></span><span>⚽</span>En direct</button><button class="tab" id="tab1" onclick="goTab(1)"><span>📅</span>Calendrier</button><button class="tab" id="tab2" onclick="goTab(2)"><span>🏁</span>Résultats</button><button class="tab" id="tab3" onclick="goTab(3)"><span>🏆</span>Classement</button><button class="tab" id="tab4" onclick="goTab(4)"><span>🔵</span>OM</button></div></div>
-<main class="shell content"><section class="page on" id="page0"><div class="loading"><div class="spinner"></div>Chargement...</div></section><section class="page" id="page1"><div class="loading"><div class="spinner"></div>Chargement du calendrier...</div></section><section class="page" id="page2"><div class="loading"><div class="spinner"></div>Chargement des résultats...</div></section><section class="page" id="page3"><div class="loading"><div class="spinner"></div>Chargement classements...</div></section><section class="page" id="page4"><div class="loading"><div class="spinner"></div>Chargement OM...</div></section></main>
+<div class="shell hdr"><div class="top"><div class="brand"><div class="mark">VL</div><div class="name">Veher <span>Live</span></div></div><div class="actions"><span class="clock" id="clock">--:--</span><button class="refresh" id="refreshBtn" onclick="manualRefresh()">↻</button></div></div><div class="strip" id="liveStrip"></div><div class="tabs"><button class="tab on" id="tab0" onclick="goTab(0)"><span class="dot hide" id="liveDot"></span><span>⚽</span>En direct</button><button class="tab" id="tab5" onclick="goTab(5)"><span>🌍</span>Mondial</button><button class="tab" id="tab1" onclick="goTab(1)"><span>📅</span>Calendrier</button><button class="tab" id="tab2" onclick="goTab(2)"><span>🏁</span>Résultats</button><button class="tab" id="tab3" onclick="goTab(3)"><span>🏆</span>Classement</button><button class="tab" id="tab4" onclick="goTab(4)"><span>🔵</span>OM</button></div></div>
+<main class="shell content"><section class="page on" id="page0"><div class="loading"><div class="spinner"></div>Chargement...</div></section><section class="page" id="page1"><div class="loading"><div class="spinner"></div>Chargement du calendrier...</div></section><section class="page" id="page2"><div class="loading"><div class="spinner"></div>Chargement des résultats...</div></section><section class="page" id="page3"><div class="loading"><div class="spinner"></div>Chargement classements...</div></section><section class="page" id="page4"><div class="loading"><div class="spinner"></div>Chargement OM...</div></section><section class="page" id="page5"><div class="loading"><div class="spinner"></div>Chargement Coupe du Monde...</div></section></main>
 <div class="shell footer"><span id="updatedAt">Connexion...</span><span class="ok">● connecté</span><span class="api" id="apiStatus">API...</span></div>
 <div class="refresh-bar" id="refreshBar"></div><div class="offline-banner" id="offlineBanner">⚠ Connexion perdue — nouvelle tentative en cours...</div><button class="cfg-btn-float" id="configOpen">⚙</button><audio id="sndGoal" preload="auto"><source src="data:audio/wav;base64,UklGRnoAAABXQVZFZm10IBAAAAEAAQARAAAACAASAAAYAAAAZGJhdGQAAAAA/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/wD/AP8A/w=="></audio><div class="cfg-ov" id="configOverlay"><div class="cfg-panel"><div class="cfg-head"><h3>Config / Debug Waveshare</h3><button class="cfg-close" id="configClose">Fermer</button></div><div class="cfg-grid"><div class="cfg-box"><h4>Affichage</h4><div class="cfg-row"><label>Mode preview</label><select id="settingPreview"><option value="off">Off</option><option value="on">Waveshare 800x480</option></select></div><div class="cfg-row"><label>Scale UI</label><select id="settingScale"><option value="1">100%</option><option value="1.1">110%</option><option value="1.2">120%</option></select></div><div class="cfg-row"><label>Mode écran</label><select id="settingLayout"><option value="standard">Standard</option><option value="tvwall">TV wall</option></select></div><div class="cfg-row"><label>Anti burn-in</label><select id="settingBurnin"><option value="on">On</option><option value="off">Off</option></select></div></div><div class="cfg-box"><h4>Données live</h4><div class="cfg-row"><label>Refresh live</label><select id="settingRefresh"><option value="5">5s</option><option value="10">10s</option><option value="15">15s</option><option value="30">30s</option></select></div><div class="cfg-row"><label>Calendrier</label><select id="settingCalDays"><option value="3">3 jours</option><option value="7">7 jours</option><option value="14">14 jours</option></select></div><div class="cfg-row"><label>Résultats</label><select id="settingResDays"><option value="2">2 jours</option><option value="3">3 jours</option><option value="5">5 jours</option></select></div><div class="cfg-row"><label>Détails matchs</label><select id="settingDetails"><option value="full">Complet</option><option value="compact">Compact</option></select></div><div class="cfg-row"><label>Animations</label><select id="settingAnim"><option value="on">On</option><option value="off">Off</option></select></div><div class="cfg-row"><label>Équipe favorite</label><input id="settingFavorite" type="text" placeholder="Marseille, OM..." /></div><div class="cfg-row"><label>Mode démo</label><select id="settingDemo"><option value="off">Off</option><option value="on">On</option></select></div></div><div class="cfg-box"><h4>Debug hardware</h4><div class="cfg-note">Écran : Waveshare 7” 800×480<br>Board : ESP32-S3<br>Source : ESPN API<br>Dernier sync : <span id="lastSync">--:--:--</span></div></div><div class="cfg-box"><h4>Actions</h4><div class="cfg-actions"><button class="cfg-btn" id="saveConfig">Sauver</button><button class="cfg-btn" id="applyConfig">Appliquer</button></div><div class="cfg-note" style="margin-top:10px">Tests mode démo</div><div class="cfg-actions"><button class="cfg-btn" data-demo="live">Live</button><button class="cfg-btn" data-demo="goal">But</button><button class="cfg-btn" data-demo="red">Rouge</button><button class="cfg-btn" data-demo="soon">Bientôt</button><button class="cfg-btn" data-demo="focus">Focus</button><button class="cfg-btn" data-demo="empty">Écran veille</button></div></div></div></div></div>
 <div class="focus" id="focusOverlay" onclick="closeFocusMatch()"></div><div class="goal-alert" id="goalAlert"></div><div class="toast" id="toast"></div>
@@ -143,7 +183,7 @@ function renderLivePage(){const p=$('page0');renderStrip();if(!liveEvents.length
 async function loadLive(silent=false){if(SETTINGS.demo==='on'){demo('live');renderLivePage();return}if(!silent)$('page0').innerHTML=`<div class="loading"><div class="spinner"></div>Chargement...</div>`;try{const res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});let matches=[...seen.values()],det=matches.filter(m=>isLiveStatus(m.status)).slice(0,12);const sums=await Promise.allSettled(det.map(m=>fetchSummary(m.leagueSlug,m.id)));sums.forEach((r,i)=>{if(r.status!=='fulfilled'||!r.value)return;const s=r.value,ev=s.header||s.event||{},c=comps(ev),idx=matches.findIndex(m=>m.id===det[i].id);if(idx<0)return;matches[idx]={...matches[idx],homeScore:c.home.score??matches[idx].homeScore,awayScore:c.away.score??matches[idx].awayScore,homeTeamId:c.home.team?.id||matches[idx].homeTeamId,awayTeamId:c.away.team?.id||matches[idx].awayTeamId,status:ev.status||matches[idx].status,details:detailsFromSummary(s)}});liveEvents=matches.filter(m=>isLiveStatus(m.status));finishedEvents=matches.filter(m=>isDoneStatus(m.status)&&isRecent(m.date));$('liveDot').classList.toggle('hide',liveEvents.length===0);if(!liveEvents.length)nextMatch=await getNextMatch();detectGoal();renderLivePage();startLiveCountdowns();retryCount=0;}catch(e){if(!silent)$('page0').innerHTML=`<div class="err">Erreur chargement<br><small>${esc(e.message)}</small></div>`;scheduleRetry();}doneRefreshBar();renderStrip();}async function getNextMatch(){try{const s=new Date(),e=new Date();e.setDate(s.getDate()+7);const q=`?dates=${dateKey(s)}-${dateKey(e)}`,res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug,q).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});return[...seen.values()].filter(m=>m.status?.type?.state==='pre').sort((a,b)=>new Date(a.date)-new Date(b.date))[0]||null}catch(e){return null}}
 async function loadCalendar(){if(SETTINGS.demo==='on'){demo('live');renderCalPage();return}$('page1').innerHTML=`<div class="loading"><div class="spinner"></div>Chargement du calendrier...</div>`;try{const s=new Date(),e=new Date();e.setDate(s.getDate()+Number(SETTINGS.calDays||3));const q=`?dates=${dateKey(s)}-${dateKey(e)}`,res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug,q).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(ev?.status?.type?.state!=='pre')return;if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});calendarEvents=[...seen.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));calendarLoaded=true;renderCalPage()}catch(e){$('page1').innerHTML=`<div class="err">Erreur calendrier<br><small>${esc(e.message)}</small></div>`}}async function loadResults(){if(SETTINGS.demo==='on'){demo('live');renderResultsPage();return}if(resultsLoaded){renderResultsPage();return}$('page2').innerHTML=`<div class="loading"><div class="spinner"></div>Chargement des résultats...</div>`;try{const now=new Date(),dates=Array.from({length:Number(SETTINGS.resDays||2)},(_,i)=>{const d=new Date(now);d.setDate(now.getDate()-i);return dateKey(d)}),req=dates.flatMap(d=>LEAGUES.map(l=>fetchEspn(l.slug,`?dates=${d}`).then(data=>({l,data})).catch(()=>null))),res=await Promise.all(req),seen=new Map();res.forEach(r=>{if(!r)return;(r.data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,r.l.name,r.l.slug))})});resultEvents=[...seen.values()].filter(m=>isDoneStatus(m.status)).sort((a,b)=>new Date(b.date)-new Date(a.date));resultsLoaded=true;renderResultsPage()}catch(e){$('page2').innerHTML=`<div class="err">Erreur résultats<br><small>${esc(e.message)}</small></div>`}}
 async function loadOm(){const p=$('page4');p.innerHTML=`<div class="loading"><div class="spinner"></div>Chargement OM...</div>`;const isOmName=(n='')=>{const v=String(n).toLowerCase();return v.includes('marseille')||v==='om'||v.includes('olympique de marseille')};if(SETTINGS.demo==='on'){demo('live');omLoaded=true;renderOmPage();return}try{const s=new Date();s.setDate(s.getDate()-14);const e=new Date();e.setDate(e.getDate()+45);const q=`?dates=${dateKey(s)}-${dateKey(e)}`,res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug,q).then(data=>({l,data}))));const seen=new Map();res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{const c=comps(ev),hn=c.home.team?.displayName||c.home.team?.shortDisplayName||c.home.team?.name||'',an=c.away.team?.displayName||c.away.team?.shortDisplayName||c.away.team?.name||'';if(!isOmName(hn)&&!isOmName(an))return;if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});const oms=[...seen.values()].sort((a,b)=>new Date(a.date)-new Date(b.date));const liveOm=liveEvents.find(isOmMatch)||oms.find(m=>isLiveStatus(m.status));const nextOm=oms.filter(m=>m.status?.type?.state==='pre').sort((a,b)=>new Date(a.date)-new Date(b.date))[0]||null;let lastOm=oms.filter(m=>isDoneStatus(m.status)).sort((a,b)=>new Date(b.date)-new Date(a.date))[0]||null;if(lastOm){const s=await fetchSummary(lastOm.leagueSlug,lastOm.id);if(s){const ev=s.header||s.event||{},c=comps(ev);lastOm={...lastOm,homeScore:c.home.score??lastOm.homeScore,awayScore:c.away.score??lastOm.awayScore,homeTeamId:c.home.team?.id||lastOm.homeTeamId,awayTeamId:c.away.team?.id||lastOm.awayTeamId,status:ev.status||lastOm.status,details:detailsFromSummary(s)}}}let h=`<div class="section">Allez l'OM 💙</div>`;if(liveOm)h+=`<div class="section">En direct</div>${renderMatch(liveOm)}`;if(nextOm)h+=`<div class="section">Prochain match</div>${renderCal(nextOm)}`;if(lastOm)h+=`<div class="section">Dernier résultat</div>${renderMatch(lastOm)}`;if(!liveOm&&!nextOm&&!lastOm)h+=`<div class="empty-state"><div class="empty-card"><div class="empty-inner"><div class="mini-title">Aucun match OM trouvé</div><div class="mini-text">ESPN ne renvoie aucun match de Marseille sur la période recherchée.</div></div></div></div>`;p.innerHTML=h;omLoaded=true}catch(e){p.innerHTML=`<div class="err">Erreur OM<br><small>${esc(e.message)}</small></div>`}}
-function detectGoal(){liveEvents.forEach(m=>{const k=`${m.homeScore??0}-${m.awayScore??0}`,old=alertScoreMemory.get(m.id);alertScoreMemory.set(m.id,k);if(old&&old!==k&&Date.now()-lastGoalAlertTime>1200){lastGoalAlertTime=Date.now();const omGoal=isOmMatch(m);playGoalSound(omGoal);goalAlert(`BUT${omGoal?' 💙':''} · ${m.homeName} ${m.homeScore??0}-${m.awayScore??0} ${m.awayName}`)}})}function goTab(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('on',i===j));if(i===1&&!calendarLoaded)loadCalendar();if(i===2)loadResults();if(i===3)loadStandings();if(i===4&&!omLoaded)loadOm()}async function manualRefresh(){const b=$('refreshBtn');b.classList.add('spin');const i=[...document.querySelectorAll('.page')].findIndex(p=>p.classList.contains('on'));if(i===0)await loadLive(false);if(i===1){calendarLoaded=false;await loadCalendar()}if(i===2){resultsLoaded=false;resultEvents=[];await loadResults()}if(i===3){standingsLoaded=false;standingsCache.clear();await loadStandings()}if(i===4){omLoaded=false;await loadOm()}updated();setTimeout(()=>b.classList.remove('spin'),500)}function clock(){const n=new Date();$('clock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}function updated(){const n=new Date();$('updatedAt').innerHTML=`<span style="color:var(--blue2)">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}function poll(){clearTimeout(pollTimer);const base=Number(SETTINGS.refreshSec||15)*1000;const h=new Date().getHours();const isNight=h>=0&&h<7;let delay;if(liveEvents.length){delay=base;}else if(isNight){delay=120000;}else{delay=Math.max(base,60000);}pollTimer=setTimeout(async()=>{startRefreshBar(delay);await loadLive(true);updated();poll()},delay)}
+function detectGoal(){liveEvents.forEach(m=>{const k=`${m.homeScore??0}-${m.awayScore??0}`,old=alertScoreMemory.get(m.id);alertScoreMemory.set(m.id,k);if(old&&old!==k&&Date.now()-lastGoalAlertTime>1200){lastGoalAlertTime=Date.now();const omGoal=isOmMatch(m);playGoalSound(omGoal);goalAlert(`BUT${omGoal?' 💙':''} · ${m.homeName} ${m.homeScore??0}-${m.awayScore??0} ${m.awayName}`)}})}function goTab(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('on',i===j));document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('on',i===j));if(i===1&&!calendarLoaded)loadCalendar();if(i===2)loadResults();if(i===3)loadStandings();if(i===4&&!omLoaded)loadOm();if(i===5&&!wcLoaded)loadWorldCup()}async function manualRefresh(){const b=$('refreshBtn');b.classList.add('spin');const i=[...document.querySelectorAll('.page')].findIndex(p=>p.classList.contains('on'));if(i===0)await loadLive(false);if(i===1){calendarLoaded=false;await loadCalendar()}if(i===2){resultsLoaded=false;resultEvents=[];await loadResults()}if(i===3){standingsLoaded=false;standingsCache.clear();await loadStandings()}if(i===4){omLoaded=false;await loadOm()}updated();setTimeout(()=>b.classList.remove('spin'),500)}function clock(){const n=new Date();$('clock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}function updated(){const n=new Date();$('updatedAt').innerHTML=`<span style="color:var(--blue2)">↻</span> MàJ ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`}function poll(){clearTimeout(pollTimer);const base=Number(SETTINGS.refreshSec||15)*1000;const h=new Date().getHours();const isNight=h>=0&&h<7;let delay;if(liveEvents.length){delay=base;}else if(isNight){delay=120000;}else{delay=Math.max(base,60000);}pollTimer=setTimeout(async()=>{startRefreshBar(delay);await loadLive(true);updated();poll()},delay)}
 function openFocusMatch(id){const m=[...liveEvents,...calendarEvents,...resultEvents,...finishedEvents,nextMatch].filter(Boolean).find(x=>String(x.id)===String(id)),ov=$('focusOverlay');if(!m||!ov)return;const st=m.status?.type?.state||'',sc=st==='pre'?timeMatch(m):`${m.homeScore??0}–${m.awayScore??0}`;ov.innerHTML=`<div class="focus-card" onclick="event.stopPropagation()"><button class="focus-close" onclick="closeFocusMatch(event)">Fermer</button><div class="focus-comp">${esc(m.leagueName)}${isPinned(m)?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="focus-teams"><div class="focus-team">${crest(m.homeLogo,74,'focus-logo')}<div class="focus-name">${esc(m.homeName)}</div></div><div class="focus-score">${esc(sc)}</div><div class="focus-team">${crest(m.awayLogo,74,'focus-logo')}<div class="focus-name">${esc(m.awayName)}</div></div></div><div class="focus-min">${esc(dayLabel(m.date))} · ${esc(timeLabel(m.date))} · ${esc(timeMatch(m))}</div>${scorers(m)}${reds(m)}</div>`;ov.classList.add('open')}function closeFocusMatch(e){if(e)e.stopPropagation();$('focusOverlay').classList.remove('open')}function toast(msg,d=2400){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._timer);t._timer=setTimeout(()=>t.classList.remove('show'),d)}function goalAlert(msg){const a=$('goalAlert');a.textContent=msg;a.classList.add('show');toast(msg,2600);clearTimeout(a._timer);a._timer=setTimeout(()=>a.classList.remove('show'),2600)}function loadSettings(){try{SETTINGS={...SETTINGS,...JSON.parse(localStorage.getItem(SETTINGS_KEY)||'{}')}}catch(e){}}function saveSettings(){localStorage.setItem(SETTINGS_KEY,JSON.stringify(SETTINGS))}
 function applyVisual(){const prev=SETTINGS.preview==='on';document.documentElement.style.fontSize=`${16*Number(SETTINGS.scale||1)}px`;document.body.classList.toggle('preview-active',prev);document.body.classList.toggle('compact-mode',SETTINGS.details==='compact');document.body.classList.toggle('no-anim',SETTINGS.anim==='off');document.body.classList.toggle('burnin-on',SETTINGS.burnin==='on'&&prev);const old=$('previewWrap');if(old){const screen=old.querySelector('.preview-screen');if(screen){while(screen.firstChild)document.body.insertBefore(screen.firstChild,$('configOpen'))}old.remove()}if(!prev)return;const lock=new Set(['configOpen','configOverlay','goalAlert','focusOverlay','toast']),nodes=[...document.body.children].filter(n=>!lock.has(n.id)),w=document.createElement('div'),f=document.createElement('div'),s=document.createElement('div');w.id='previewWrap';w.className='preview-wrap';f.className='preview-frame';s.className='preview-screen';nodes.forEach(n=>s.appendChild(n));f.appendChild(s);w.appendChild(f);document.body.insertBefore(w,$('configOpen'))}function syncForm(){$('settingPreview').value=SETTINGS.preview;$('settingScale').value=String(SETTINGS.scale);$('settingLayout').value=SETTINGS.layout;$('settingBurnin').value=SETTINGS.burnin;$('settingRefresh').value=String(SETTINGS.refreshSec);$('settingCalDays').value=String(SETTINGS.calDays);$('settingResDays').value=String(SETTINGS.resDays);$('settingDetails').value=SETTINGS.details;$('settingAnim').value=SETTINGS.anim;$('settingFavorite').value=SETTINGS.favorite;$('settingDemo').value=SETTINGS.demo}function readForm(){SETTINGS.preview=$('settingPreview').value;SETTINGS.scale=Number($('settingScale').value);SETTINGS.layout=$('settingLayout').value;SETTINGS.burnin=$('settingBurnin').value;SETTINGS.refreshSec=Number($('settingRefresh').value);SETTINGS.calDays=Number($('settingCalDays').value);SETTINGS.resDays=Number($('settingResDays').value);SETTINGS.details=$('settingDetails').value;SETTINGS.anim=$('settingAnim').value;SETTINGS.favorite=$('settingFavorite').value.trim()||'Marseille';SETTINGS.demo=$('settingDemo').value}function bindConfig(){$('configOpen').onclick=()=>$('configOverlay').classList.add('open');$('configClose').onclick=()=>$('configOverlay').classList.remove('open');$('configOverlay').onclick=e=>{if(e.target===$('configOverlay'))$('configOverlay').classList.remove('open')};$('saveConfig').onclick=()=>{readForm();saveSettings();applyVisual();stamp();poll();$('configOverlay').classList.remove('open')};$('applyConfig').onclick=async()=>{readForm();applyVisual();stamp();calendarLoaded=false;resultsLoaded=false;omLoaded=false;standingsLoaded=false;standingsCache=new Map();await loadLive(false);poll()};document.querySelectorAll('[data-demo]').forEach(b=>b.onclick=()=>runDemo(b.dataset.demo))}function stamp(){const e=$('lastSync');if(e)e.textContent=new Date().toLocaleTimeString('fr-FR')}
 function demo(type='live'){const now=new Date(),soon=new Date(now.getTime()+8*60000),later=new Date(now.getTime()+26*60000),past=new Date(now.getTime()-3*3600000),details=[{scoringPlay:true,clock:{displayValue:"12'"},team:{id:'om'},athletesInvolved:[{displayName:'Aubameyang'}]},{scoringPlay:true,clock:{displayValue:"58'"},team:{id:'psg'},athletesInvolved:[{displayName:'Dembélé'}]},{scoringPlay:true,clock:{displayValue:"67'"},team:{id:'om'},athletesInvolved:[{displayName:'Greenwood'}]}],main={id:'demo-om-psg',leagueName:'Démo Ligue 1',leagueSlug:'fra.1',date:now.toISOString(),homeName:'Marseille',awayName:'Paris SG',homeLogo:'',awayLogo:'',homeScore:2,awayScore:1,homeTeamId:'om',awayTeamId:'psg',status:{type:{state:'in',shortDetail:"67'",detail:"67'"}},details};liveEvents=[main,{id:'demo-mu-bre',leagueName:'Démo Premier League',leagueSlug:'eng.1',date:now.toISOString(),homeName:'Man United',awayName:'Brentford',homeLogo:'',awayLogo:'',homeScore:1,awayScore:1,homeTeamId:'mu',awayTeamId:'bre',status:{type:{state:'in',shortDetail:"72'"}},details:[]}];calendarEvents=[{id:'demo-next',leagueName:'Démo Champions League',leagueSlug:'uefa.champions',date:later.toISOString(),homeName:'Marseille',awayName:'Real Madrid',homeLogo:'',awayLogo:'',homeScore:0,awayScore:0,homeTeamId:'om',awayTeamId:'real',status:{type:{state:'pre'}},details:[]}];resultEvents=[{id:'demo-result',leagueName:'Démo Ligue 1',leagueSlug:'fra.1',date:past.toISOString(),homeName:'Lyon',awayName:'Marseille',homeLogo:'',awayLogo:'',homeScore:0,awayScore:3,homeTeamId:'lyon',awayTeamId:'om',status:{type:{state:'post',completed:true}},details:[]}];nextMatch=calendarEvents[0];calendarLoaded=true;resultsLoaded=true;if(type==='goal'){liveEvents[0]={...main,homeScore:3,status:{type:{state:'in',shortDetail:"89'"}},details:[...details,{scoringPlay:true,clock:{displayValue:"89'"},team:{id:'om'},athletesInvolved:[{displayName:'Harit'}]}]};goalAlert('BUT · Marseille 3-1 Paris SG')}if(type==='red'){liveEvents[0]={...main,details:[...details,{redCard:true,clock:{displayValue:"76'"},team:{id:'psg'},athletesInvolved:[{displayName:'Hakimi'}]}]};toast('Test carton rouge 🟥')}if(type==='soon'){liveEvents=[];calendarEvents=[{...calendarEvents[0],date:soon.toISOString()}];nextMatch=calendarEvents[0];toast('Test match dans 8 minutes')}if(type==='empty'){liveEvents=[];calendarEvents=[];resultEvents=[];nextMatch=null;toast('Test écran veille')}$('liveDot').classList.toggle('hide',liveEvents.length===0);api('Mode démo')}function runDemo(type){SETTINGS.demo='on';$('settingDemo').value='on';demo(type);renderLivePage();if($('page1').classList.contains('on'))renderCalPage();if($('page2').classList.contains('on'))renderResultsPage();if($('page3').classList.contains('on'))renderOmPage();if(type==='focus')setTimeout(()=>openFocusMatch('demo-om-psg'),80)}
@@ -349,7 +389,220 @@ async function loadStandings(forceSlug){
   p.innerHTML=`<div class="standings-league-sel">${pills2}</div><div class="standings-wrap">${table}</div>`;
   standingsLoaded=true;
 }
-window.goTab=goTab;window.manualRefresh=manualRefresh;window.setLiveFilter=setLiveFilter;window.setCalendarFilter=setCalendarFilter;window.openFocusMatch=openFocusMatch;window.closeFocusMatch=closeFocusMatch;window.toggleMatchPin=toggleMatchPin;clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();applyVisual();stamp();
+// ── COUPE DU MONDE ─────────────────────────────────────────────────────────
+let wcLoaded=false,wcMode='groupes',wcData=null;
+
+async function loadWorldCup(){
+  const p=$('page5');
+  p.innerHTML='<div class="loading"><div class="spinner"></div>Chargement Coupe du Monde...</div>';
+  try{
+    const season=2026;
+    const [groupsResp,koResp,scoresResp]=await Promise.allSettled([
+      fetch(`https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings?season=${season}`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():null),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():null),
+      fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():null),
+    ]);
+    wcData={
+      groups:groupsResp.status==='fulfilled'?groupsResp.value:null,
+      ko:koResp.status==='fulfilled'?koResp.value:null,
+    };
+    wcLoaded=true;
+    renderWorldCupPage();
+  }catch(e){
+    p.innerHTML=`<div class="err">Erreur Coupe du Monde<br><small>${esc(e.message)}</small></div>`;
+  }
+}
+
+function renderWorldCupPage(){
+  const p=$('page5');
+  const modeBtns=`<div class="wc-mode-btns">
+    <button class="wc-mode-btn${wcMode==='groupes'?' on':''}" onclick="setWcMode('groupes')">Phase de groupes</button>
+    <button class="wc-mode-btn${wcMode==='ko'?' on':''}" onclick="setWcMode('ko')">Élimination directe</button>
+  </div>`;
+
+  if(wcMode==='groupes'){
+    p.innerHTML=modeBtns+renderWcGroups();
+  } else {
+    p.innerHTML=modeBtns+renderWcKO();
+  }
+}
+
+function setWcMode(mode){wcMode=mode;renderWorldCupPage();}
+window.setWcMode=setWcMode;
+window.loadWcGroup=function(){};
+
+function renderWcGroups(){
+  const data=wcData?.groups;
+  if(!data)return'<div class="err">Données de groupes indisponibles</div>';
+
+  // Essai multi-structure ESPN standings
+  let groups=[];
+
+  // Structure avec children (groupes nommés A,B,C...)
+  if(data.children?.length){
+    data.children.forEach(child=>{
+      const name=child.name||child.abbreviation||'Groupe';
+      let entries=[];
+      if(child.standings?.entries?.length)entries=child.standings.entries;
+      else if(child.children?.[0]?.standings?.entries?.length)entries=child.children[0].standings.entries;
+      if(entries.length)groups.push({name,entries});
+    });
+  }
+  // Structure flat standings
+  if(!groups.length&&data.standings?.[0]?.entries?.length){
+    groups=[{name:'Classement',entries:data.standings[0].entries}];
+  }
+  // Structure groups directement
+  if(!groups.length&&data.groups?.length){
+    data.groups.forEach(g=>{
+      if(g.standings?.entries?.length)groups.push({name:g.name||'Groupe',entries:g.standings.entries});
+    });
+  }
+
+  if(!groups.length){
+    // Fallback : essayer de récupérer depuis scoreboard ESPN les matchs récents groupés
+    return renderWcGroupsFallback();
+  }
+
+  const cards=groups.map(g=>renderWcGroupCard(g.name,g.entries)).join('');
+  return`<div class="wc-groups">${cards}</div>`;
+}
+
+function renderWcGroupCard(name,entries){
+  const favNeedle_=favNeedle();
+  let rows='';
+  entries.forEach((e,i)=>{
+    const rank=e.stats?.find(s=>s.name==='rank')?.value||(i+1);
+    const team=e.team||{};
+    const tname=team.shortDisplayName||team.displayName||team.name||'?';
+    const logo=team.logos?.[0]?.href||'';
+    const pts=e.stats?.find(s=>['points','pts'].includes(s.name))?.value??'—';
+    const played=e.stats?.find(s=>['gamesPlayed','played','gp'].includes(s.name))?.value??'—';
+    const gf=e.stats?.find(s=>['pointsFor','goalsFor','gf'].includes(s.name))?.value??'—';
+    const ga=e.stats?.find(s=>['pointsAgainst','goalsAgainst','ga'].includes(s.name))?.value??'—';
+    const diff=e.stats?.find(s=>['pointDifferential','goalDifference','diff'].includes(s.name))?.value??'—';
+    const isFav=favNeedle_&&tname.toLowerCase().includes(favNeedle_);
+    const qualified=rank<=2;
+    const logoHtml=logo?`<img src="${esc(logo)}" width="16" height="16" loading="lazy" style="width:16px;height:16px;object-fit:contain" onerror="this.style.display='none'">`:`<span class="ko-flag-e"></span>`;
+    rows+=`<tr class="wc-group-row${qualified?' q':''}">
+      <td class="std-rank" style="width:20px">${rank}</td>
+      <td class="left"><span style="display:flex;align-items:center;gap:4px">${logoHtml}<span class="wc-team-name">${esc(tname)}</span></span></td>
+      <td>${played}</td>
+      <td style="color:var(--blue);font-weight:900">${pts}</td>
+      <td>${diff!=='—'?(diff>0?'+'+diff:diff):diff}</td>
+      <td style="color:var(--muted);font-size:10px">${gf}:${ga}</td>
+    </tr>`;
+  });
+  return`<div class="wc-group-card">
+    <div class="wc-group-title">Groupe ${esc(name)}</div>
+    <table class="wc-group-table">
+      <thead><tr>
+        <th class="left" colspan="2">Équipe</th>
+        <th title="Matchs joués">J</th>
+        <th title="Points">Pts</th>
+        <th title="Diff">+/-</th>
+        <th title="Buts">B</th>
+      </tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+  </div>`;
+}
+
+function renderWcGroupsFallback(){
+  // Si l'API standings ne répond pas, on affiche les matchs du scoreboard groupés
+  const events=(wcData?.ko?.events||[]);
+  if(!events.length)return'<div class="empty">📋 Données de groupes non disponibles pour le moment</div>';
+  // Grouper par round
+  const grouped={};
+  events.forEach(ev=>{
+    const note=ev.notes?.[0]?.headline||ev.season?.type?.abbreviation||'Groupe';
+    const key=note.includes('Group')||note.includes('Groupe')||/groupe\s+[A-H]/i.test(note)?note:'Phase de groupes';
+    (grouped[key]||(grouped[key]=[])).push(ev);
+  });
+  const isGroup=Object.keys(grouped).some(k=>k!=='Phase de groupes'&&!/final|semi|quart|huitième/i.test(k));
+  if(!isGroup)return'<div class="empty">📋 Phase de groupes non commencée ou données indisponibles</div>';
+  return Object.entries(grouped).map(([k,evs])=>`<div class="section">${esc(k)}</div>${evs.map(ev=>{const m=norm(ev,'Coupe du Monde','fifa.world');return renderMatch(m)}).join('')}`).join('');
+}
+
+function renderWcKO(){
+  const events=(wcData?.ko?.events||[]);
+  if(!events.length)return'<div class="empty">📋 Le tableau éliminatoire n\'est pas encore disponible</div>';
+
+  // Classifier les matchs par phase
+  const rounds={
+    'Huitièmes':[],
+    'Quarts de finale':[],
+    'Demi-finales':[],
+    'Finale':[],
+    'Petite finale':[],
+  };
+  const roundMap={
+    'round of 32':'Huitièmes','huitième':'Huitièmes','round of 16':'Huitièmes','16':'Huitièmes',
+    'quarter':'Quarts de finale','quart':'Quarts de finale',
+    'semi':'Demi-finales','demi':'Demi-finales',
+    'third':'Petite finale','3rd':'Petite finale','petite finale':'Petite finale',
+    'final':'Finale','finale':'Finale',
+  };
+  const other=[];
+
+  events.forEach(ev=>{
+    const note=String(ev.notes?.[0]?.headline||ev.season?.type?.abbreviation||ev.name||'').toLowerCase();
+    let placed=false;
+    for(const [key,label] of Object.entries(roundMap)){
+      if(note.includes(key)){
+        if(rounds[label])rounds[label].push(ev);
+        placed=true;break;
+      }
+    }
+    if(!placed)other.push(ev);
+  });
+
+  const hasKO=Object.values(rounds).some(r=>r.length>0);
+  if(!hasKO){
+    // Fallback : on affiche tout sous forme de cards
+    return`<div class="section">Matchs à élimination directe</div>${other.map(ev=>{const m=norm(ev,'Coupe du Monde','fifa.world');return renderMatch(m)}).join('')}`;
+  }
+
+  // Bracket visuel
+  const roundOrder=['Huitièmes','Quarts de finale','Demi-finales','Petite finale','Finale'];
+  let html='<div class="ko-wrap"><div class="ko-bracket">';
+  roundOrder.forEach(rName=>{
+    const evs=rounds[rName];
+    if(!evs.length)return;
+    html+=`<div class="ko-round"><div class="ko-round-title">${esc(rName)}</div><div class="ko-matches">`;
+    evs.forEach(ev=>{
+      const c=comps(ev),home=c.home,away=c.away;
+      const hn=home.team?.shortDisplayName||home.team?.name||'À définir';
+      const an=away.team?.shortDisplayName||away.team?.name||'À définir';
+      const hs=home.score,as=away.score;
+      const st=ev.status?.type?.state||'pre';
+      const live=st==='in';
+      const done=st==='post';
+      const hl=logo=>logo?`<img src="${esc(logo)}" width="16" height="16" loading="lazy" style="width:16px;height:16px;object-fit:contain" onerror="this.style.display='none'">`:`<span class="ko-flag-e"></span>`;
+      const homeW=done&&Number(hs)>Number(as);
+      const awayW=done&&Number(as)>Number(hs);
+      const tbd=hn==='À définir'||hn==='TBD';
+      const tbd2=an==='À définir'||an==='TBD';
+      html+=`<div class="ko-match${live?' live':''}">
+        <div class="ko-team${homeW?' winner':''}">
+          ${hl(home.team?.logo||'')}
+          <span class="ko-team-name${tbd?' ko-tbd':''}">${esc(hn)}</span>
+          <span class="ko-score">${(done||live)&&hs!==undefined?esc(String(hs)):''}</span>
+        </div>
+        <div class="ko-team${awayW?' winner':''}">
+          ${hl(away.team?.logo||'')}
+          <span class="ko-team-name${tbd2?' ko-tbd':''}">${esc(an)}</span>
+          <span class="ko-score">${(done||live)&&as!==undefined?esc(String(as)):''}</span>
+        </div>
+      </div>`;
+    });
+    html+='</div></div>';
+  });
+  html+='</div></div>';
+  return html;
+}
+
+window.goTab=goTab;window.loadWorldCup=loadWorldCup;window.loadWcGroup=loadWcGroup;window.setWcMode=setWcMode;window.manualRefresh=manualRefresh;window.setLiveFilter=setLiveFilter;window.setCalendarFilter=setCalendarFilter;window.openFocusMatch=openFocusMatch;window.closeFocusMatch=closeFocusMatch;window.toggleMatchPin=toggleMatchPin;clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();applyVisual();stamp();
 setOnline(navigator.onLine);loadLive(false).then(()=>{updated();poll()});
 </script>
 </body>
