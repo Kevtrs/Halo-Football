@@ -152,7 +152,7 @@ body.preview-active .next-day,body.preview-active .next-league{font-size:9px;mar
 <script>
 'use strict';
 const BASE_URL='https://site.api.espn.com/apis/site/v2/sports/soccer',SETTINGS_KEY='veher_live_settings_pro_v1',PINNED_KEY='veher_live_pinned_matches_v1';
-const CACHE_LIVE_KEY='veher_cache_live_v2',CACHE_CAL_KEY='veher_cache_cal_v2',CACHE_RES_KEY='veher_cache_res_v2';
+const CACHE_LIVE_KEY='veher_cache_live_v2',CACHE_CAL_KEY='veher_cache_cal_v2',CACHE_RES_KEY='veher_cache_res_v2',CACHE_WC_KEY='veher_cache_wc_v2',CACHE_STD_PREFIX='veher_std_v2_';
 function readCache(key){try{const r=localStorage.getItem(key);if(!r)return null;const p=JSON.parse(r);return{data:p.data,age:Date.now()-p.ts}}catch(e){return null}}
 function writeCache(key,data){try{localStorage.setItem(key,JSON.stringify({data,ts:Date.now()}))}catch(e){}}
 function skeletonCards(n=2){const c=`<div class="skel-card"><div class="skel-head"><div class="skel-line" style="width:110px;height:11px"></div><div class="skel-line" style="width:60px;height:20px;border-radius:999px"></div></div><div class="skel-teams"><div class="skel-team"><div class="skel-line" style="width:32px;height:32px;border-radius:50%;flex:0 0 32px"></div><div class="skel-line" style="width:72px;height:14px"></div></div><div class="skel-line" style="width:82px;height:44px;border-radius:14px"></div><div class="skel-team" style="flex-direction:row-reverse"><div class="skel-line" style="width:32px;height:32px;border-radius:50%;flex:0 0 32px"></div><div class="skel-line" style="width:72px;height:14px"></div></div></div></div>`;return Array(n).fill(c).join('')}
@@ -160,7 +160,7 @@ function skeletonCalCards(n=3){const c=`<div class="skel-cal"><div class="skel-l
 const LEAGUES=[{slug:'fra.1',name:'Ligue 1'},{slug:'eng.1',name:'Premier League'},{slug:'esp.1',name:'La Liga'},{slug:'ger.1',name:'Bundesliga'},{slug:'ita.1',name:'Serie A'},{slug:'uefa.champions',name:'Champions League'},{slug:'uefa.europa',name:'Europa League'},{slug:'fra.cup',name:'Coupe de France'},{slug:'fifa.world',name:'Coupe du Monde'}];
 let SETTINGS={preview:'off',scale:1,refreshSec:15,calDays:3,resDays:2,details:'full',anim:'on',favorite:'Marseille',layout:'standard',burnin:'on',demo:'off'};
 let liveEvents=[],finishedEvents=[],calendarEvents=[],resultEvents=[],nextMatch=null,activeLiveFilter='all',activeCalFilter='all',calendarLoaded=false,resultsLoaded=false,omLoaded=false,pollTimer=null,scoreMemory=new Map(),alertScoreMemory=new Map(),lastGoalAlertTime=0,pinnedMatchIds=new Set();
-let retryCount=0,countdownTimer=null,refreshBarTimer=null,isOnline=navigator.onLine;
+let retryCount=0,countdownTimer=null,refreshBarTimer=null,isOnline=navigator.onLine,currentLiveIds=[];
 const $=id=>document.getElementById(id);function esc(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function escJs(v){return String(v??'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}function api(t,ok=true){const e=$('apiStatus');if(e){e.textContent=t;e.style.color=ok?'var(--blue2)':'#fca5a5'}}
 async function fetchEspn(slug,params=''){
   const url=`${BASE_URL}/${slug}/scoreboard${params}`;
@@ -182,7 +182,30 @@ function detailsFromSummary(s){const out=[...(s?.header?.competitions?.[0]?.deta
 function favNeedle(){return String(SETTINGS.favorite||'Marseille').toLowerCase().trim()}function isFavoriteMatch(m){const f=favNeedle(),n=`${m?.homeName||''} ${m?.awayName||''}`.toLowerCase();if(!f)return false;if(n.includes(f))return true;if(f==='om'&&n.includes('marseille'))return true;if(f==='marseille'&&n.includes('om'))return true;return false}function isOmMatch(m){return /marseille|\bom\b/i.test(`${m?.homeName||''} ${m?.awayName||''}`)}function isLiveMatch(m){return m?.status?.type?.state==='in'||isLiveStatus(m?.status)}function isAutoStar(m){return isLiveMatch(m)&&isOmMatch(m)}function isPinned(m){return isLiveMatch(m)&&(pinnedMatchIds.has(String(m?.id))||isAutoStar(m))}function sortMatches(list){return[...(list||[])].sort((a,b)=>{const p=Number(isPinned(b))-Number(isPinned(a));if(p)return p;const f=Number(isFavoriteMatch(b))-Number(isFavoriteMatch(a));if(f)return f;return new Date(a.date)-new Date(b.date)})}function loadPins(){try{pinnedMatchIds=new Set(JSON.parse(localStorage.getItem(PINNED_KEY)||'[]').map(String))}catch(e){pinnedMatchIds=new Set()}}function savePins(){localStorage.setItem(PINNED_KEY,JSON.stringify([...pinnedMatchIds]))}function currentPage(){if($('page0').classList.contains('on'))renderLivePage();if($('page1').classList.contains('on'))renderCalPage();if($('page2').classList.contains('on'))renderResultsPage();if($('page4').classList.contains('on'))renderOmPage()}function toggleMatchPin(id,e){if(e)e.stopPropagation();id=String(id);const m=[...liveEvents,...calendarEvents,...resultEvents,...finishedEvents,nextMatch].filter(Boolean).find(x=>String(x.id)===id);if(!m||!isLiveMatch(m))return;if(isAutoStar(m)){toast('L’OM est suivi automatiquement');return}if(pinnedMatchIds.has(id))pinnedMatchIds.delete(id);else pinnedMatchIds.add(id);savePins();currentPage();renderStrip()}function pinBtn(m){if(!isLiveMatch(m))return'';const active=isPinned(m),auto=isAutoStar(m),label=auto?'OM suivi automatiquement':active?'Ne plus suivre ce match':'Suivre ce match';return`<button class="pin-btn${active?' on':''}" title="${label}" aria-label="${label}" onclick="toggleMatchPin('${escJs(m.id)}',event)">${active?'★':'☆'}</button>`}
 function crest(src,size,cls){if(!src)return`<div class="${cls}-e" style="width:${size}px;height:${size}px"></div>`;return`<img src="${esc(src)}" class="${cls}" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none'" />`}function badge(m){const st=m?.status?.type?.state||'',l=timeMatch(m);if(st==='in')return`<span class="badge b-live">● ${esc(l)}</span>`;if(st==='pre')return`<span class="badge b-pre">⏳ ${esc(l)}</span>`;if(st==='post')return`<span class="badge b-done">Terminé</span>`;return''}function flash(m){const st=m.status?.type?.state||'';if(st!=='in'&&st!=='post')return'';const k=`${m.homeScore??0}-${m.awayScore??0}`,old=scoreMemory.get(m.id);scoreMemory.set(m.id,k);return old&&old!==k?' flash':''}
 function side(d,m){const tid=String(d?.team?.id||''),team=String(d?.team?.displayName||d?.team?.name||d?.team?.shortDisplayName||'').toLowerCase(),txt=String(d?.text||d?.shortText||'').toLowerCase(),home=String(m.homeName||'').toLowerCase(),away=String(m.awayName||'').toLowerCase();if(tid&&String(m.homeTeamId)===tid)return'home';if(tid&&String(m.awayTeamId)===tid)return'away';if(team&&(home.includes(team)||team.includes(home)))return'home';if(team&&(away.includes(team)||team.includes(away)))return'away';const textTeam=txt.includes('(')?txt.split('(').pop().split(')')[0].toLowerCase():'',ht=home.split(/\s+/).filter(w=>w.length>3),at=away.split(/\s+/).filter(w=>w.length>3);if(textTeam&&(away.includes(textTeam)||textTeam.includes(away)||at.some(w=>textTeam.includes(w))))return'away';if(textTeam&&(home.includes(textTeam)||textTeam.includes(home)||ht.some(w=>textTeam.includes(w))))return'home';if(away&&txt.includes(away))return'away';if(home&&txt.includes(home))return'home';if(at.some(w=>txt.includes(w)))return'away';if(ht.some(w=>txt.includes(w)))return'home';return'home'}function scorers(m){const goals=(m.details||[]).filter(d=>{const t=String(d?.text||d?.shortText||'').toLowerCase();if(t.includes('overturned')||t.includes('annulé'))return false;return d?.scoringPlay===true||t.includes('goal')||t.includes('but')});if(!goals.length)return'';const map=new Map();goals.forEach(g=>{const name=playerName(g);if(!name||/overturned|annulé|var/i.test(name))return;const s=side(g,m),mi=minute(g),k=`${s}|${name}`;if(!map.has(k))map.set(k,{side:s,name,mins:[]});map.get(k).mins.push(mi)});const h=[],a=[];map.forEach(it=>{const min=it.mins.filter(Boolean).join(' '),minHtml=min?`<span class="ev-min">${esc(min)}</span>`:'',balls='⚽'.repeat(it.mins.length);if(it.side==='home')h.push(`<div class="ev-left"><span class="ev-name">${esc(it.name)}</span>${balls}${minHtml}</div>`);else a.push(`<div class="ev-right">${minHtml}${balls}<span class="ev-name">${esc(it.name)}</span></div>`)});if(!h.length&&!a.length)return'';const max=Math.max(h.length,a.length);let rows='';for(let i=0;i<max;i++)rows+=`${h[i]||'<div class="ev-left"></div>'}${a[i]||'<div class="ev-right"></div>'}`;return`<div class="events"><div class="events-title">Buteurs</div><div class="scorers">${rows}</div></div>`}function reds(m){const r=(m.details||[]).filter(d=>d?.redCard===true);if(!r.length)return'';return`<div class="events red-only"><div class="events-title">Rouge</div>${r.slice(0,3).map(x=>`<div class="red-line">🟥 ${esc(playerName(x)||'Carton rouge')}${minute(x)?` <span class="ev-min">${esc(minute(x))}</span>`:''}</div>`).join('')}</div>`}
-function renderMatch(m){const st=m.status?.type?.state||'',live=st==='in',done=st==='post',soon=st==='pre'&&isSoon(m.date),p=isPinned(m);const center=(live||done)?`<div class="score${flash(m)}"><span class="num">${m.homeScore??0}</span><span class="sep">–</span><span class="num">${m.awayScore??0}</span></div>`:`<div class="kick${soon?' soon':''}">${esc(timeLabel(m.date))}</div>`;return`<article class="card${live?' live':''}${p?' pin':isFavoriteMatch(m)?' fav':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="card-top"><div class="comp">${esc(m.leagueName)}${p?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="card-actions">${pinBtn(m)}${badge(m)}</div></div><div class="teams"><div class="team home">${crest(m.homeLogo,32,'crest')}<span class="tn">${esc(m.homeName)}</span></div>${center}<div class="team away"><span class="tn">${esc(m.awayName)}</span>${crest(m.awayLogo,32,'crest')}</div></div>${live?`<div class="minute">${esc(timeMatch(m))}</div>`:''}${scorers(m)}${reds(m)}</article>`}function renderCal(m){return`<article class="cal-card${isSoon(m.date)?' soon':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="cal-time">${esc(timeLabel(m.date))}</div><div class="cal-crests">${crest(m.homeLogo,24,'crest')}${crest(m.awayLogo,24,'crest')}</div><div class="cal-info"><div class="cal-title">${esc(m.homeName)} — ${esc(m.awayName)}</div><div class="cal-sub">${esc(m.leagueName)}${isFavoriteMatch(m)?' · ★ favori':''}</div></div></article>`}
+function pruneMemoryMaps(){const ids=new Set(liveEvents.map(m=>m.id));scoreMemory.forEach((_,k)=>{if(!ids.has(k))scoreMemory.delete(k)});alertScoreMemory.forEach((_,k)=>{if(!ids.has(k))alertScoreMemory.delete(k)})}
+function updateMatchCard(m){
+  const card=document.querySelector(`[data-match-id="${CSS.escape(String(m.id))}"]`);
+  if(!card)return false;
+  const f=flash(m);// updates scoreMemory as side effect
+  if(f){
+    const nums=card.querySelectorAll('.num');
+    if(nums[0])nums[0].textContent=m.homeScore??0;
+    if(nums[1])nums[1].textContent=m.awayScore??0;
+    const scoreEl=card.querySelector('.score');
+    if(scoreEl){scoreEl.classList.remove('flash');void scoreEl.offsetWidth;scoreEl.classList.add('flash');}
+    // Refresh scorers/reds after a goal
+    const evEl=card.querySelector('.events');
+    const evHtml=scorers(m)+reds(m);
+    if(evEl)evEl.outerHTML=evHtml||'';
+    else if(evHtml)card.insertAdjacentHTML('beforeend',evHtml);
+  }
+  const minEl=card.querySelector('.minute');
+  if(minEl){const t=timeMatch(m);if(minEl.textContent!==t)minEl.textContent=t;}
+  const badgeEl=card.querySelector('.badge');
+  if(badgeEl)badgeEl.outerHTML=badge(m);
+  return true;
+}
+function renderMatch(m){const st=m.status?.type?.state||'',live=st==='in',done=st==='post',soon=st==='pre'&&isSoon(m.date),p=isPinned(m);const center=(live||done)?`<div class="score${flash(m)}"><span class="num">${m.homeScore??0}</span><span class="sep">–</span><span class="num">${m.awayScore??0}</span></div>`:`<div class="kick${soon?' soon':''}">${esc(timeLabel(m.date))}</div>`;return`<article class="card${live?' live':''}${p?' pin':isFavoriteMatch(m)?' fav':''}" data-match-id="${escJs(m.id)}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="card-top"><div class="comp">${esc(m.leagueName)}${p?' · ★ suivi':isFavoriteMatch(m)?' · ★ favori':''}</div><div class="card-actions">${pinBtn(m)}${badge(m)}</div></div><div class="teams"><div class="team home">${crest(m.homeLogo,32,'crest')}<span class="tn">${esc(m.homeName)}</span></div>${center}<div class="team away"><span class="tn">${esc(m.awayName)}</span>${crest(m.awayLogo,32,'crest')}</div></div>${live?`<div class="minute">${esc(timeMatch(m))}</div>`:''}${scorers(m)}${reds(m)}</article>`}function renderCal(m){return`<article class="cal-card${isSoon(m.date)?' soon':''}" onclick="openFocusMatch('${escJs(m.id)}')"><div class="cal-time">${esc(timeLabel(m.date))}</div><div class="cal-crests">${crest(m.homeLogo,24,'crest')}${crest(m.awayLogo,24,'crest')}</div><div class="cal-info"><div class="cal-title">${esc(m.homeName)} — ${esc(m.awayName)}</div><div class="cal-sub">${esc(m.leagueName)}${isFavoriteMatch(m)?' · ★ favori':''}</div></div></article>`}
 function emptyState(){
   const n=calendarEvents.find(isFavoriteMatch)||nextMatch;
   const nextBlock=n
@@ -191,12 +214,25 @@ function emptyState(){
   return `<div class="empty-state"><div class="empty-card"><div class="empty-inner"><div class="pitch"><div class="box left"></div><div class="box right"></div><div class="goal left"></div><div class="goal right"></div><div class="player cyan" style="left:13%;top:45%;animation-delay:.1s"></div><div class="player blue" style="left:24%;top:23%;animation-delay:.4s"></div><div class="player blue" style="left:24%;top:67%;animation-delay:.8s"></div><div class="player cyan hot" style="left:38%;top:48%;animation-delay:.2s"></div><div class="player blue" style="left:50%;top:29%;animation-delay:.7s"></div><div class="player cyan hot" style="left:58%;top:48%;animation-delay:1s"></div><div class="player blue" style="left:70%;top:24%;animation-delay:.3s"></div><div class="player cyan" style="left:79%;top:64%;animation-delay:.9s"></div><div class="ball"></div></div><div class="mini-title">Veher Live</div>${nextBlock}<div class="mini-text">Aucun match en direct pour le moment</div></div></div></div>`;
 }
 function renderStrip(){const s=$('liveStrip');let html='';const p=liveEvents.find(isPinned),f=liveEvents.find(isFavoriteMatch);if(p)html=`<b>SUIVI</b>${esc(p.homeName)} ${p.homeScore??0}–${p.awayScore??0} ${esc(p.awayName)} · ${esc(timeMatch(p))}`;else if(f)html=`<b>LIVE</b>${esc(f.homeName)} ${f.homeScore??0}–${f.awayScore??0} ${esc(f.awayName)} · ${esc(timeMatch(f))}`;else if(liveEvents[0])html=`<b>LIVE</b>${liveEvents.length} match${liveEvents.length>1?'s':''} en direct · ${esc(liveEvents[0].homeName)} vs ${esc(liveEvents[0].awayName)}`;else if(nextMatch)html=`<b>À VENIR</b>${esc(nextMatch.homeName)} — ${esc(nextMatch.awayName)} · ${esc(timeMatch(nextMatch))}`;s.innerHTML=html;s.classList.toggle('on',!!html)}function filters(items,active,cb,includeFav){const sl=[...new Set(items.map(x=>x.leagueSlug))],lgs=LEAGUES.filter(l=>sl.includes(l.slug)),hasFav=includeFav&&items.some(isFavoriteMatch);if(lgs.length<=1&&!hasFav)return'';const fav=hasFav?`<button class="pill${active==='favorite'?' on':''}" onclick="${cb}('favorite')">★ Favori</button>`:'';return`<div class="filters"><button class="pill${active==='all'?' on':''}" onclick="${cb}('all')">Toutes</button>${fav}${lgs.map(l=>`<button class="pill${active===l.slug?' on':''}" onclick="${cb}('${l.slug}')">${esc(l.name)}</button>`).join('')}</div>`}function setLiveFilter(f){activeLiveFilter=f;renderLivePage()}function setCalendarFilter(f){activeCalFilter=f;renderCalPage()}
-function renderLivePage(){const p=$('page0');renderStrip();if(!liveEvents.length){p.innerHTML=emptyState();return}const order=sortMatches(liveEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeLiveFilter!=='all'&&activeLiveFilter!=='favorite'&&!sl.has(activeLiveFilter))activeLiveFilter='all';let ms=order;if(activeLiveFilter==='favorite')ms=order.filter(isFavoriteMatch);else if(activeLiveFilter!=='all')ms=order.filter(x=>x.leagueSlug===activeLiveFilter);p.innerHTML=filters(order,activeLiveFilter,'setLiveFilter',true)+(ms.length?`<div class="section">En cours · <span>${ms.length} match${ms.length>1?'s':''}</span></div>`+ms.map(renderMatch).join(''):`<div class="empty">⚽ Aucun match en direct pour ce filtre</div>`);
-  // Scroll auto vers match favori
-  if(activeLiveFilter==='all'){setTimeout(()=>{const fav=ms.find(isFavoriteMatch);if(fav){const el=p.querySelector('.card.fav,.card.pin');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})}},120);}}function renderCalPage(){const p=$('page1');if(!calendarEvents.length){p.innerHTML=`<div class="empty">📅 Aucun match prévu</div>`;return}const order=sortMatches(calendarEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeCalFilter!=='all'&&!sl.has(activeCalFilter))activeCalFilter='all';const filtered=activeCalFilter==='all'?order:order.filter(x=>x.leagueSlug===activeCalFilter),groups={};filtered.forEach(m=>{const d=dayLabel(m.date);(groups[d]||(groups[d]=[])).push(m)});let html=filters(order,activeCalFilter,'setCalendarFilter',false);Object.entries(groups).forEach(([d,ms])=>{html+=`<div class="day">${esc(d)}</div>`+ms.map(renderCal).join('')});p.innerHTML=html}function renderResultsPage(){const p=$('page2');if(!resultEvents.length){p.innerHTML=`<div class="empty">📰 Aucun résultat récent</div>`;return}const o=sortMatches(resultEvents);p.innerHTML=`<div class="section">Résultats récents · <span>${o.length} match${o.length>1?'s':''}</span></div>`+o.map(renderMatch).join('')}function renderOmPage(){const p=$('page4'),live=liveEvents.find(isOmMatch),next=calendarEvents.find(isOmMatch),last=resultEvents.find(isOmMatch);let h=`<div class="section">Allez l'OM 💙</div>`;if(live)h+=`<div class="section">En direct</div>${renderMatch(live)}`;if(next)h+=`<div class="section">Prochain match</div>${renderCal(next)}`;if(last)h+=`<div class="section">Dernier résultat</div>${renderMatch(last)}`;if(!live&&!next&&!last)h+=`<div class="empty">💙 Aucun match OM trouvé</div>`;p.innerHTML=h}
+function renderLivePage(){
+  const p=$('page0');renderStrip();
+  if(!liveEvents.length){currentLiveIds=[];p.innerHTML=emptyState();return}
+  const order=sortMatches(liveEvents),sl=new Set(order.map(x=>x.leagueSlug));
+  if(activeLiveFilter!=='all'&&activeLiveFilter!=='favorite'&&!sl.has(activeLiveFilter))activeLiveFilter='all';
+  let ms=order;
+  if(activeLiveFilter==='favorite')ms=order.filter(isFavoriteMatch);
+  else if(activeLiveFilter!=='all')ms=order.filter(x=>x.leagueSlug===activeLiveFilter);
+  // Partial DOM update: only patch scores/minutes/badges when same matches in same order
+  const newIds=ms.map(m=>String(m.id));
+  if(newIds.length===currentLiveIds.length&&newIds.every((id,i)=>id===currentLiveIds[i])&&p.querySelector('[data-match-id]')){
+    ms.forEach(m=>updateMatchCard(m));return;
+  }
+  currentLiveIds=newIds;
+  p.innerHTML=filters(order,activeLiveFilter,'setLiveFilter',true)+(ms.length?`<div class="section">En cours · <span>${ms.length} match${ms.length>1?'s':''}</span></div>`+ms.map(renderMatch).join(''):`<div class="empty">⚽ Aucun match en direct pour ce filtre</div>`);
+  if(activeLiveFilter==='all'){setTimeout(()=>{const fav=ms.find(isFavoriteMatch);if(fav){const el=p.querySelector('.card.fav,.card.pin');if(el)el.scrollIntoView({behavior:'smooth',block:'nearest'})}},120);}
+}function renderCalPage(){const p=$('page1');if(!calendarEvents.length){p.innerHTML=`<div class="empty">📅 Aucun match prévu</div>`;return}const order=sortMatches(calendarEvents),sl=new Set(order.map(x=>x.leagueSlug));if(activeCalFilter!=='all'&&!sl.has(activeCalFilter))activeCalFilter='all';const filtered=activeCalFilter==='all'?order:order.filter(x=>x.leagueSlug===activeCalFilter),groups={};filtered.forEach(m=>{const d=dayLabel(m.date);(groups[d]||(groups[d]=[])).push(m)});let html=filters(order,activeCalFilter,'setCalendarFilter',false);Object.entries(groups).forEach(([d,ms])=>{html+=`<div class="day">${esc(d)}</div>`+ms.map(renderCal).join('')});p.innerHTML=html}function renderResultsPage(){const p=$('page2');if(!resultEvents.length){p.innerHTML=`<div class="empty">📰 Aucun résultat récent</div>`;return}const o=sortMatches(resultEvents);p.innerHTML=`<div class="section">Résultats récents · <span>${o.length} match${o.length>1?'s':''}</span></div>`+o.map(renderMatch).join('')}function renderOmPage(){const p=$('page4'),live=liveEvents.find(isOmMatch),next=calendarEvents.find(isOmMatch),last=resultEvents.find(isOmMatch);let h=`<div class="section">Allez l'OM 💙</div>`;if(live)h+=`<div class="section">En direct</div>${renderMatch(live)}`;if(next)h+=`<div class="section">Prochain match</div>${renderCal(next)}`;if(last)h+=`<div class="section">Dernier résultat</div>${renderMatch(last)}`;if(!live&&!next&&!last)h+=`<div class="empty">💙 Aucun match OM trouvé</div>`;p.innerHTML=h}
 async function loadLive(silent=false){
   if(SETTINGS.demo==='on'){demo('live');renderLivePage();return}
-  // Stale-while-revalidate: restore from cache immediately
   const cached=readCache(CACHE_LIVE_KEY);
   if(cached){
     liveEvents=cached.data.live||[];finishedEvents=cached.data.finished||[];nextMatch=cached.data.nextMatch||null;
@@ -206,9 +242,19 @@ async function loadLive(silent=false){
     $('page0').innerHTML=skeletonCards(3);
   }
   try{
-    const res=await Promise.allSettled(LEAGUES.map(l=>fetchEspn(l.slug).then(data=>({l,data}))));
     const seen=new Map();
-    res.forEach(r=>{if(r.status!=='fulfilled')return;const{l,data}=r.value;(data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))})});
+    // Progressive rendering: render as each league responds (foreground only)
+    const leagueFetches=LEAGUES.map(l=>fetchEspn(l.slug).then(data=>{
+      (data.events||[]).forEach(ev=>{if(!seen.has(ev.id))seen.set(ev.id,norm(ev,l.name,l.slug))});
+      if(!silent){
+        const partialLive=[...seen.values()].filter(m=>isLiveStatus(m.status));
+        if(partialLive.length>liveEvents.length){
+          liveEvents=partialLive;$('liveDot').classList.remove('hide');
+          renderLivePage();renderStrip();
+        }
+      }
+    }).catch(()=>null));
+    await Promise.allSettled(leagueFetches);
     let matches=[...seen.values()],det=matches.filter(m=>isLiveStatus(m.status)).slice(0,12);
     const sums=await Promise.allSettled(det.map(m=>fetchSummary(m.leagueSlug,m.id)));
     sums.forEach((r,i)=>{if(r.status!=='fulfilled'||!r.value)return;const s=r.value,ev=s.header||s.event||{},c=comps(ev),idx=matches.findIndex(m=>m.id===det[i].id);if(idx<0)return;matches[idx]={...matches[idx],homeScore:c.home.score??matches[idx].homeScore,awayScore:c.away.score??matches[idx].awayScore,homeTeamId:c.home.team?.id||matches[idx].homeTeamId,awayTeamId:c.away.team?.id||matches[idx].awayTeamId,status:ev.status||matches[idx].status,details:detailsFromSummary(s)}});
@@ -221,9 +267,15 @@ async function loadLive(silent=false){
     }
     writeCache(CACHE_LIVE_KEY,{live:liveEvents,finished:finishedEvents,nextMatch});
     $('liveDot').classList.toggle('hide',liveEvents.length===0);
-    detectGoal();renderLivePage();retryCount=0;
+    detectGoal();renderLivePage();pruneMemoryMaps();retryCount=0;
   }catch(e){
-    if(!cached&&!silent)$('page0').innerHTML=`<div class="err">Erreur chargement<br><small>${esc(e.message)}</small></div>`;
+    if(!cached&&!silent){
+      $('page0').innerHTML=`<div class="err">Erreur chargement<br><small>${esc(e.message)}</small></div>`;
+    } else if(cached){
+      // Show subtle stale indicator — don't erase the visible cached content
+      const el=$('updatedAt');
+      if(el)el.innerHTML=`<span style="color:#fca5a5">⚠ Données du ${new Date(Date.now()-cached.age).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</span>`;
+    }
     scheduleRetry();
   }
   doneRefreshBar();renderStrip();
@@ -376,20 +428,25 @@ function scheduleRetry(){
 let standingsCache=new Map(),standingsLoaded=false,activeStandingSlug='';
 
 async function fetchStandings(slug){
-  const cached=standingsCache.get(slug);
-  if(cached&&Date.now()-cached.ts<300000)return cached.data;
-  // Saison dynamique : en Europe la saison 2025-26 = season=2026 (année de fin)
-  // Avant juillet = saison en cours, après juillet = nouvelle saison
+  const mem=standingsCache.get(slug);
+  if(mem&&Date.now()-mem.ts<300000)return mem.data;
+  // Check localStorage before hitting the network
+  const lsCached=readCache(CACHE_STD_PREFIX+slug);
+  if(lsCached&&lsCached.age<300000){
+    standingsCache.set(slug,{data:lsCached.data,ts:Date.now()-lsCached.age});
+    return lsCached.data;
+  }
   const now=new Date();
   const season=now.getMonth()>=6?now.getFullYear()+1:now.getFullYear();
   const url=`https://site.web.api.espn.com/apis/v2/sports/soccer/${slug}/standings?season=${season}`;
   try{
     const r=await fetch(url,{signal:AbortSignal.timeout(6000)});
-    if(!r.ok)return null;
+    if(!r.ok)return lsCached?.data||null;
     const data=await r.json();
     standingsCache.set(slug,{data,ts:Date.now()});
+    writeCache(CACHE_STD_PREFIX+slug,data);
     return data;
-  }catch(e){return null;}
+  }catch(e){return lsCached?.data||null;} // offline: serve stale localStorage
 }
 
 function extractEntries(data){
@@ -518,24 +575,27 @@ let wcLoaded=false,wcMode='groupes',wcData=null;
 
 async function loadWorldCup(){
   const p=$('page5');
-  p.innerHTML='<div class="loading"><div class="spinner"></div>Chargement Coupe du Monde...</div>';
+  // Show cached World Cup data immediately
+  const wcCached=readCache(CACHE_WC_KEY);
+  if(wcCached){
+    wcData=wcCached.data;wcLoaded=true;renderWorldCupPage();
+    if(wcCached.age<300000)return;// fresh within 5 min, skip refetch
+  } else {
+    p.innerHTML='<div class="loading"><div class="spinner"></div>Chargement Coupe du Monde...</div>';
+  }
   try{
     const season=2026;
-    // Récupérer plusieurs endpoints ESPN en parallèle
     const [groupsResp,scoreboardResp,playoffsResp]=await Promise.allSettled([
       fetch(`https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/standings?season=${season}`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():null),
       fetch(`https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():null),
-      // Endpoint playoffs/bracket ESPN
       fetch(`https://site.web.api.espn.com/apis/v2/sports/soccer/fifa.world/playoffbracket?season=${season}`,{signal:AbortSignal.timeout(8000)}).then(r=>r.ok?r.json():null),
     ]);
     const scoreboard=scoreboardResp.status==='fulfilled'?scoreboardResp.value:null;
     const allEvents=scoreboard?.events||[];
-    // Séparer les matchs : poule = season.type.id "2", KO = "3" ou type slug contient "knockout"
     const koEvents=allEvents.filter(ev=>{
       const typeId=String(ev.season?.type?.id||ev.seasonType?.id||'');
       const typeName=String(ev.season?.type?.name||ev.seasonType?.name||ev.season?.type?.abbreviation||'').toLowerCase();
       const note=String(ev.notes?.[0]?.headline||'').toLowerCase();
-      // ESPN utilise type 3 pour playoffs/KO, type 2 pour saison régulière/poules
       if(typeId==='3')return true;
       if(typeName.includes('playoff')||typeName.includes('knockout')||typeName.includes('elimination'))return true;
       if(note.includes('round of')||note.includes('quarter')||note.includes('semi')||note.includes('final'))return true;
@@ -544,15 +604,13 @@ async function loadWorldCup(){
     const groupEvents=allEvents.filter(ev=>!koEvents.includes(ev));
     wcData={
       groups:groupsResp.status==='fulfilled'?groupsResp.value:null,
-      scoreboard:scoreboard,
-      koEvents,
-      groupEvents,
+      scoreboard,koEvents,groupEvents,
       bracket:playoffsResp.status==='fulfilled'?playoffsResp.value:null,
     };
-    wcLoaded=true;
-    renderWorldCupPage();
+    writeCache(CACHE_WC_KEY,wcData);
+    wcLoaded=true;renderWorldCupPage();
   }catch(e){
-    p.innerHTML=`<div class="err">Erreur Coupe du Monde<br><small>${esc(e.message)}</small></div>`;
+    if(!wcLoaded)p.innerHTML=`<div class="err">Erreur Coupe du Monde<br><small>${esc(e.message)}</small></div>`;
   }
 }
 
@@ -745,8 +803,27 @@ function renderWcKO(){
   return html;
 }
 
+// Background prefetch: silently load calendar + results while user reads live page
+function startBackgroundPrefetch(){
+  setTimeout(async()=>{
+    const tasks=[];
+    const cc=readCache(CACHE_CAL_KEY);if(!cc||cc.age>120000)tasks.push(loadCalendar());
+    const rc=readCache(CACHE_RES_KEY);if(!rc||rc.age>300000)tasks.push(loadResults());
+    if(tasks.length)await Promise.allSettled(tasks);
+  },3000);// wait 3s so live data + summaries have priority
+}
+// Hover prefetch: start loading a tab ~100ms before click
+function setupHoverPrefetch(){
+  const hp=(tabId,cacheKey,ttl,fn)=>{
+    const el=$(tabId);if(!el)return;let t;
+    el.addEventListener('pointerenter',()=>{t=setTimeout(()=>{const c=readCache(cacheKey);if(!c||c.age>ttl)fn();},100);});
+    el.addEventListener('pointerleave',()=>clearTimeout(t));
+  };
+  hp('tab1',CACHE_CAL_KEY,120000,loadCalendar);
+  hp('tab2',CACHE_RES_KEY,300000,loadResults);
+}
 window.goTab=goTab;window.loadWorldCup=loadWorldCup;window.loadWcGroup=loadWcGroup;window.setWcMode=setWcMode;window.manualRefresh=manualRefresh;window.setLiveFilter=setLiveFilter;window.setCalendarFilter=setCalendarFilter;window.openFocusMatch=openFocusMatch;window.closeFocusMatch=closeFocusMatch;window.toggleMatchPin=toggleMatchPin;
-clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();applyVisual();stamp();
+clock();setInterval(clock,30000);loadSettings();loadPins();syncForm();bindConfig();setupHoverPrefetch();applyVisual();stamp();
 setOnline(navigator.onLine);
 
 // Restore strip from cache immediately — within milliseconds of page load
@@ -769,7 +846,7 @@ document.addEventListener('visibilitychange',()=>{
   }
 });
 
-loadLive(false).then(()=>{updated();poll();});
+loadLive(false).then(()=>{updated();startBackgroundPrefetch();poll();});
 </script>
 </body>
 </html>
